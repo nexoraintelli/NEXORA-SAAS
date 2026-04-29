@@ -1,3 +1,321 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Nexora · relatorio</title><link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="../styles/global.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head><body><main class="wrap"><section class="card"><h1>Nexora · relatorio</h1><p style="color:var(--muted);margin-top:8px">Arquivo-base para migração da nova arquitetura Nexora SaaS.</p></section></main><script type="module">import { requireAuth } from "../js/auth.js"; await requireAuth();</script></body></html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <title>Nexora · Relatório</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/global.css">
+
+  <style>
+    body {
+      background: #0b0b0c;
+      padding: 24px 0 60px;
+    }
+
+    .report-wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .report {
+      background: rgba(18,18,18,.94);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cover {
+      padding: 44px 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cover h1 {
+      font-size: 42px;
+      line-height: 1.08;
+      max-width: 780px;
+    }
+
+    .cover p {
+      color: var(--muted);
+      margin-top: 16px;
+      font-size: 16px;
+      line-height: 1.7;
+      max-width: 760px;
+    }
+
+    .content {
+      padding: 28px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .section {
+      background: var(--surface-strong);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+    }
+
+    .section h2 {
+      margin-bottom: 12px;
+    }
+
+    .section p {
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .metric {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      background: rgba(255,255,255,.03);
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .metric-score {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+    }
+
+    .good { color: var(--green); }
+    .warn { color: var(--amber); }
+    .bad { color: var(--red); }
+
+    .action {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .action:last-child {
+      border-bottom: 0;
+    }
+
+    .num {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: rgba(123,92,240,.16);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    @media print {
+      body {
+        background: white !important;
+        padding: 0;
+      }
+
+      .topbar button,
+      .no-print {
+        display: none !important;
+      }
+
+      .report-wrap {
+        max-width: none;
+        padding: 0;
+      }
+
+      .report {
+        border: none;
+        border-radius: 0;
+      }
+
+      .section,
+      .metric {
+        break-inside: avoid;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .cover h1 {
+        font-size: 32px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="report-wrap">
+    <div class="report">
+
+      <div class="topbar">
+        <div>
+          <strong style="font-family:Syne,sans-serif;letter-spacing:.08em;">
+            NEXORA INTELLIGENCE
+          </strong>
+          <p class="muted" style="font-size:12px;margin-top:4px;">
+            Relatório estratégico de diagnóstico
+          </p>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn-secondary no-print" onclick="location.href='./sintese.html'">
+            Voltar
+          </button>
+
+          <button class="btn-primary no-print" onclick="window.print()">
+            Gerar PDF
+          </button>
+        </div>
+      </div>
+
+      <section class="cover">
+        <p style="font-family:Syne,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);font-size:11px;margin-bottom:14px;">
+          Relatório Nexora
+        </p>
+
+        <h1 id="headline">Relatório Nexora</h1>
+        <p id="coverSub">Síntese estratégica gerada pela Nexora.</p>
+
+        <div style="margin-top:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          <div class="metric">
+            <div class="metric-label">Data</div>
+            <div class="metric-score" style="font-size:16px;" id="reportDate">-</div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Fonte</div>
+            <div class="metric-score" style="font-size:16px;">3 Cérebros</div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Status</div>
+            <div class="metric-score good" style="font-size:16px;">Concluído</div>
+          </div>
+        </div>
+      </section>
+
+      <main class="content">
+
+        <section class="section">
+          <h2>Resumo executivo</h2>
+          <p id="summary">Resumo não disponível.</p>
+        </section>
+
+        <section class="section">
+          <h2>Causa raiz</h2>
+          <p id="root">Causa raiz não disponível.</p>
+        </section>
+
+        <section class="section">
+          <h2>Status por pilar</h2>
+          <div class="metrics-grid" id="metrics"></div>
+        </section>
+
+        <section class="section">
+          <h2>Plano de ação</h2>
+          <div id="actions"></div>
+        </section>
+
+        <section class="section">
+          <h2>Próximos passos recomendados</h2>
+          <p>
+            Execute as ações prioritárias, monitore os indicadores após a implementação e gere uma nova análise para comparar evolução de performance, conversão e posicionamento competitivo.
+          </p>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const data = JSON.parse(localStorage.getItem("nexora_relatorio_mapeado") || "{}");
+
+    if (!data || Object.keys(data).length === 0) {
+      document.body.innerHTML = `
+        <main class="wrap">
+          <section class="card">
+            <h1>Relatório não encontrado</h1>
+            <p style="color:var(--muted);margin-top:8px;">
+              Gere a síntese estratégica antes de abrir o relatório.
+            </p>
+            <button class="btn-primary" style="margin-top:20px;" onclick="location.href='./sintese.html'">
+              Voltar para síntese
+            </button>
+          </section>
+        </main>
+      `;
+    } else {
+      document.getElementById("headline").textContent = data.headline || "Relatório Nexora";
+      document.getElementById("coverSub").textContent = data.coverSub || "Síntese estratégica gerada pela Nexora.";
+      document.getElementById("summary").textContent = data.executiveSummary || "Resumo não disponível.";
+      document.getElementById("root").textContent = data.rootCause || "Causa raiz não disponível.";
+      document.getElementById("reportDate").textContent = new Date().toLocaleDateString("pt-BR");
+
+      document.getElementById("metrics").innerHTML = (data.metrics || []).map(m => `
+        <div class="metric">
+          <div class="metric-label">${escapeHtml(m.title)}</div>
+          <div class="metric-score ${escapeHtml(m.level || '')}">
+            ${escapeHtml(m.score)}
+          </div>
+          <p style="margin-top:8px;color:var(--muted);font-size:13px;">
+            ${escapeHtml(m.description)}
+          </p>
+        </div>
+      `).join("");
+
+      document.getElementById("actions").innerHTML = (data.actions || []).map((a, i) => `
+        <div class="action">
+          <div class="num">${i + 1}</div>
+          <div>
+            <strong>${escapeHtml(a.title)}</strong>
+            <p style="margin-top:5px;color:var(--muted);">
+              ${escapeHtml(a.description)}
+            </p>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+  </script>
+</body>
+</html>
