@@ -1,1 +1,46 @@
+# Checklist Técnico — Nexora SaaS
+
+## Base
+- [ ] Criar repositório novo
+- [ ] Subir estrutura de pastas
+- [ ] Configurar Supabase anon key em `js/config.js`
+- [ ] Configurar variável `ANTHROPIC_API_KEY` no Vercel
+- [ ] Criar tabelas no Supabase
+
+## Supabase
+- [ ] Remover `authSb`
+- [ ] Remover `SUA_ANON_KEY_AQUI`
+- [ ] Usar apenas `supabaseClient.js`
+- [ ] Usar `requireAuth()` em páginas protegidas
+
+## Cérebro 1
+- [ ] Migrar UI atual
+- [ ] Usar `cerebro1Engine.js`
+- [ ] Salvar `diagnostics`
+- [ ] Salvar `brain_results`
+- [ ] Usar IA apenas como camada de texto
+
+## Cérebro 2
+- [ ] Migrar UI atual
+- [ ] Usar `cerebro2Engine.js`
+- [ ] Bloquear sem C1
+- [ ] Salvar resultado vinculado ao mesmo diagnóstico
+
+## Cérebro 3
+- [ ] Migrar UI atual
+- [ ] Usar `cerebro3Engine.js`
+- [ ] Validar pelo menos 3 concorrentes
+- [ ] Salvar resultado vinculado ao mesmo diagnóstico
+
+## Síntese
+- [ ] Usar `synthesisEngine.js`
+- [ ] Score real
+- [ ] Causa raiz lógica
+- [ ] IA apenas explica
+
+## Relatório
+- [ ] Criar layout A4
+- [ ] Buscar dados por `diagnostic_id`
+- [ ] Adicionar cliente/produto
+- [ ] Criar `@media print`
 
