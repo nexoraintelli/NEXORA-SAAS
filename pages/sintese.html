@@ -1,3 +1,261 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Nexora · sintese</title><link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="../styles/global.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head><body><main class="wrap"><section class="card"><h1>Nexora · sintese</h1><p style="color:var(--muted);margin-top:8px">Arquivo-base para migração da nova arquitetura Nexora SaaS.</p></section></main><script type="module">import { requireAuth } from "../js/auth.js"; await requireAuth();</script></body></html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <title>Nexora · Síntese</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/global.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+  <main class="wrap">
+
+    <section class="card">
+      <p style="font-family:Syne,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);font-size:11px;margin-bottom:12px;">
+        Nexora Intelligence · Síntese Final
+      </p>
+
+      <h1>Síntese estratégica</h1>
+
+      <p style="color:var(--muted);margin-top:8px;line-height:1.6;">
+        Cruzamento dos três cérebros para identificar causa raiz, score geral e plano de ação.
+      </p>
+    </section>
+
+    <section id="statusArea" class="card"></section>
+
+    <section class="card">
+      <button class="btn-primary" style="width:100%;" onclick="gerarSintese()">
+        Gerar síntese estratégica
+      </button>
+
+      <p id="msg" style="color:var(--muted);font-size:13px;margin-top:16px;"></p>
+    </section>
+
+    <section id="resultArea" class="card" style="display:none;"></section>
+
+  </main>
+
+  <script type="module">
+    import { requireAuth } from "../js/auth.js";
+    import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
+    import { gerarSinteseBase } from "../js/synthesisEngine.js";
+
+    await requireAuth();
+
+    const msg = document.getElementById("msg");
+    const statusArea = document.getElementById("statusArea");
+    const resultArea = document.getElementById("resultArea");
+
+    let C1 = null;
+    let C2 = null;
+    let C3 = null;
+
+    try { C1 = JSON.parse(localStorage.getItem("nx_c1") || "null"); } catch(e) {}
+    try { C2 = JSON.parse(localStorage.getItem("nx_c2") || "null"); } catch(e) {}
+    try { C3 = JSON.parse(localStorage.getItem("nx_c3") || "null"); } catch(e) {}
+
+    function renderStatus() {
+      statusArea.innerHTML = `
+        <h2>Status dos cérebros</h2>
+
+        <div class="grid-3" style="margin-top:18px;">
+          ${statusCard("Cérebro 1", C1 ? "Concluído" : "Pendente")}
+          ${statusCard("Cérebro 2", C2 ? "Concluído" : "Pendente")}
+          ${statusCard("Cérebro 3", C3 ? "Concluído" : "Pendente")}
+        </div>
+
+        ${(!C1 || !C2 || !C3) ? `
+          <p style="color:var(--muted);margin-top:18px;line-height:1.6;">
+            Para gerar uma síntese completa, execute os três cérebros.
+          </p>
+        ` : ""}
+      `;
+    }
+
+    renderStatus();
+
+    window.gerarSintese = async function () {
+      const diagnosticId = getDiagnosticId();
+
+      if (!diagnosticId) {
+        msg.textContent = "Nenhum diagnóstico ativo. Volte ao dashboard e inicie um diagnóstico.";
+        return;
+      }
+
+      if (!C1 || !C2 || !C3) {
+        msg.textContent = "Execute os três cérebros antes de gerar a síntese.";
+        return;
+      }
+
+      msg.textContent = "Gerando síntese estratégica...";
+
+      const result = gerarSinteseBase(C1, C2, C3);
+
+      const fullResult = {
+        ...result,
+        diagnostic_id: diagnosticId,
+        ts: new Date().toISOString()
+      };
+
+      localStorage.setItem("nexora_sintese_result", JSON.stringify(fullResult));
+      localStorage.setItem("nexora_relatorio_mapeado", JSON.stringify(buildReportPayload(fullResult)));
+
+      await updateDiagnostic(diagnosticId, {
+        status: "completed",
+        final_score: result.score_geral,
+        root_cause: result.problema_raiz,
+        completed_at: new Date().toISOString()
+      });
+
+      await saveBrainResult({
+        diagnosticId,
+        brainCode: "synth",
+        brainName: "Síntese Estratégica Final",
+        score: result.score_geral,
+        resultData: fullResult
+      });
+
+      renderResult(fullResult);
+
+      msg.textContent = "Síntese salva com sucesso.";
+    };
+
+    function renderResult(result) {
+      resultArea.style.display = "block";
+
+      resultArea.innerHTML = `
+        <h2>Resultado final</h2>
+
+        <div style="margin-top:18px;padding:18px;border:1px solid var(--border);border-radius:14px;background:var(--surface-strong);">
+          <p style="font-size:12px;color:var(--muted);">Score geral</p>
+          <h1 style="margin-top:6px;">${result.score_geral}/100</h1>
+
+          <p style="font-size:12px;color:var(--muted);margin-top:16px;">Causa raiz final</p>
+          <h3>${escapeHtml(result.problema_raiz)}</h3>
+
+          <p style="color:var(--muted);margin-top:12px;line-height:1.7;">
+            ${escapeHtml(result.diagnostico_executivo)}
+          </p>
+        </div>
+
+        <div style="margin-top:22px;">
+          <h3>Status por pilar</h3>
+
+          <div class="grid-3" style="margin-top:14px;">
+            ${pillarCard("Atração", result.pilares?.atracao)}
+            ${pillarCard("Conversão", result.pilares?.conversao)}
+            ${pillarCard("Mercado", result.pilares?.mercado)}
+            ${pillarCard("Operação", result.pilares?.operacao)}
+          </div>
+        </div>
+
+        <div style="margin-top:22px;">
+          <h3>Plano de ação</h3>
+
+          <div style="display:grid;gap:10px;margin-top:12px;">
+            ${(result.plano_acao || []).map((a, i) => `
+              <div style="padding:14px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.03);">
+                <p style="font-size:12px;color:var(--muted);">${escapeHtml(a.prioridade)}</p>
+                <strong>${i + 1}. ${escapeHtml(a.titulo)}</strong>
+                <p style="color:var(--muted);margin-top:5px;">${escapeHtml(a.detalhe)}</p>
+                <p style="color:var(--text-muted);margin-top:5px;font-size:12px;">Impacto: ${escapeHtml(a.impacto)}</p>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn-secondary" onclick="location.href='./mercado.html'">
+            Voltar ao Cérebro 3
+          </button>
+
+          <button class="btn-primary" onclick="location.href='./relatorio.html'">
+            Abrir relatório
+          </button>
+        </div>
+      `;
+    }
+
+    function buildReportPayload(result) {
+      return {
+        headline: `Score geral de ${result.score_geral}/100`,
+        coverSub: result.veredicto || "Síntese estratégica gerada pela Nexora.",
+        executiveSummary: result.diagnostico_executivo,
+        rootCause: result.problema_raiz,
+        metrics: [
+          {
+            title: "Atração",
+            score: result.pilares?.atracao?.status || "-",
+            level: normalizeLevel(result.pilares?.atracao?.status),
+            description: result.pilares?.atracao?.resumo || "-"
+          },
+          {
+            title: "Conversão",
+            score: result.pilares?.conversao?.status || "-",
+            level: normalizeLevel(result.pilares?.conversao?.status),
+            description: result.pilares?.conversao?.resumo || "-"
+          },
+          {
+            title: "Mercado",
+            score: result.pilares?.mercado?.status || "-",
+            level: normalizeLevel(result.pilares?.mercado?.status),
+            description: result.pilares?.mercado?.resumo || "-"
+          },
+          {
+            title: "Operação",
+            score: result.pilares?.operacao?.status || "-",
+            level: normalizeLevel(result.pilares?.operacao?.status),
+            description: result.pilares?.operacao?.resumo || "-"
+          }
+        ],
+        actions: (result.plano_acao || []).map(a => ({
+          title: a.titulo,
+          description: a.detalhe
+        }))
+      };
+    }
+
+    function normalizeLevel(status) {
+      if (status === "CRÍTICO") return "bad";
+      if (status === "ATENÇÃO") return "warn";
+      return "good";
+    }
+
+    function statusCard(title, status) {
+      return `
+        <div style="padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);">
+          <p style="font-size:12px;color:var(--muted);">${escapeHtml(title)}</p>
+          <h3 style="margin-top:4px;">${escapeHtml(status)}</h3>
+        </div>
+      `;
+    }
+
+    function pillarCard(title, pilar) {
+      return `
+        <div style="padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);">
+          <p style="font-size:12px;color:var(--muted);">${escapeHtml(title)}</p>
+          <h3 style="margin-top:4px;">${escapeHtml(pilar?.status || "-")}</h3>
+          <p style="color:var(--muted);margin-top:6px;font-size:13px;">
+            ${escapeHtml(pilar?.resumo || "-")}
+          </p>
+        </div>
+      `;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+  </script>
+</body>
+</html>
