@@ -1,307 +1,272 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Nexora · Cérebro 1</title>
+<title>Nexora · Diagnóstico</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../styles/global.css">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles/global.css">
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{
+  background: radial-gradient(circle at center, #1a0000 0%, #0b0b0c 70%);
+}
+
+.container{
+  max-width:900px;
+  margin:auto;
+  padding:40px 20px;
+}
+
+.step{
+  display:none;
+}
+
+.step.active{
+  display:block;
+}
+
+.box{
+  background:#121212;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px;
+  padding:24px;
+  margin-top:20px;
+}
+
+.grid{
+  display:grid;
+  gap:12px;
+}
+
+.grid-2{
+  grid-template-columns:1fr 1fr;
+}
+
+input, select{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:#0d0d0e;
+  color:white;
+}
+
+.buttons{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.btn-option{
+  padding:10px 14px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.12);
+  cursor:pointer;
+}
+
+.btn-option.active{
+  background:#7b2cff;
+  border:none;
+}
+
+.nav{
+  display:flex;
+  justify-content:space-between;
+  margin-top:20px;
+}
+
+.progress{
+  display:flex;
+  gap:6px;
+  margin:20px 0;
+}
+
+.progress div{
+  flex:1;
+  height:4px;
+  background:#222;
+  border-radius:999px;
+}
+
+.progress .active{
+  background:#7b2cff;
+}
+</style>
 </head>
 
 <body>
-  <main class="wrap">
 
-    <section class="card">
-      <p style="font-family:Syne,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);font-size:11px;margin-bottom:12px;">
-        Nexora Intelligence · Cérebro 1
-      </p>
+<div class="container">
 
-      <h1>Diagnóstico de métricas</h1>
+<h1 style="text-align:center;">Diagnóstico de Performance</h1>
 
-      <p style="color:var(--muted);margin-top:8px;line-height:1.6;">
-        Analise CTR, CVR, ACOS, TACOS e operação para identificar a primeira causa raiz do produto.
-      </p>
-    </section>
+<div class="progress" id="progress"></div>
 
-    <section class="card">
-      <h2>Dados do produto</h2>
+<!-- STEP 1 -->
+<div class="step active">
+<h3>Etapa 1 · Contexto</h3>
 
-      <div style="display:grid;gap:16px;margin-top:20px;">
-        <div>
-          <label>Categoria</label>
-          <input id="category" placeholder="Ex: Beleza, Suplementos, Casa">
-        </div>
+<div class="box grid">
 
-        <div>
-          <label>Subcategoria</label>
-          <input id="subcategory" placeholder="Ex: Vitamina C, Vela aromática, Shampoo">
-        </div>
-      </div>
-    </section>
+<select id="categoria">
+<option>Categoria</option>
+<option>Beleza</option>
+<option>Casa</option>
+<option>Eletrônicos</option>
+</select>
 
-    <section class="card">
-      <h2>Métricas</h2>
+<select id="subcategoria">
+<option>Subcategoria</option>
+</select>
 
-      <div class="grid-3" style="margin-top:20px;">
-        <div>
-          <label>CTR (%)</label>
-          <input id="ctr" type="number" step="0.01" placeholder="Ex: 0.45">
-        </div>
+<div>
+<p>Modelo de negócio</p>
+<div class="buttons" id="modelo">
+<span class="btn-option">Private Label</span>
+<span class="btn-option">Wholesale</span>
+<span class="btn-option">Revenda</span>
+</div>
+</div>
 
-        <div>
-          <label>CVR (%)</label>
-          <input id="cvr" type="number" step="0.01" placeholder="Ex: 8.5">
-        </div>
+<div>
+<p>Força dominante</p>
+<div class="buttons" id="forca">
+<span class="btn-option">Preço</span>
+<span class="btn-option">Marca</span>
+<span class="btn-option">Review</span>
+<span class="btn-option">Diferenciação</span>
+</div>
+</div>
 
-        <div>
-          <label>ACOS (%)</label>
-          <input id="acos" type="number" step="0.01" placeholder="Ex: 32">
-        </div>
+<div>
+<p>Posicionamento</p>
+<div class="buttons" id="posicao">
+<span class="btn-option">Premium</span>
+<span class="btn-option">Médio</span>
+<span class="btn-option">Barato</span>
+</div>
+</div>
 
-        <div>
-          <label>TACOS (%)</label>
-          <input id="tacos" type="number" step="0.01" placeholder="Ex: 12">
-        </div>
+</div>
+</div>
 
-        <div>
-          <label>BuyBox</label>
-          <select id="buybox">
-            <option value="">Selecione</option>
-            <option>Tenho</option>
-            <option>Disputada</option>
-            <option>Não tenho</option>
-          </select>
-        </div>
+<!-- STEP 2 -->
+<div class="step">
+<h3>Etapa 2 · Atração</h3>
 
-        <div>
-          <label>Estoque</label>
-          <select id="stock">
-            <option value="">Selecione</option>
-            <option>Saudável</option>
-            <option>Baixo</option>
-            <option>Zerado</option>
-          </select>
-        </div>
+<div class="box grid grid-2">
+<input placeholder="Impressões" id="imp">
+<input placeholder="Cliques" id="click">
+<input placeholder="CTR (%)" id="ctr">
+</div>
+</div>
 
-        <div>
-          <label>Fulfillment</label>
-          <select id="fulfillment">
-            <option value="">Selecione</option>
-            <option>FBA</option>
-            <option>FBM</option>
-            <option>DBA</option>
-          </select>
-        </div>
-      </div>
+<!-- STEP 3 -->
+<div class="step">
+<h3>Etapa 3 · Conversão</h3>
 
-      <button class="btn-primary" style="margin-top:24px;width:100%;" onclick="gerarDiagnostico()">
-        Gerar diagnóstico
-      </button>
+<div class="box grid grid-2">
+<input placeholder="Vendas" id="sales">
+<input placeholder="CVR (%)" id="cvr">
+<input placeholder="Reviews" id="reviews">
+<input placeholder="Rating" id="rating">
+</div>
+</div>
 
-      <p id="msg" style="color:var(--muted);font-size:13px;margin-top:16px;"></p>
-    </section>
+<!-- STEP 4 -->
+<div class="step">
+<h3>Etapa 4 · PPC</h3>
 
-    <section id="resultArea" class="card" style="display:none;"></section>
+<div class="box grid grid-2">
+<input placeholder="ACOS (%)" id="acos">
+<input placeholder="TACOS (%)" id="tacos">
+<input placeholder="Margem (%)" id="margin">
+<input placeholder="ROAS" id="roas">
+</div>
+</div>
 
-  </main>
+<!-- STEP 5 -->
+<div class="step">
+<h3>Etapa 5 · Operação</h3>
 
-  <script type="module">
-    import { requireAuth } from "../js/auth.js";
-    import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
-    import { gerarDiagnosticoBaseC1 } from "../js/cerebro1Engine.js";
+<div class="box grid">
 
-    const user = await requireAuth();
+<div>
+<p>Fulfillment</p>
+<div class="buttons" id="fulfillment">
+<span class="btn-option">FBA</span>
+<span class="btn-option">FBM</span>
+</div>
+</div>
 
-    const msg = document.getElementById("msg");
-    const resultArea = document.getElementById("resultArea");
+<div>
+<p>BuyBox</p>
+<div class="buttons" id="buybox">
+<span class="btn-option">Tenho</span>
+<span class="btn-option">Disputada</span>
+<span class="btn-option">Não tenho</span>
+</div>
+</div>
 
-    function n(id) {
-      return Number(document.getElementById(id).value || 0);
-    }
+<div>
+<p>Estoque</p>
+<div class="buttons" id="stock">
+<span class="btn-option">Saudável</span>
+<span class="btn-option">Baixo</span>
+<span class="btn-option">Zerado</span>
+</div>
+</div>
 
-    function v(id) {
-      return document.getElementById(id).value.trim();
-    }
+<input placeholder="Preço (R$)" id="price">
 
-    function validar() {
-      const required = [
-        ["category", "categoria"],
-        ["subcategory", "subcategoria"],
-        ["ctr", "CTR"],
-        ["cvr", "CVR"],
-        ["acos", "ACOS"],
-        ["tacos", "TACOS"],
-        ["buybox", "BuyBox"],
-        ["stock", "estoque"],
-        ["fulfillment", "fulfillment"]
-      ];
+</div>
+</div>
 
-      for (const [id, label] of required) {
-        if (!v(id)) {
-          msg.textContent = `Preencha o campo: ${label}.`;
-          return false;
-        }
-      }
+<div class="nav">
+<button onclick="prev()">Voltar</button>
+<button onclick="next()">Continuar</button>
+</div>
 
-      return true;
-    }
+</div>
 
-    window.gerarDiagnostico = async function () {
-      if (!validar()) return;
+<script>
+let step=0;
+const steps=document.querySelectorAll('.step');
+const progress=document.getElementById('progress');
 
-      const diagnosticId = getDiagnosticId();
+function update(){
+  steps.forEach((s,i)=>s.classList.toggle('active',i===step));
 
-      if (!diagnosticId) {
-        msg.textContent = "Nenhum diagnóstico iniciado. Volte ao dashboard e clique em Novo diagnóstico.";
-        return;
-      }
+  progress.innerHTML="";
+  steps.forEach((_,i)=>{
+    const bar=document.createElement('div');
+    if(i<=step) bar.classList.add('active');
+    progress.appendChild(bar);
+  });
+}
+update();
 
-      msg.textContent = "Gerando diagnóstico...";
+function next(){
+  if(step<steps.length-1) step++;
+  else alert("Gerar diagnóstico (ligar engine depois)");
+  update();
+}
 
-      const data = {
-        category: v("category"),
-        subcategory: v("subcategory"),
-        cat: v("category"),
-        sub: v("subcategory"),
-        ctr: n("ctr"),
-        cvr: n("cvr"),
-        acos: n("acos"),
-        tacos: n("tacos"),
-        buybox: v("buybox"),
-        bb: v("buybox"),
-        stock: v("stock"),
-        est: v("stock"),
-        fulfillment: v("fulfillment"),
-        fba: v("fulfillment")
-      };
+function prev(){
+  if(step>0) step--;
+  update();
+}
 
-      const benchmark = {
-        ctr: 0.6,
-        cvr: 10,
-        acos: 25
-      };
+document.querySelectorAll('.btn-option').forEach(btn=>{
+  btn.onclick=()=>{
+    btn.parentNode.querySelectorAll('.btn-option').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+});
+</script>
 
-      const result = gerarDiagnosticoBaseC1(data, benchmark);
-
-      const fullResult = {
-        ...data,
-        ...result,
-        diagnostic_id: diagnosticId,
-        benchmark,
-        ts: new Date().toISOString()
-      };
-
-      localStorage.setItem("nx_c1", JSON.stringify(fullResult));
-
-      await updateDiagnostic(diagnosticId, {
-        status: "c1_completed",
-        category: data.category,
-        subcategory: data.subcategory,
-        ctr: data.ctr,
-        cvr: data.cvr,
-        acos: data.acos,
-        tacos: data.tacos,
-        root_cause: result.root_cause
-      });
-
-      await saveBrainResult({
-        diagnosticId,
-        brainCode: "c1",
-        brainName: "Cérebro 1 - Diagnóstico de Métricas",
-        score: calcularScore(result.scores),
-        resultData: fullResult
-      });
-
-      renderResult(fullResult);
-
-      msg.textContent = "Diagnóstico salvo com sucesso.";
-    };
-
-    function calcularScore(scores) {
-      let score = 100;
-
-      if (scores.ctr === "CRÍTICO") score -= 20;
-      else if (scores.ctr === "BAIXO") score -= 10;
-
-      if (scores.cvr === "CRÍTICO") score -= 25;
-      else if (scores.cvr === "BAIXO") score -= 12;
-
-      if (scores.acos === "CRÍTICO") score -= 15;
-      else if (scores.acos === "ATENÇÃO") score -= 8;
-
-      if (scores.tacos === "ALTO") score -= 10;
-      if (scores.ops === "CRÍTICO") score -= 25;
-      else if (scores.ops === "ATENÇÃO") score -= 10;
-
-      return Math.max(0, Math.min(100, score));
-    }
-
-    function renderResult(result) {
-      resultArea.style.display = "block";
-
-      resultArea.innerHTML = `
-        <h2>Resultado do Cérebro 1</h2>
-
-        <div style="margin-top:18px;padding:16px;border:1px solid var(--border);border-radius:14px;background:var(--surface-strong);">
-          <p style="font-family:Syne,sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);">
-            Causa raiz provável
-          </p>
-
-          <h3 style="margin-top:8px;color:var(--text);">
-            ${result.root_cause}
-          </h3>
-
-          <p style="color:var(--muted);margin-top:10px;line-height:1.6;">
-            ${result.summary}
-          </p>
-        </div>
-
-        <div class="grid-3" style="margin-top:18px;">
-          ${metricCard("CTR", result.ctr + "%", result.scores.ctr)}
-          ${metricCard("CVR", result.cvr + "%", result.scores.cvr)}
-          ${metricCard("ACOS", result.acos + "%", result.scores.acos)}
-          ${metricCard("TACOS", result.tacos + "%", result.scores.tacos)}
-          ${metricCard("Operação", result.fulfillment, result.scores.ops)}
-          ${metricCard("BuyBox", result.buybox, result.stock)}
-        </div>
-
-        <div style="margin-top:22px;">
-          <h3>Prioridades</h3>
-
-          <div style="display:grid;gap:10px;margin-top:12px;">
-            ${result.priorities.map((p, i) => `
-              <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.03);">
-                <strong>${i + 1}. ${p}</strong>
-              </div>
-            `).join("")}
-          </div>
-        </div>
-
-        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
-          <button class="btn-secondary" onclick="location.href='./dashboard.html'">
-            Voltar ao dashboard
-          </button>
-
-          <button class="btn-primary" onclick="location.href='./pagina.html'">
-            Ir para Cérebro 2
-          </button>
-        </div>
-      `;
-    }
-
-    function metricCard(title, value, status) {
-      return `
-        <div style="padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);">
-          <p style="font-size:12px;color:var(--muted);">${title}</p>
-          <h3 style="margin-top:4px;">${value}</h3>
-          <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">${status || "-"}</p>
-        </div>
-      `;
-    }
-  </script>
 </body>
 </html>
