@@ -1,2 +1,2 @@
 export const SUPABASE_URL = "https://ctvhnqnzgmtotxzbtfov.supabase.co";
-export const SUPABASE_ANON_KEY = "COLE_SUA_ANON_KEY_AQUI";
+export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0dmhucW56Z210b3R4emJ0Zm92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MDUxODQsImV4cCI6MjA5MjI4MTE4NH0.i_m-l-XdNcYZO0B48quyPXO1CLmFcTN8pKLzj8iF5Hs";
