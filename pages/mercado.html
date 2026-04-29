@@ -166,7 +166,21 @@
         newEntrants: v("newEntrants") === "true"
       };
 
-      const result = analisarMercadoBase(data, C1, C2);
+   const competitorsList = Array.from({ length: Math.max(1, data.competitors) }).map(() => ({
+  price: data.avgPrice,
+  reviews: 100
+}));
+
+const result = analisarMercadoBase({
+  product: {
+    price: data.yourPrice,
+    reviews: C2.reviews || 0
+  },
+  competitors: competitorsList,
+  saturation: data.competitionLevel === "high" ? "Muito alta" : data.competitionLevel === "medium" ? "Média" : "Baixa",
+  c1: C1,
+  c2: C2
+});
 
       const fullResult = {
         ...data,
