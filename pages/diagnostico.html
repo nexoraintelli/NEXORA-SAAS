@@ -1,3 +1,115 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Nexora · diagnostico</title><link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="../styles/global.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head><body><main class="wrap"><section class="card"><h1>Nexora · diagnostico</h1><p style="color:var(--muted);margin-top:8px">Arquivo-base para migração da nova arquitetura Nexora SaaS.</p></section></main><script type="module">import { requireAuth } from "../js/auth.js"; await requireAuth();</script></body></html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexora · Dashboard</title>
 
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/global.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+  <main class="wrap">
+
+    <section class="card">
+      <h1>Dashboard Nexora</h1>
+      <p id="userEmail" style="color:var(--muted);margin-top:6px">
+        Carregando usuário...
+      </p>
+
+      <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-primary" onclick="novoDiagnostico()">
+          Novo diagnóstico
+        </button>
+
+        <button class="btn-secondary" onclick="logoutUser()">
+          Sair
+        </button>
+      </div>
+    </section>
+
+    <section class="grid-3">
+      <div class="card" onclick="location.href='./diagnostico.html'">
+        <h3>Cérebro 1</h3>
+        <p style="color:var(--muted)">Performance e métricas</p>
+      </div>
+
+      <div class="card" onclick="location.href='./pagina.html'">
+        <h3>Cérebro 2</h3>
+        <p style="color:var(--muted)">Página e conversão</p>
+      </div>
+
+      <div class="card" onclick="location.href='./mercado.html'">
+        <h3>Cérebro 3</h3>
+        <p style="color:var(--muted)">Mercado e concorrência</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Seus diagnósticos</h2>
+      <div id="diagnosticsList" style="margin-top:12px;color:var(--muted)">
+        Carregando...
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module">
+    import { sb } from "../js/supabaseClient.js";
+    import { requireAuth, logout } from "../js/auth.js";
+    import { createDiagnostic } from "../js/diagnostics.js";
+
+    const user = await requireAuth();
+
+    if (user) {
+      document.getElementById("userEmail").textContent = user.email;
+      loadDiagnostics(user.id);
+    }
+
+    window.logoutUser = logout;
+
+    window.novoDiagnostico = async function () {
+      ["nx_c1", "nx_c2", "nx_c3", "nexora_sintese_result"].forEach(k => localStorage.removeItem(k));
+
+      const diag = await createDiagnostic();
+
+      localStorage.setItem("nx_diagnostic_id", diag.id);
+
+      window.location.href = "./diagnostico.html";
+    }
+
+    async function loadDiagnostics(userId) {
+      const { data, error } = await sb
+        .from("diagnostics")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      const el = document.getElementById("diagnosticsList");
+
+      if (error) {
+        el.textContent = "Erro ao carregar diagnósticos.";
+        return;
+      }
+
+      if (!data.length) {
+        el.textContent = "Nenhum diagnóstico ainda.";
+        return;
+      }
+
+      el.innerHTML = data.map(d => `
+        <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+          <strong>${d.category || "Sem categoria"}</strong>
+          <div style="font-size:12px;color:var(--muted)">
+            ${d.status} · ${new Date(d.created_at).toLocaleDateString()}
+          </div>
+        </div>
+      `).join("");
+    }
+  </script>
+</body>
+</html>
