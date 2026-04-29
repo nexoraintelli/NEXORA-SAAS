@@ -209,35 +209,61 @@ const result = analisarMercadoBase({
     };
 
     function renderResult(result) {
-      resultArea.style.display = "block";
+  resultArea.style.display = "block";
 
-      resultArea.innerHTML = `
-        <h2>Resultado do Cérebro 3</h2>
+  resultArea.innerHTML = `
+    <h2>Resultado do Cérebro 3</h2>
 
-        <div style="margin-top:18px;padding:16px;border:1px solid var(--border);border-radius:14px;">
-          <h3>${result.market_diagnosis}</h3>
-          <p style="color:var(--muted);margin-top:10px;">
-            ${result.explanation}
-          </p>
+    <div style="margin-top:18px;padding:16px;border:1px solid var(--border);border-radius:14px;">
+      <p style="font-size:12px;color:var(--muted);">Quadrante competitivo</p>
+      <h3>${result.quadrante || "Não identificado"}</h3>
+      <p style="color:var(--muted);margin-top:10px;">
+        ${result.quadrante_explicacao || result.diagnostico || "Análise de mercado gerada."}
+      </p>
+    </div>
+
+    <div style="margin-top:18px;padding:16px;border:1px solid var(--border);border-radius:14px;">
+      <p style="font-size:12px;color:var(--muted);">Força dominante</p>
+      <h3>${result.forca_dominante || "Não identificada"}</h3>
+      <p style="color:var(--muted);margin-top:10px;">
+        ${result.forca_explicacao || "Força dominante calculada pela lógica Nexora."}
+      </p>
+    </div>
+
+    <div class="grid-3" style="margin-top:18px;">
+      ${card("Preço médio", "R$ " + (result.preco_medio || "-"))}
+      ${card("Review barrier", result.review_barrier || "-")}
+      ${card("Gap competitivo", result.gap_competitivo || "-")}
+    </div>
+
+    <div style="margin-top:22px;">
+      <h3>Riscos detectados</h3>
+
+      ${(result.riscos || []).map(r => `
+        <div style="margin-top:10px;padding:10px;border:1px solid var(--border);border-radius:10px;">
+          <strong>${r.nivel || "ATENÇÃO"}</strong>
+          <p style="color:var(--muted);margin-top:4px;">${r.descricao || ""}</p>
         </div>
+      `).join("")}
+    </div>
 
-        <div style="margin-top:22px;">
-          <h3>Estratégia sugerida</h3>
+    <div style="margin-top:22px;">
+      <h3>Estratégia sugerida</h3>
 
-          ${(result.strategy || []).map(s => `
-            <div style="margin-top:10px;padding:10px;border:1px solid var(--border);border-radius:10px;">
-              ${s}
-            </div>
-          `).join("")}
+      ${(result.prioridades || []).map(s => `
+        <div style="margin-top:10px;padding:10px;border:1px solid var(--border);border-radius:10px;">
+          ${s}
         </div>
+      `).join("")}
+    </div>
 
-        <div style="margin-top:24px;">
-          <button class="btn-primary" onclick="location.href='./sintese.html'">
-            Ir para Síntese
-          </button>
-        </div>
-      `;
-    }
+    <div style="margin-top:24px;">
+      <button class="btn-primary" onclick="location.href='./sintese.html'">
+        Ir para Síntese
+      </button>
+    </div>
+  `;
+}
 
     function card(t, v) {
       return `
