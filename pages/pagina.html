@@ -1,2 +1,358 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Nexora · pagina</title><link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="../styles/global.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head><body><main class="wrap"><section class="card"><h1>Nexora · pagina</h1><p style="color:var(--muted);margin-top:8px">Arquivo-base para migração da nova arquitetura Nexora SaaS.</p></section></main><script type="module">import { requireAuth } from "../js/auth.js"; await requireAuth();</script></body></html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Nexora · Cérebro 2</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/global.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+  <main class="wrap">
+
+    <section class="card">
+      <p style="font-family:Syne,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);font-size:11px;margin-bottom:12px;">
+        Nexora Intelligence · Cérebro 2
+      </p>
+
+      <h1>Análise de página</h1>
+
+      <p style="color:var(--muted);margin-top:8px;line-height:1.6;">
+        Analise título, bullets, descrição, prova social e elementos de conversão da página.
+      </p>
+    </section>
+
+    <section id="contextArea" class="card"></section>
+
+    <section class="card">
+      <h2>Dados da página</h2>
+
+      <div style="display:grid;gap:16px;margin-top:20px;">
+        <div>
+          <label>Título do produto</label>
+          <textarea id="title" rows="3" placeholder="Cole o título do anúncio"></textarea>
+        </div>
+
+        <div>
+          <label>Bullets / principais argumentos</label>
+          <textarea id="bullets" rows="5" placeholder="Cole os bullets ou principais argumentos da página"></textarea>
+        </div>
+
+        <div>
+          <label>Descrição / A+ / informações complementares</label>
+          <textarea id="description" rows="5" placeholder="Cole a descrição, A+ ou resumo da comunicação do produto"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Prova social e oferta</h2>
+
+      <div class="grid-3" style="margin-top:20px;">
+        <div>
+          <label>Preço atual (R$)</label>
+          <input id="price" type="number" step="0.01" placeholder="Ex: 89.90">
+        </div>
+
+        <div>
+          <label>Reviews</label>
+          <input id="reviews" type="number" placeholder="Ex: 128">
+        </div>
+
+        <div>
+          <label>Rating</label>
+          <input id="rating" type="number" step="0.1" min="0" max="5" placeholder="Ex: 4.5">
+        </div>
+
+        <div>
+          <label>Imagem principal forte?</label>
+          <select id="hasMainImage">
+            <option value="">Selecione</option>
+            <option value="true">Sim</option>
+            <option value="false">Não / fraca</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Tem vídeo?</label>
+          <select id="hasVideo">
+            <option value="">Selecione</option>
+            <option value="true">Sim</option>
+            <option value="false">Não</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Tem cupom/oferta?</label>
+          <select id="hasCoupon">
+            <option value="">Selecione</option>
+            <option value="true">Sim</option>
+            <option value="false">Não</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn-primary" style="margin-top:24px;width:100%;" onclick="gerarAnalisePagina()">
+        Analisar página
+      </button>
+
+      <p id="msg" style="color:var(--muted);font-size:13px;margin-top:16px;"></p>
+    </section>
+
+    <section id="resultArea" class="card" style="display:none;"></section>
+
+  </main>
+
+  <script type="module">
+    import { requireAuth } from "../js/auth.js";
+    import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
+    import { analisarPaginaBase } from "../js/cerebro2Engine.js";
+
+    await requireAuth();
+
+    const msg = document.getElementById("msg");
+    const resultArea = document.getElementById("resultArea");
+    const contextArea = document.getElementById("contextArea");
+
+    let C1 = null;
+
+    try {
+      C1 = JSON.parse(localStorage.getItem("nx_c1") || "null");
+    } catch (e) {}
+
+    function loadContext() {
+      if (!C1) {
+        contextArea.innerHTML = `
+          <h2>Cérebro 1 não encontrado</h2>
+          <p style="color:var(--muted);margin-top:8px;line-height:1.6;">
+            Execute o Cérebro 1 antes da análise de página. O Cérebro 2 depende da leitura de métricas para interpretar a página corretamente.
+          </p>
+
+          <button class="btn-primary" style="margin-top:18px;" onclick="location.href='./diagnostico.html'">
+            Ir para Cérebro 1
+          </button>
+        `;
+        return;
+      }
+
+      contextArea.innerHTML = `
+        <h2>Contexto do Cérebro 1</h2>
+
+        <div class="grid-3" style="margin-top:18px;">
+          ${infoCard("Categoria", C1.subcategory || C1.sub || C1.category || C1.cat || "-")}
+          ${infoCard("CTR", (C1.ctr ?? "-") + "%")}
+          ${infoCard("CVR", (C1.cvr ?? "-") + "%")}
+          ${infoCard("Causa raiz inicial", C1.root_cause || "-")}
+        </div>
+      `;
+    }
+
+    loadContext();
+
+    function v(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function n(id) {
+      return Number(document.getElementById(id).value || 0);
+    }
+
+    function bool(id) {
+      const value = document.getElementById(id).value;
+      if (value === "true") return true;
+      if (value === "false") return false;
+      return null;
+    }
+
+    function validar() {
+      if (!C1) {
+        msg.textContent = "Execute o Cérebro 1 antes.";
+        return false;
+      }
+
+      const diagnosticId = getDiagnosticId();
+
+      if (!diagnosticId) {
+        msg.textContent = "Nenhum diagnóstico ativo. Volte ao dashboard e inicie um novo diagnóstico.";
+        return false;
+      }
+
+      const title = v("title");
+      const bullets = v("bullets");
+      const description = v("description");
+
+      if (!title && !bullets && !description) {
+        msg.textContent = "Preencha pelo menos título, bullets ou descrição.";
+        return false;
+      }
+
+      const rating = n("rating");
+
+      if (rating && (rating < 0 || rating > 5)) {
+        msg.textContent = "O rating precisa estar entre 0 e 5.";
+        return false;
+      }
+
+      if (bool("hasMainImage") === null) {
+        msg.textContent = "Informe se a imagem principal é forte.";
+        return false;
+      }
+
+      if (bool("hasVideo") === null) {
+        msg.textContent = "Informe se o produto tem vídeo.";
+        return false;
+      }
+
+      if (bool("hasCoupon") === null) {
+        msg.textContent = "Informe se o produto tem cupom ou oferta.";
+        return false;
+      }
+
+      return true;
+    }
+
+    window.gerarAnalisePagina = async function () {
+      if (!validar()) return;
+
+      const diagnosticId = getDiagnosticId();
+
+      msg.textContent = "Analisando página...";
+
+      const data = {
+        title: v("title"),
+        bullets: v("bullets"),
+        description: v("description"),
+        price: n("price"),
+        reviews: n("reviews"),
+        rating: n("rating"),
+        hasMainImage: bool("hasMainImage"),
+        hasVideo: bool("hasVideo"),
+        hasCoupon: bool("hasCoupon")
+      };
+
+      const result = analisarPaginaBase(data, C1);
+
+      const fullResult = {
+        ...data,
+        ...result,
+        diagnostic_id: diagnosticId,
+        ts: new Date().toISOString()
+      };
+
+      localStorage.setItem("nx_c2", JSON.stringify(fullResult));
+
+      await updateDiagnostic(diagnosticId, {
+        status: "c2_completed"
+      });
+
+      await saveBrainResult({
+        diagnosticId,
+        brainCode: "c2",
+        brainName: "Cérebro 2 - Análise de Página",
+        score: result.scores?.cvr_readiness || 0,
+        resultData: fullResult
+      });
+
+      renderResult(fullResult);
+
+      msg.textContent = "Análise de página salva com sucesso.";
+    };
+
+    function renderResult(result) {
+      resultArea.style.display = "block";
+
+      resultArea.innerHTML = `
+        <h2>Resultado do Cérebro 2</h2>
+
+        <div style="margin-top:18px;padding:16px;border:1px solid var(--border);border-radius:14px;background:var(--surface-strong);">
+          <p style="font-family:Syne,sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);">
+            Problema principal da página
+          </p>
+
+          <h3 style="margin-top:8px;color:var(--text);">
+            ${escapeHtml(result.problema_principal)}
+          </h3>
+
+          <p style="color:var(--muted);margin-top:10px;line-height:1.6;">
+            ${escapeHtml(result.diagnostico)}
+          </p>
+        </div>
+
+        <div class="grid-3" style="margin-top:18px;">
+          ${metricCard("CTR-readiness", result.scores.ctr_readiness + "/100")}
+          ${metricCard("CVR-readiness", result.scores.cvr_readiness + "/100")}
+          ${metricCard("Diferenciação", result.scores.diferenciacao + "/100")}
+          ${metricCard("Confiança", result.scores.confianca + "/100")}
+        </div>
+
+        <div style="margin-top:22px;">
+          <h3>Gaps detectados</h3>
+
+          <div style="display:grid;gap:10px;margin-top:12px;">
+            ${(result.gaps || []).map((g, i) => `
+              <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.03);">
+                <strong>${i + 1}. ${escapeHtml(g.nivel)}</strong>
+                <p style="color:var(--muted);margin-top:4px;">${escapeHtml(g.descricao)}</p>
+              </div>
+            `).join("") || `<p style="color:var(--muted)">Nenhum gap crítico detectado.</p>`}
+          </div>
+        </div>
+
+        <div style="margin-top:22px;">
+          <h3>Prioridades</h3>
+
+          <div style="display:grid;gap:10px;margin-top:12px;">
+            ${(result.prioridades || []).map((p, i) => `
+              <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.03);">
+                <strong>${i + 1}. ${escapeHtml(p)}</strong>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn-secondary" onclick="location.href='./diagnostico.html'">
+            Voltar ao Cérebro 1
+          </button>
+
+          <button class="btn-primary" onclick="location.href='./mercado.html'">
+            Ir para Cérebro 3
+          </button>
+        </div>
+      `;
+    }
+
+    function metricCard(title, value) {
+      return `
+        <div style="padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);">
+          <p style="font-size:12px;color:var(--muted);">${escapeHtml(title)}</p>
+          <h3 style="margin-top:4px;">${escapeHtml(value)}</h3>
+        </div>
+      `;
+    }
+
+    function infoCard(title, value) {
+      return `
+        <div style="padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);">
+          <p style="font-size:12px;color:var(--muted);">${escapeHtml(title)}</p>
+          <h3 style="margin-top:4px;">${escapeHtml(value)}</h3>
+        </div>
+      `;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+  </script>
+</body>
+</html>
