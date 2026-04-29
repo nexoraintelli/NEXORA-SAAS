@@ -1,3 +1,238 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Nexora · mercado</title><link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="../styles/global.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head><body><main class="wrap"><section class="card"><h1>Nexora · mercado</h1><p style="color:var(--muted);margin-top:8px">Arquivo-base para migração da nova arquitetura Nexora SaaS.</p></section></main><script type="module">import { requireAuth } from "../js/auth.js"; await requireAuth();</script></body></html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <title>Nexora · Cérebro 3</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/global.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+  <main class="wrap">
+
+    <section class="card">
+      <p style="font-family:Syne,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);font-size:11px;margin-bottom:12px;">
+        Nexora Intelligence · Cérebro 3
+      </p>
+
+      <h1>Análise de mercado</h1>
+
+      <p style="color:var(--muted);margin-top:8px;line-height:1.6;">
+        Entenda o contexto competitivo: preço, saturação, barreira de entrada e tipo de mercado.
+      </p>
+    </section>
+
+    <section id="contextArea" class="card"></section>
+
+    <section class="card">
+      <h2>Dados do mercado</h2>
+
+      <div class="grid-3" style="margin-top:20px;">
+        <div>
+          <label>Preço médio da categoria (R$)</label>
+          <input id="avgPrice" type="number" step="0.01" placeholder="Ex: 79.90">
+        </div>
+
+        <div>
+          <label>Seu preço (R$)</label>
+          <input id="yourPrice" type="number" step="0.01" placeholder="Ex: 89.90">
+        </div>
+
+        <div>
+          <label>Concorrentes principais</label>
+          <input id="competitors" type="number" placeholder="Ex: 20">
+        </div>
+
+        <div>
+          <label>Nível de concorrência</label>
+          <select id="competitionLevel">
+            <option value="">Selecione</option>
+            <option value="low">Baixa</option>
+            <option value="medium">Média</option>
+            <option value="high">Alta</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Tipo de mercado</label>
+          <select id="marketType">
+            <option value="">Selecione</option>
+            <option value="price_war">Guerra de preço</option>
+            <option value="brand_dominance">Dominância de marca</option>
+            <option value="differentiation">Diferenciação</option>
+            <option value="niche">Nicho</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Novos concorrentes surgindo?</label>
+          <select id="newEntrants">
+            <option value="">Selecione</option>
+            <option value="true">Sim</option>
+            <option value="false">Não</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn-primary" style="margin-top:24px;width:100%;" onclick="gerarAnaliseMercado()">
+        Analisar mercado
+      </button>
+
+      <p id="msg" style="color:var(--muted);font-size:13px;margin-top:16px;"></p>
+    </section>
+
+    <section id="resultArea" class="card" style="display:none;"></section>
+
+  </main>
+
+  <script type="module">
+    import { requireAuth } from "../js/auth.js";
+    import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
+    import { analisarMercadoBase } from "../js/cerebro3Engine.js";
+
+    await requireAuth();
+
+    const msg = document.getElementById("msg");
+    const resultArea = document.getElementById("resultArea");
+    const contextArea = document.getElementById("contextArea");
+
+    const C1 = JSON.parse(localStorage.getItem("nx_c1") || "null");
+    const C2 = JSON.parse(localStorage.getItem("nx_c2") || "null");
+
+    function loadContext() {
+      if (!C1 || !C2) {
+        contextArea.innerHTML = `
+          <h2>Contexto incompleto</h2>
+          <p style="color:var(--muted);margin-top:8px;">
+            Execute os Cérebros 1 e 2 antes de continuar.
+          </p>
+        `;
+        return;
+      }
+
+      contextArea.innerHTML = `
+        <h2>Contexto consolidado</h2>
+
+        <div class="grid-3" style="margin-top:18px;">
+          ${card("Causa raiz inicial", C1.root_cause)}
+          ${card("Problema da página", C2.problema_principal)}
+          ${card("CVR readiness", C2.scores?.cvr_readiness + "/100")}
+        </div>
+      `;
+    }
+
+    loadContext();
+
+    function v(id) {
+      return document.getElementById(id).value;
+    }
+
+    function n(id) {
+      return Number(document.getElementById(id).value || 0);
+    }
+
+    function validar() {
+      if (!C1 || !C2) {
+        msg.textContent = "Execute C1 e C2 primeiro.";
+        return false;
+      }
+
+      if (!v("competitionLevel") || !v("marketType") || !v("newEntrants")) {
+        msg.textContent = "Preencha os dados de mercado.";
+        return false;
+      }
+
+      return true;
+    }
+
+    window.gerarAnaliseMercado = async function () {
+      if (!validar()) return;
+
+      const diagnosticId = getDiagnosticId();
+
+      msg.textContent = "Analisando mercado...";
+
+      const data = {
+        avgPrice: n("avgPrice"),
+        yourPrice: n("yourPrice"),
+        competitors: n("competitors"),
+        competitionLevel: v("competitionLevel"),
+        marketType: v("marketType"),
+        newEntrants: v("newEntrants") === "true"
+      };
+
+      const result = analisarMercadoBase(data, C1, C2);
+
+      const fullResult = {
+        ...data,
+        ...result,
+        diagnostic_id: diagnosticId,
+        ts: new Date().toISOString()
+      };
+
+      localStorage.setItem("nx_c3", JSON.stringify(fullResult));
+
+      await updateDiagnostic(diagnosticId, {
+        status: "c3_completed"
+      });
+
+      await saveBrainResult({
+        diagnosticId,
+        brainCode: "c3",
+        brainName: "Cérebro 3 - Análise de Mercado",
+        score: result.score,
+        resultData: fullResult
+      });
+
+      renderResult(fullResult);
+
+      msg.textContent = "Análise de mercado salva.";
+    };
+
+    function renderResult(result) {
+      resultArea.style.display = "block";
+
+      resultArea.innerHTML = `
+        <h2>Resultado do Cérebro 3</h2>
+
+        <div style="margin-top:18px;padding:16px;border:1px solid var(--border);border-radius:14px;">
+          <h3>${result.market_diagnosis}</h3>
+          <p style="color:var(--muted);margin-top:10px;">
+            ${result.explanation}
+          </p>
+        </div>
+
+        <div style="margin-top:22px;">
+          <h3>Estratégia sugerida</h3>
+
+          ${(result.strategy || []).map(s => `
+            <div style="margin-top:10px;padding:10px;border:1px solid var(--border);border-radius:10px;">
+              ${s}
+            </div>
+          `).join("")}
+        </div>
+
+        <div style="margin-top:24px;">
+          <button class="btn-primary" onclick="location.href='./sintese.html'">
+            Ir para Síntese
+          </button>
+        </div>
+      `;
+    }
+
+    function card(t, v) {
+      return `
+        <div style="padding:14px;border:1px solid var(--border);border-radius:12px;">
+          <p style="font-size:12px;color:var(--muted);">${t}</p>
+          <strong>${v || "-"}</strong>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
