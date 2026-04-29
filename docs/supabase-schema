@@ -1,1 +1,56 @@
+create table if not exists profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text,
+  name text,
+  company_name text,
+  account_type text default 'consultor',
+  created_at timestamptz default now()
+);
+create table if not exists clients (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  name text not null,
+  marketplace text default 'Amazon',
+  niche text,
+  notes text,
+  created_at timestamptz default now()
+);
+create table if not exists products (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  client_id uuid references clients(id) on delete cascade,
+  product_name text,
+  asin text,
+  product_url text,
+  category text,
+  subcategory text,
+  created_at timestamptz default now()
+);
+create table if not exists diagnostics (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  client_id uuid references clients(id) on delete set null,
+  product_id uuid references products(id) on delete set null,
+  status text default 'draft',
+  category text,
+  subcategory text,
+  ctr numeric,
+  cvr numeric,
+  acos numeric,
+  tacos numeric,
+  final_score numeric,
+  root_cause text,
+  created_at timestamptz default now(),
+  completed_at timestamptz
+);
+create table if not exists brain_results (
+  id uuid primary key default gen_random_uuid(),
+  diagnostic_id uuid references diagnostics(id) on delete cascade,
+  brain_code text not null,
+  brain_name text,
+  score numeric,
+  result_data jsonb,
+  created_at timestamptz default now(),
+  unique (diagnostic_id, brain_code)
+);
 
