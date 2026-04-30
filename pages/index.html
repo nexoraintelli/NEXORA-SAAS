@@ -239,16 +239,16 @@
 
     .hero {
   position: relative;
-  padding: 46px 0 42px;
+  padding: 34px 0 34px;
   overflow: hidden;
 }
 
     .hero-grid {
   display: grid;
-  grid-template-columns: minmax(0, .92fr) minmax(420px, .78fr);
-  gap: 54px;
+  grid-template-columns: minmax(0, .95fr) minmax(360px, .70fr);
+  gap: 38px;
   align-items: center;
-  min-height: 560px;
+  min-height: 480px;
 }
 
     .hero-copy {
@@ -282,11 +282,11 @@
       box-shadow: 0 0 16px rgba(188,116,30,.62);
     }
 
-    .hero h1 {
-  font-size: clamp(46px, 5.2vw, 76px);
-  line-height: .94;
+   .hero h1 {
+  font-size: clamp(40px, 4.35vw, 62px);
+  line-height: .98;
   font-weight: 800;
-  max-width: 620px;
+  max-width: 560px;
 }
 
     .hero h1 .orange {
@@ -294,22 +294,21 @@
     }
 
     .hero-sub {
-      margin-top: 24px;
-      max-width: 630px;
-      color: rgba(240,240,248,.82);
-      font-size: 18px;
-      line-height: 1.75;
-    }
-
+  margin-top: 18px;
+  max-width: 560px;
+  color: rgba(240,240,248,.78);
+  font-size: 15.5px;
+  line-height: 1.7;
+}
     .hero-actions {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-top: 32px;
-    }
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
 
     .hero-stats {
-      margin-top: 38px;
+      margin-top: 28px;
       max-width: 720px;
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -321,7 +320,7 @@
     }
 
     .stat {
-      padding: 18px 18px;
+      padding: 14px 14px;
       border-right: 1px solid rgba(255,255,255,.09);
       display: flex;
       gap: 12px;
@@ -341,7 +340,7 @@
     .stat strong {
       display: block;
       font-family: "Syne", sans-serif;
-      font-size: 27px;
+      font-size: 22px;
       line-height: 1;
       letter-spacing: -.03em;
     }
@@ -354,15 +353,15 @@
       margin-top: 4px;
     }
 
-    .hero-scanner {
-      position: relative;
-      min-height: 610px;
-      display: grid;
-      place-items: center;
-    }
+   .hero-scanner {
+  position: relative;
+  min-height: 430px;
+  display: grid;
+  place-items: center;
+}
 
-    .scanner-orbit {
-      width: min(570px, 100%);
+   .scanner-orbit {
+  width: min(420px, 100%);
       aspect-ratio: 1;
       border-radius: 999px;
       position: relative;
@@ -815,6 +814,14 @@
   height: auto;
   object-fit: contain;
 }
+    .footer-logo {
+  width: 140px;
+}
+
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+}
   </style>
 </head>
 
@@ -1080,20 +1087,16 @@
       </section>
     </main>
 
-    <footer class="footer">
-      <div class="container footer-inner">
-        <div class="brand">
-          <div class="scanner-logo"></div>
-          <div class="brand-name">
-            NEXORA
-            <span>INTELLIGENCE</span>
-          </div>
-        </div>
+   <footer class="footer">
+  <div class="container footer-inner">
+    <a href="./index.html" class="brand footer-brand">
+      <img src="../logo-horizontal.png%20(2).png" alt="Nexora Intelligence" class="brand-image footer-logo">
+    </a>
 
-        <div>Diagnóstico sistêmico Amazon com inteligência real.</div>
-        <div>© 2026 Nexora Intelligence</div>
-      </div>
-    </footer>
+    <div>Diagnóstico sistêmico Amazon com inteligência real.</div>
+    <div>© 2026 Nexora Intelligence</div>
+  </div>
+</footer>
 
   </div>
 </body>
