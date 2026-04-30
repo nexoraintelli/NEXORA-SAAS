@@ -220,7 +220,95 @@
   border-radius: 10px;
   object-fit: cover;
 }      
-    
+    .hidden-file {
+  display: none;
+}
+
+.upload-card {
+  min-height: 72px;
+  border: 1px dashed rgba(179,38,38,.45);
+  background:
+    linear-gradient(135deg, rgba(139,30,30,.18), rgba(255,255,255,.03));
+  border-radius: 16px;
+  padding: 16px;
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.upload-card:hover {
+  border-color: var(--nexora-red-2);
+  background:
+    linear-gradient(135deg, rgba(139,30,30,.28), rgba(255,255,255,.05));
+  transform: translateY(-1px);
+}
+
+.upload-title {
+  font-family: Syne, sans-serif;
+  font-weight: 800;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.upload-subtitle {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.image-preview {
+  margin-top: 12px;
+  min-height: 120px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 14px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.025);
+}
+
+.image-preview:empty::before {
+  content: "Prévia da imagem";
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 180px;
+  border-radius: 10px;
+  object-fit: contain;
+}
+
+.image-preview-grid {
+  margin-top: 12px;
+  min-height: 120px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 14px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  background: rgba(255,255,255,.025);
+}
+
+.image-preview-grid:empty::before {
+  content: "Prévia das imagens";
+  color: var(--muted);
+  font-size: 12px;
+  grid-column: 1 / -1;
+  align-self: center;
+  justify-self: center;
+}
+
+.image-preview-grid img {
+  width: 100%;
+  height: 76px;
+  border-radius: 10px;
+  object-fit: cover;
+}
   </style>
 </head>
 
@@ -256,19 +344,46 @@
     Envie a imagem principal e, se quiser, as imagens secundárias do listing para apoiar a leitura visual da página.
   </p>
 
-  <div class="form-grid" style="margin-top:18px;">
-    <div>
-      <label>Imagem principal</label>
-      <input id="mainImageFile" type="file" accept="image/*" onchange="previewSingleImage(event, 'mainImagePreview')">
-      <div id="mainImagePreview" class="image-preview"></div>
-    </div>
+<div class="form-grid" style="margin-top:18px;">
+  <div>
+    <label>Imagem principal</label>
 
-    <div>
-      <label>Imagens secundárias</label>
-      <input id="secondaryImageFiles" type="file" accept="image/*" multiple onchange="previewMultipleImages(event, 'secondaryImagesPreview')">
-      <div id="secondaryImagesPreview" class="image-preview-grid"></div>
-    </div>
+    <label class="upload-card" for="mainImageFile">
+      <span class="upload-title">Selecionar imagem principal</span>
+      <span class="upload-subtitle" id="mainImageFileName">PNG, JPG ou WEBP</span>
+    </label>
+
+    <input
+      id="mainImageFile"
+      class="hidden-file"
+      type="file"
+      accept="image/*"
+      onchange="handleSingleImageUpload(event, 'mainImagePreview', 'mainImageFileName')"
+    >
+
+    <div id="mainImagePreview" class="image-preview"></div>
   </div>
+
+  <div>
+    <label>Imagens secundárias</label>
+
+    <label class="upload-card" for="secondaryImageFiles">
+      <span class="upload-title">Selecionar imagens secundárias</span>
+      <span class="upload-subtitle" id="secondaryImageFileName">Até 8 imagens</span>
+    </label>
+
+    <input
+      id="secondaryImageFiles"
+      class="hidden-file"
+      type="file"
+      accept="image/*"
+      multiple
+      onchange="handleMultipleImageUpload(event, 'secondaryImagesPreview', 'secondaryImageFileName')"
+    >
+
+    <div id="secondaryImagesPreview" class="image-preview-grid"></div>
+  </div>
+</div>
 
   <div style="margin-top:18px;">
     <label>Observações sobre as imagens</label>
@@ -911,11 +1026,16 @@
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
     }
-window.previewSingleImage = function (event, targetId) {
+window.handleSingleImageUpload = function (event, targetId, labelId) {
   const file = event.target.files?.[0];
   const target = document.getElementById(targetId);
+  const label = document.getElementById(labelId);
 
   if (!file || !target) return;
+
+  if (label) {
+    label.textContent = file.name;
+  }
 
   const reader = new FileReader();
 
@@ -926,11 +1046,16 @@ window.previewSingleImage = function (event, targetId) {
   reader.readAsDataURL(file);
 };
 
-window.previewMultipleImages = function (event, targetId) {
+window.handleMultipleImageUpload = function (event, targetId, labelId) {
   const files = Array.from(event.target.files || []);
   const target = document.getElementById(targetId);
+  const label = document.getElementById(labelId);
 
   if (!files.length || !target) return;
+
+  if (label) {
+    label.textContent = `${files.length} imagem(ns) selecionada(s)`;
+  }
 
   target.innerHTML = "";
 
