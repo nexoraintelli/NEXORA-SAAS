@@ -172,35 +172,39 @@
 
       <div class="grid-3" style="margin-top:20px;">
         <div>
-          <label>Categoria</label>
-          <select id="category">
-            <option value="">Selecione</option>
-            <option>Beleza</option>
-            <option>Casa</option>
-            <option>Suplementos</option>
-            <option>Eletrônicos</option>
-            <option>Pet</option>
-            <option>Moda</option>
-            <option>Alimentos</option>
-            <option>Outros</option>
-          </select>
-        </div>
-
+<div>
+  <label>Categoria</label>
+  <select id="category" onchange="atualizarSubcategorias()">
+    <option value="">Selecione</option>
+    <option>Beleza</option>
+    <option>Saúde e cuidados pessoais</option>
+    <option>Suplementos</option>
+    <option>Casa</option>
+    <option>Cozinha</option>
+    <option>Decoração</option>
+    <option>Pet</option>
+    <option>Bebês</option>
+    <option>Brinquedos</option>
+    <option>Eletrônicos</option>
+    <option>Informática</option>
+    <option>Celulares e acessórios</option>
+    <option>Moda</option>
+    <option>Calçados</option>
+    <option>Esportes</option>
+    <option>Ferramentas</option>
+    <option>Automotivo</option>
+    <option>Alimentos e bebidas</option>
+    <option>Papelaria e escritório</option>
+    <option>Livros</option>
+    <option>Outros</option>
+  </select>
+</div>
         <div>
-          <label>Subcategoria</label>
-          <select id="subcategory">
-            <option value="">Selecione</option>
-            <option>Vitaminas e suplementos</option>
-            <option>Velas aromáticas</option>
-            <option>Difusores</option>
-            <option>Skincare</option>
-            <option>Haircare</option>
-            <option>Casa e decoração</option>
-            <option>Acessórios</option>
-            <option>Outro</option>
-          </select>
-        </div>
-
+  <label>Subcategoria</label>
+  <select id="subcategory">
+    <option value="">Selecione uma categoria primeiro</option>
+  </select>
+</div>
         <div>
           <label>Nome/ASIN do produto</label>
           <input id="product" placeholder="Ex: B0XXXX ou nome do produto">
@@ -409,7 +413,205 @@
         progress.appendChild(item);
       });
     }
+const subcategoriasPorCategoria = {
+  "Beleza": [
+    "Skincare",
+    "Haircare",
+    "Maquiagem",
+    "Perfumes",
+    "Cuidados corporais",
+    "Cuidados com unhas",
+    "Barba e depilação",
+    "Protetor solar",
+    "Dermocosméticos",
+    "Outro"
+  ],
+  "Saúde e cuidados pessoais": [
+    "Higiene oral",
+    "Cuidados íntimos",
+    "Aparelhos de saúde",
+    "Massagem e relaxamento",
+    "Primeiros socorros",
+    "Cuidados pessoais",
+    "Outro"
+  ],
+  "Suplementos": [
+    "Vitaminas",
+    "Whey protein",
+    "Creatina",
+    "Ômega 3",
+    "Colágeno",
+    "Pré-treino",
+    "Termogênicos",
+    "Suplementos naturais",
+    "Outro"
+  ],
+  "Casa": [
+    "Organização",
+    "Limpeza",
+    "Cama, mesa e banho",
+    "Velas aromáticas",
+    "Difusores",
+    "Iluminação",
+    "Utilidades domésticas",
+    "Outro"
+  ],
+  "Cozinha": [
+    "Panelas",
+    "Utensílios",
+    "Eletroportáteis",
+    "Copos e garrafas",
+    "Organização de cozinha",
+    "Café e chá",
+    "Outro"
+  ],
+  "Decoração": [
+    "Velas decorativas",
+    "Aromatizadores",
+    "Quadros",
+    "Vasos",
+    "Objetos decorativos",
+    "Luminárias",
+    "Outro"
+  ],
+  "Pet": [
+    "Alimentos pet",
+    "Higiene pet",
+    "Brinquedos pet",
+    "Camas e casinhas",
+    "Coleiras e guias",
+    "Saúde pet",
+    "Outro"
+  ],
+  "Bebês": [
+    "Fraldas",
+    "Higiene bebê",
+    "Alimentação bebê",
+    "Carrinhos",
+    "Brinquedos bebê",
+    "Quarto bebê",
+    "Outro"
+  ],
+  "Brinquedos": [
+    "Educativos",
+    "Bonecas",
+    "Carrinhos",
+    "Jogos",
+    "Pelúcias",
+    "Colecionáveis",
+    "Outro"
+  ],
+  "Eletrônicos": [
+    "Áudio",
+    "Smart home",
+    "Câmeras",
+    "Acessórios eletrônicos",
+    "TV e vídeo",
+    "Games",
+    "Outro"
+  ],
+  "Informática": [
+    "Notebooks",
+    "Monitores",
+    "Teclados e mouses",
+    "Armazenamento",
+    "Impressoras",
+    "Acessórios",
+    "Outro"
+  ],
+  "Celulares e acessórios": [
+    "Capas",
+    "Carregadores",
+    "Películas",
+    "Fones",
+    "Suportes",
+    "Cabos",
+    "Outro"
+  ],
+  "Moda": [
+    "Roupas femininas",
+    "Roupas masculinas",
+    "Bolsas",
+    "Acessórios",
+    "Relógios",
+    "Moda fitness",
+    "Outro"
+  ],
+  "Calçados": [
+    "Tênis",
+    "Sandálias",
+    "Botas",
+    "Sapatos sociais",
+    "Calçados infantis",
+    "Outro"
+  ],
+  "Esportes": [
+    "Fitness",
+    "Yoga e pilates",
+    "Ciclismo",
+    "Futebol",
+    "Musculação",
+    "Camping",
+    "Outro"
+  ],
+  "Ferramentas": [
+    "Ferramentas manuais",
+    "Ferramentas elétricas",
+    "Jardinagem",
+    "Construção",
+    "Segurança",
+    "Outro"
+  ],
+  "Automotivo": [
+    "Acessórios automotivos",
+    "Limpeza automotiva",
+    "Peças",
+    "Som automotivo",
+    "Moto",
+    "Outro"
+  ],
+  "Alimentos e bebidas": [
+    "Café",
+    "Chás",
+    "Snacks",
+    "Alimentos saudáveis",
+    "Bebidas não alcoólicas",
+    "Temperos",
+    "Outro"
+  ],
+  "Papelaria e escritório": [
+    "Cadernos",
+    "Canetas",
+    "Organizadores",
+    "Material escolar",
+    "Material de escritório",
+    "Outro"
+  ],
+  "Livros": [
+    "Negócios",
+    "Autoajuda",
+    "Ficção",
+    "Infantil",
+    "Educação",
+    "Técnicos",
+    "Outro"
+  ],
+  "Outros": [
+    "Outro"
+  ]
+};
 
+window.atualizarSubcategorias = function () {
+  const category = document.getElementById("category").value;
+  const subcategory = document.getElementById("subcategory");
+
+  const lista = subcategoriasPorCategoria[category] || [];
+
+  subcategory.innerHTML = `
+    <option value="">Selecione</option>
+    ${lista.map(item => `<option>${item}</option>`).join("")}
+  `;
+};
     function renderStep() {
       steps.forEach((s, i) => s.classList.toggle("active", i === currentStep));
       nextBtn.textContent = currentStep === steps.length - 1 ? "Gerar diagnóstico" : "Continuar";
