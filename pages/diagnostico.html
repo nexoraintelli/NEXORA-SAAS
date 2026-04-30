@@ -935,23 +935,10 @@ window.atualizarSubcategorias = function () {
 
      let result = gerarDiagnosticoBaseC1(data, benchmark);
 
-const aiResult = await aprofundarComIA(data, benchmark, result);
-
-if (aiResult) {
-  result = {
-    ...result,
-    diagnostico_executivo: aiResult.diagnostico_executivo || result.diagnostico_executivo,
-    impacto: aiResult.impacto || result.impacto,
-    gap_principal: aiResult.gap_principal || result.gap_principal,
-    prioridades: aiResult.prioridades || result.prioridades,
-    ia_usada: true
-  };
-} else {
-  result = {
-    ...result,
-    ia_usada: false
-  };
-}
+result = {
+  ...result,
+  ia_usada: false
+};
 
       const fullResult = {
         ...data,
@@ -1159,19 +1146,70 @@ function parseJsonSafe(raw) {
         </div>
 
         <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
-          <button class="btn-secondary" onclick="location.href='./dashboard.html'">
-            Voltar ao dashboard
-          </button>
+         <button class="btn-secondary" onclick="location.href='./dashboard.html'">
+  Voltar ao dashboard
+</button>
 
-          <button class="btn-primary" onclick="location.href='./pagina.html'">
-            Ir para Cérebro 2
-          </button>
+<button class="btn-secondary" onclick="aprofundarResultadoComIA()">
+  Aprofundar com IA
+</button>
+
+<button class="btn-primary" onclick="location.href='./pagina.html'">
+  Ir para Cérebro 2
+</button>
         </div>
       `;
 
       resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+window.aprofundarResultadoComIA = async function () {
+  const raw = localStorage.getItem("nx_c1");
 
+  if (!raw) {
+    alert("Gere o diagnóstico primeiro.");
+    return;
+  }
+
+  const fullResult = JSON.parse(raw);
+  const diagnosticId = getDiagnosticId();
+
+  msg.textContent = "Aprofundando análise com IA...";
+
+  const aiResult = await aprofundarComIA(
+    fullResult,
+    fullResult.benchmark || {},
+    fullResult
+  );
+
+  if (!aiResult) {
+    msg.textContent = "A IA não respondeu neste momento. A análise da engine Nexora continua válida.";
+    return;
+  }
+
+  const updated = {
+    ...fullResult,
+    diagnostico_executivo: aiResult.diagnostico_executivo || fullResult.diagnostico_executivo,
+    impacto: aiResult.impacto || fullResult.impacto,
+    gap_principal: aiResult.gap_principal || fullResult.gap_principal,
+    prioridades: aiResult.prioridades || fullResult.prioridades,
+    ia_usada: true
+  };
+
+  localStorage.setItem("nx_c1", JSON.stringify(updated));
+
+  await saveBrainResult({
+    diagnosticId,
+    brainCode: "c1",
+    brainName: "Cérebro 1 - Diagnóstico de Performance",
+    score: updated.score_geral,
+    resultData: updated
+  });
+
+  renderResult(updated);
+
+  msg.textContent = "Análise aprofundada com IA aplicada.";
+};
+    
     function metricCard(title, value, status) {
       return `
         <div class="metric-card">
