@@ -1,573 +1,852 @@
-// NEXORA · CÉREBRO 2 ENGINE
-// Análise profunda de página, atratividade, SEO, comunicação, confiança e conversão
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-export function analisarPaginaBase(data, c1 = null) {
-  const d = normalizarDados(data);
-  const contexto = normalizarC1(c1);
+  <title>Nexora · Cérebro 2</title>
 
-  const scores = calcularScoresPagina(d, contexto);
-  const scoreGeral = calcularScoreGeral(scores);
-  const status = classificarStatus(scoreGeral);
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/global.css">
 
-  const problemaPrincipal = identificarProblemaPrincipal(scores, d, contexto);
-  const gapPrincipal = identificarGapPrincipal(scores, d, contexto, problemaPrincipal);
-  const diagnostico = gerarDiagnosticoExecutivo(d, contexto, scores, scoreGeral, status, problemaPrincipal, gapPrincipal);
-  const impacto = gerarImpacto(problemaPrincipal, contexto, scores);
-  const prioridades = gerarPrioridades(scores, d, contexto, problemaPrincipal);
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  return {
-    score_pagina: scoreGeral,
-    status,
-    scores,
-
-    problema_principal: problemaPrincipal,
-    gap_principal: gapPrincipal,
-    diagnostico_executivo: diagnostico,
-    diagnostico,
-    impacto,
-
-    prioridades,
-    gaps: gerarGaps(scores, d, contexto),
-
-    leitura: {
-      imagem: gerarLeituraImagem(d, scores, contexto),
-      titulo_seo: gerarLeituraTituloSEO(d, scores, contexto),
-      comunicacao: gerarLeituraComunicacao(d, scores, contexto),
-      confianca: gerarLeituraConfianca(d, scores, contexto),
-      oferta: gerarLeituraOferta(d, scores, contexto)
+  <style>
+    :root {
+      --nexora-red: #8b1e1e;
+      --nexora-red-2: #b32626;
+      --nexora-red-soft: rgba(139, 30, 30, 0.18);
     }
-  };
-}
-
-function normalizarDados(data) {
-  return {
-    title: texto(data.title || data.titulo),
-    keyword: texto(data.keyword || data.palavra_chave),
-    mainBenefit: texto(data.mainBenefit || data.beneficio_principal),
-    bullets: texto(data.bullets || data.argumentos),
-    differentials: texto(data.differentials || data.diferenciais),
-    objections: texto(data.objections || data.objecoes),
-    description: texto(data.description || data.descricao),
-
-    reviews: num(data.reviews),
-    rating: num(data.rating),
-    price: num(data.price || data.preco),
-
-    imageClarity: data.imageClarity || data.imagem_clara || "",
-    oneSecondUnderstanding: data.oneSecondUnderstanding || data.entende_1s || "",
-    benefitVisible: data.benefitVisible || data.beneficio_visivel || "",
-    competitiveContrast: data.competitiveContrast || data.contraste_competitivo || "",
-    visualPerception: data.visualPerception || data.percepcao_visual || "",
-
-    titleQuality: data.titleQuality || data.qualidade_titulo || "",
-    seoQuality: data.seoQuality || data.qualidade_seo || "",
-    titleClarity: data.titleClarity || data.clareza_titulo || "",
-
-    communicationQuality: data.communicationQuality || data.qualidade_comunicacao || "",
-    differentiationQuality: data.differentiationQuality || data.qualidade_diferenciacao || "",
-    objectionCoverage: data.objectionCoverage || data.cobre_objecoes || "",
-
-    hasAplus: bool(data.hasAplus),
-    hasVideo: bool(data.hasVideo),
-    hasCoupon: bool(data.hasCoupon),
-    hasSocialImages: bool(data.hasSocialImages || data.hasUserImages),
-
-    trustLevel: data.trustLevel || data.nivel_confianca || "",
-    offerAlignment: data.offerAlignment || data.alinhamento_oferta || ""
-  };
-}
-
-function normalizarC1(c1) {
-  return {
-    category: c1?.category || c1?.cat || "",
-    subcategory: c1?.subcategory || c1?.sub || "",
-    ctr: num(c1?.ctr),
-    cvr: num(c1?.cvr),
-    acos: num(c1?.acos),
-    tacos: num(c1?.tacos),
-    rootCause: c1?.root_cause || c1?.problema_raiz || "",
-    c1Score: num(c1?.score_geral),
-    c1Status: c1?.status || "",
-    c1Scores: c1?.scores || {}
-  };
-}
-
-function calcularScoresPagina(d, c1) {
-  return {
-    atratividade_visual: scoreAtratividadeVisual(d, c1),
-    titulo_seo: scoreTituloSEO(d, c1),
-    comunicacao_valor: scoreComunicacaoValor(d, c1),
-    confianca: scoreConfianca(d, c1),
-    diferenciacao: scoreDiferenciacao(d, c1),
-    oferta: scoreOferta(d, c1),
-
-    ctr_readiness: scoreCTRReadiness(d, c1),
-    cvr_readiness: scoreCVRReadiness(d, c1)
-  };
-}
-
-function scoreAtratividadeVisual(d, c1) {
-  let score = 100;
-
-  if (d.imageClarity === "Fraca") score -= 30;
-  if (d.imageClarity === "Média") score -= 14;
-
-  if (d.oneSecondUnderstanding === "Não") score -= 24;
-  if (d.oneSecondUnderstanding === "Parcial") score -= 12;
-
-  if (d.benefitVisible === "Não") score -= 20;
-  if (d.benefitVisible === "Parcial") score -= 10;
-
-  if (d.competitiveContrast === "Baixo") score -= 18;
-  if (d.competitiveContrast === "Médio") score -= 8;
 
-  if (d.visualPerception === "Genérica") score -= 18;
-  if (d.visualPerception === "Pouco premium") score -= 10;
-
-  if (c1?.c1Scores?.atracao < 65 || String(c1?.rootCause || "").includes("Atração")) {
-    score -= 8;
-  }
-
-  return clamp(score);
-}
-
-function scoreTituloSEO(d, c1) {
-  let score = 100;
-
-  if (d.title.length < 50) score -= 22;
-  else if (d.title.length < 90) score -= 10;
-
-  if (!d.keyword) score -= 18;
-  if (!d.mainBenefit) score -= 12;
-
-  if (d.titleQuality === "Genérico") score -= 20;
-  if (d.titleQuality === "Poluído") score -= 18;
-  if (d.titleQuality === "Fraco em SEO") score -= 18;
-
-  if (d.seoQuality === "Fraco") score -= 22;
-  if (d.seoQuality === "Médio") score -= 10;
-
-  if (d.titleClarity === "Confuso") score -= 20;
-  if (d.titleClarity === "Parcial") score -= 10;
-
-  return clamp(score);
-}
-
-function scoreComunicacaoValor(d, c1) {
-  let score = 100;
-
-  if (d.bullets.length < 120) score -= 24;
-  else if (d.bullets.length < 220) score -= 10;
-
-  if (!d.mainBenefit) score -= 12;
-  if (!d.objections) score -= 10;
-
-  if (d.communicationQuality === "Só características") score -= 24;
-  if (d.communicationQuality === "Confusa") score -= 22;
-  if (d.communicationQuality === "Fraca") score -= 18;
-  if (d.communicationQuality === "Convincente") score += 4;
-
-  if (d.objectionCoverage === "Não cobre") score -= 18;
-  if (d.objectionCoverage === "Cobre parcialmente") score -= 8;
-
-  if (c1?.c1Scores?.conversao < 65 || String(c1?.rootCause || "").includes("Conversão")) {
-    score -= 8;
-  }
-
-  return clamp(score);
-}
-
-function scoreConfianca(d, c1) {
-  let score = 100;
-
-  if (d.reviews <= 0) score -= 28;
-  else if (d.reviews < 10) score -= 22;
-  else if (d.reviews < 50) score -= 12;
-
-  if (d.rating > 0 && d.rating < 4.0) score -= 24;
-  else if (d.rating > 0 && d.rating < 4.3) score -= 12;
-
-  if (!d.hasAplus) score -= 8;
-  if (!d.hasVideo) score -= 8;
-  if (!d.hasSocialImages) score -= 8;
-
-  if (d.trustLevel === "Baixa") score -= 24;
-  if (d.trustLevel === "Média") score -= 10;
-
-  return clamp(score);
-}
-
-function scoreDiferenciacao(d, c1) {
-  let score = 100;
-
-  if (!d.differentials || d.differentials.length < 40) score -= 24;
-
-  if (d.differentiationQuality === "Fraca") score -= 26;
-  if (d.differentiationQuality === "Média") score -= 12;
-  if (d.differentiationQuality === "Commodity") score -= 30;
-  if (d.differentiationQuality === "Forte") score += 5;
-
-  if (d.visualPerception === "Genérica") score -= 10;
-  if (d.communicationQuality === "Só características") score -= 10;
-
-  return clamp(score);
-}
-
-function scoreOferta(d, c1) {
-  let score = 100;
-
-  if (d.offerAlignment === "Desalinhada") score -= 28;
-  if (d.offerAlignment === "Parcial") score -= 12;
-
-  if (!d.hasCoupon) score -= 4;
-
-  if (d.price <= 0) score -= 8;
-
-  if (c1?.rootCause?.includes("Rentabilidade") && d.offerAlignment !== "Alinhada") {
-    score -= 8;
-  }
-
-  return clamp(score);
-}
-
-function scoreCTRReadiness(d, c1) {
-  const score =
-    scoreAtratividadeVisual(d, c1) * 0.45 +
-    scoreTituloSEO(d, c1) * 0.35 +
-    scoreOferta(d, c1) * 0.20;
-
-  return clamp(score);
-}
-
-function scoreCVRReadiness(d, c1) {
-  const score =
-    scoreComunicacaoValor(d, c1) * 0.35 +
-    scoreConfianca(d, c1) * 0.30 +
-    scoreDiferenciacao(d, c1) * 0.20 +
-    scoreOferta(d, c1) * 0.15;
-
-  return clamp(score);
-}
-
-function calcularScoreGeral(scores) {
-  const score =
-    scores.atratividade_visual * 0.18 +
-    scores.titulo_seo * 0.16 +
-    scores.comunicacao_valor * 0.22 +
-    scores.confianca * 0.18 +
-    scores.diferenciacao * 0.16 +
-    scores.oferta * 0.10;
-
-  return clamp(score);
-}
-
-function identificarProblemaPrincipal(scores, d, c1) {
-  if (scores.atratividade_visual < 55 && c1?.ctr > 0 && c1?.ctr < 0.6) {
-    return "A página não sustenta atração: imagem e apresentação visual não geram clique suficiente";
-  }
-
-  if (scores.comunicacao_valor < 55 && c1?.cvr > 0) {
-    return "Comunicação fraca: a página não transforma interesse em decisão de compra";
-  }
-
-  if (scores.confianca < 55) {
-    return "Confiança insuficiente: prova social e elementos de segurança não sustentam a conversão";
-  }
-
-  if (scores.diferenciacao < 55) {
-    return "Diferenciação fraca: o produto parece substituível frente à concorrência";
-  }
-
-  if (scores.titulo_seo < 55) {
-    return "Título e SEO frágeis: a página não comunica intenção, keyword e benefício com clareza";
-  }
-
-  if (scores.oferta < 55) {
-    return "Oferta desalinhada: preço, percepção de valor e incentivo não estão bem equilibrados";
-  }
-
-  if (scores.ctr_readiness < scores.cvr_readiness) {
-    return "A página tem maior risco de atração do que de conversão";
-  }
-
-  if (scores.cvr_readiness < scores.ctr_readiness) {
-    return "A página tem maior risco de conversão do que de atração";
-  }
-
-  return "Página funcional, mas com oportunidade de otimização estratégica";
-}
-
-function identificarGapPrincipal(scores, d, c1, problema) {
-  if (problema.includes("atração")) {
-    return "O principal gap está no primeiro contato visual: antes de vender, a página precisa fazer o cliente escolher o clique. Se imagem, título e oferta não se destacam, o produto perde a disputa ainda no resultado de busca.";
-  }
-
-  if (problema.includes("Comunicação")) {
-    return "O principal gap está na clareza da proposta de valor. A página pode até explicar o produto, mas ainda não convence com força suficiente por que ele deve ser escolhido agora.";
-  }
-
-  if (problema.includes("Confiança")) {
-    return "O principal gap está na segurança percebida. Reviews, rating, vídeo, A+ e prova visual precisam reduzir risco e aumentar confiança antes da compra.";
-  }
-
-  if (problema.includes("Diferenciação")) {
-    return "O principal gap está na percepção de valor. Se o produto parece parecido com todos os outros, o cliente tende a comparar por preço ou reviews.";
-  }
-
-  if (problema.includes("Título")) {
-    return "O principal gap está no alinhamento entre busca, clareza e benefício. Um título fraco reduz relevância percebida e pode afetar clique, SEO e conversão.";
-  }
-
-  if (problema.includes("Oferta")) {
-    return "O principal gap está na relação entre preço e valor percebido. A página precisa justificar o preço ou tornar a oferta mais atrativa.";
-  }
-
-  return "O gap não está concentrado em um único ponto. A página precisa de ajustes coordenados em atratividade, confiança e comunicação.";
-}
-
-function gerarDiagnosticoExecutivo(d, c1, scores, score, status, problema, gap) {
-  return `
-O Cérebro 2 avaliou a página do produto com foco em atratividade, SEO, comunicação, confiança, diferenciação e oferta.
-
-Score da página: ${score}/100.
-Status: ${status}.
-
-Problema principal identificado:
-${problema}
-
-Gap principal:
-${gap}
-
-Leitura conectada ao Cérebro 1:
-${gerarLeituraContextoC1(c1)}
-
-Leitura de imagem e atratividade:
-${gerarLeituraImagem(d, scores, c1)}
-
-Leitura de título e SEO:
-${gerarLeituraTituloSEO(d, scores, c1)}
-
-Leitura de comunicação e valor:
-${gerarLeituraComunicacao(d, scores, c1)}
-
-Leitura de confiança:
-${gerarLeituraConfianca(d, scores, c1)}
-
-Leitura de oferta:
-${gerarLeituraOferta(d, scores, c1)}
-
-Interpretação estratégica:
-Na Amazon, a página não é apenas uma vitrine. Ela é o ponto onde o algoritmo observa se o tráfego recebido gera clique, permanência, confiança e compra. Quando a página falha em comunicar valor, reduzir objeções ou diferenciar o produto, o seller pode acabar tentando resolver o problema com mídia, quando na verdade o bloqueio está na própria estrutura da oferta.
-
-A prioridade do Cérebro 2 é entender se a página confirma ou contradiz a hipótese do Cérebro 1. Se o Cérebro 1 apontou conversão e a página mostra falhas de confiança, comunicação ou diferenciação, a causa raiz ganha força. Se o Cérebro 1 apontou atração e a imagem/título estão fracos, o problema começa antes do clique.
-`.trim();
-}
-
-function gerarLeituraContextoC1(c1) {
-  if (!c1 || !c1.rootCause) {
-    return "O Cérebro 1 não trouxe contexto suficiente. A análise da página foi feita de forma independente.";
-  }
-
-  return `O Cérebro 1 indicou como causa raiz inicial: ${c1.rootCause}. Isso significa que a página precisa ser avaliada não apenas pela aparência, mas pela capacidade de explicar esse bloqueio de performance.`;
-}
-
-function gerarLeituraImagem(d, scores, c1) {
-  if (scores.atratividade_visual < 55) {
-    return "A atratividade visual está crítica. A imagem principal provavelmente não comunica o produto, benefício ou diferencial rápido o suficiente para disputar clique em um ambiente competitivo.";
-  }
-
-  if (scores.atratividade_visual < 75) {
-    return "A imagem principal possui pontos de atenção. Ela pode estar clara, mas ainda não parece forte o bastante para gerar vantagem competitiva no resultado de busca.";
-  }
-
-  return "A atratividade visual parece saudável. A imagem principal tende a sustentar a primeira camada de clique, desde que preço e título estejam coerentes.";
-}
-
-function gerarLeituraTituloSEO(d, scores, c1) {
-  if (scores.titulo_seo < 55) {
-    return "O título e SEO estão frágeis. Isso pode prejudicar tanto a indexação quanto a clareza para o cliente. Um título fraco reduz relevância e pode afetar CTR.";
-  }
-
-  if (scores.titulo_seo < 75) {
-    return "O título tem base funcional, mas ainda pode melhorar em clareza, keyword principal e comunicação de benefício.";
-  }
-
-  return "O título e SEO parecem bem estruturados. A página tende a comunicar bem intenção de busca e proposta principal.";
-}
-
-function gerarLeituraComunicacao(d, scores, c1) {
-  if (scores.comunicacao_valor < 55) {
-    return "A comunicação de valor está fraca. A página pode estar descrevendo o produto, mas não está convencendo o cliente de forma clara, emocional e racional.";
-  }
-
-  if (scores.comunicacao_valor < 75) {
-    return "A comunicação possui boa base, mas ainda pode melhorar ao transformar características em benefícios, responder objeções e reforçar diferenciais.";
-  }
-
-  return "A comunicação de valor está saudável. A página tende a explicar bem o que o produto entrega e por que vale a escolha.";
-}
-
-function gerarLeituraConfianca(d, scores, c1) {
-  if (scores.confianca < 55) {
-    return "A confiança percebida está baixa. Reviews, rating, vídeo, A+ ou prova visual podem não ser suficientes para reduzir risco de compra.";
-  }
-
-  if (scores.confianca < 75) {
-    return "A confiança está em nível intermediário. A página não está necessariamente fraca, mas ainda pode reforçar segurança e prova social.";
-  }
-
-  return "A confiança está saudável. A página tem sinais suficientes para apoiar decisão de compra, desde que oferta e diferenciação estejam coerentes.";
-}
-
-function gerarLeituraOferta(d, scores, c1) {
-  if (scores.oferta < 55) {
-    return "A oferta parece desalinhada. O preço, incentivo ou valor percebido não estão suficientemente equilibrados para facilitar a decisão.";
-  }
-
-  if (scores.oferta < 75) {
-    return "A oferta é aceitável, mas ainda pode ganhar força com cupom, melhor ancoragem de valor ou diferenciação mais evidente.";
-  }
-
-  return "A oferta parece coerente com a proposta de valor apresentada.";
-}
-
-function gerarImpacto(problema, c1, scores) {
-  if (problema.includes("atração")) {
-    return "O impacto principal é perda de clique. Mesmo que a página tenha bons elementos internos, o produto pode não receber tráfego suficiente para provar conversão.";
-  }
-
-  if (problema.includes("Comunicação") || problema.includes("conversão")) {
-    return "O impacto principal é desperdício de tráfego. O cliente chega na página, mas não recebe argumentos suficientes para avançar até a compra.";
-  }
-
-  if (problema.includes("Confiança")) {
-    return "O impacto principal é fricção na decisão. O cliente pode até se interessar, mas hesita por falta de segurança, prova social ou validação.";
-  }
-
-  if (problema.includes("Diferenciação")) {
-    return "O impacto principal é comparação por preço. Sem diferenciação, o produto perde margem e depende mais de desconto ou mídia.";
-  }
-
-  return "O impacto principal é perda de eficiência. A página pode até funcionar, mas não extrai todo o potencial do tráfego recebido.";
-}
-
-function gerarPrioridades(scores, d, c1, problema) {
-  const list = [];
-
-  if (scores.atratividade_visual < 75) {
-    list.push({
-      prioridade: "URGENTE",
-      titulo: "Reforçar imagem principal e primeira impressão",
-      detalhe: "Ajustar clareza visual, benefício, contraste competitivo e percepção de valor no primeiro contato.",
-      impacto: "Aumenta chance de clique e melhora leitura de CTR"
+    body {
+      background:
+        radial-gradient(circle at 15% 20%, rgba(128,0,0,.45) 0%, transparent 30%),
+        radial-gradient(circle at 75% 25%, rgba(111,29,29,.40) 0%, transparent 28%),
+        radial-gradient(circle at 60% 80%, rgba(214,31,31,.22) 0%, transparent 22%),
+        linear-gradient(135deg, #0b0b0c 0%, #121212 35%, #1a0000 100%);
+    }
+
+    .step {
+      display: none;
+    }
+
+    .step.active {
+      display: block;
+    }
+
+    .progress {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin: 24px 0;
+    }
+
+    .progress-item {
+      height: 6px;
+      background: rgba(255,255,255,.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-item.active {
+      background: linear-gradient(135deg, var(--nexora-red), var(--nexora-red-2));
+    }
+
+    .step-label {
+      font-family: Syne, sans-serif;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-size: 11px;
+      margin-bottom: 10px;
+    }
+
+    .option-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .option-btn {
+      min-width: 128px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.03);
+      color: var(--text-muted);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-family: DM Sans, sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: .15s ease;
+      text-align: center;
+      justify-content: center;
+    }
+
+    .option-btn.active {
+      background: var(--nexora-red-soft);
+      border-color: var(--nexora-red-2);
+      color: #fff;
+    }
+
+    .nav-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+
+    .context-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .metric-card {
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,.03);
+    }
+
+    .metric-card p {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric-card h3 {
+      margin-top: 4px;
+    }
+
+    .result-block {
+      border: 1px solid var(--border);
+      background: var(--surface-strong);
+      border-radius: 16px;
+      padding: 18px;
+      margin-top: 16px;
+    }
+
+    .score-number {
+      font-family: Syne, sans-serif;
+      font-size: 54px;
+      line-height: 1;
+      font-weight: 800;
+    }
+
+    .analysis-text {
+      color: var(--text-muted);
+      line-height: 1.85;
+      white-space: pre-wrap;
+      font-size: 14px;
+    }
+
+    .pill-red {
+      color: #fff;
+      background: var(--nexora-red-soft);
+      border: 1px solid rgba(179,38,38,.35);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      display: inline-flex;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    .form-grid-full {
+      display: grid;
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    .option-block {
+      margin-top: 20px;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    @media (max-width: 900px) {
+      .context-grid,
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .progress {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="wrap">
+
+    <section class="card">
+      <p class="step-label">Nexora Intelligence · Cérebro 2</p>
+
+      <h1>Análise de página</h1>
+
+      <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
+        Leitura profunda da página do produto: imagem, título, SEO, comunicação, diferenciação, confiança e oferta.
+      </p>
+
+      <div class="progress" id="progress"></div>
+    </section>
+
+    <section id="contextArea" class="card"></section>
+
+    <!-- ETAPA 1 -->
+    <section class="card step active" data-step="0">
+      <p class="step-label">Etapa 1 de 5</p>
+      <h2>Imagem principal e atratividade</h2>
+
+      <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
+        Aqui avaliamos se a página sustenta o clique. Essa etapa conversa diretamente com problemas de CTR identificados no Cérebro 1.
+      </p>
+
+      <div class="option-block">
+        <label>Imagem principal é clara?</label>
+        <div class="option-group" data-group="imageClarity">
+          <button type="button" class="option-btn" data-value="Forte">Forte</button>
+          <button type="button" class="option-btn" data-value="Média">Média</button>
+          <button type="button" class="option-btn" data-value="Fraca">Fraca</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>O cliente entende o produto em 1 segundo?</label>
+        <div class="option-group" data-group="oneSecondUnderstanding">
+          <button type="button" class="option-btn" data-value="Sim">Sim</button>
+          <button type="button" class="option-btn" data-value="Parcial">Parcial</button>
+          <button type="button" class="option-btn" data-value="Não">Não</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>O benefício principal aparece visualmente?</label>
+        <div class="option-group" data-group="benefitVisible">
+          <button type="button" class="option-btn" data-value="Sim">Sim</button>
+          <button type="button" class="option-btn" data-value="Parcial">Parcial</button>
+          <button type="button" class="option-btn" data-value="Não">Não</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Contraste competitivo no resultado de busca</label>
+        <div class="option-group" data-group="competitiveContrast">
+          <button type="button" class="option-btn" data-value="Alto">Alto</button>
+          <button type="button" class="option-btn" data-value="Médio">Médio</button>
+          <button type="button" class="option-btn" data-value="Baixo">Baixo</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Percepção visual</label>
+        <div class="option-group" data-group="visualPerception">
+          <button type="button" class="option-btn" data-value="Premium">Premium</button>
+          <button type="button" class="option-btn" data-value="Boa">Boa</button>
+          <button type="button" class="option-btn" data-value="Pouco premium">Pouco premium</button>
+          <button type="button" class="option-btn" data-value="Genérica">Genérica</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ETAPA 2 -->
+    <section class="card step" data-step="1">
+      <p class="step-label">Etapa 2 de 5</p>
+      <h2>Título e SEO</h2>
+
+      <div class="form-grid-full">
+        <div>
+          <label>Título do produto</label>
+          <textarea id="title" placeholder="Cole o título atual do produto"></textarea>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div>
+          <label>Palavra-chave principal</label>
+          <input id="keyword" placeholder="Ex: vela aromática, vitamina C, suporte celular">
+        </div>
+
+        <div>
+          <label>Benefício principal</label>
+          <input id="mainBenefit" placeholder="Ex: relaxamento, clareamento, organização, resistência">
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Qualidade do título</label>
+        <div class="option-group" data-group="titleQuality">
+          <button type="button" class="option-btn" data-value="Bom">Bom</button>
+          <button type="button" class="option-btn" data-value="Genérico">Genérico</button>
+          <button type="button" class="option-btn" data-value="Poluído">Poluído</button>
+          <button type="button" class="option-btn" data-value="Fraco em SEO">Fraco em SEO</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Qualidade de SEO</label>
+        <div class="option-group" data-group="seoQuality">
+          <button type="button" class="option-btn" data-value="Forte">Forte</button>
+          <button type="button" class="option-btn" data-value="Médio">Médio</button>
+          <button type="button" class="option-btn" data-value="Fraco">Fraco</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Clareza do título</label>
+        <div class="option-group" data-group="titleClarity">
+          <button type="button" class="option-btn" data-value="Clara">Clara</button>
+          <button type="button" class="option-btn" data-value="Parcial">Parcial</button>
+          <button type="button" class="option-btn" data-value="Confuso">Confuso</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ETAPA 3 -->
+    <section class="card step" data-step="2">
+      <p class="step-label">Etapa 3 de 5</p>
+      <h2>Bullets e comunicação de valor</h2>
+
+      <div class="form-grid-full">
+        <div>
+          <label>Bullets / principais argumentos</label>
+          <textarea id="bullets" placeholder="Cole os bullets ou principais argumentos da página"></textarea>
+        </div>
+
+        <div>
+          <label>Diferenciais do produto</label>
+          <textarea id="differentials" placeholder="Quais diferenciais a página comunica?"></textarea>
+        </div>
+
+        <div>
+          <label>Objeções respondidas</label>
+          <textarea id="objections" placeholder="Ex: durabilidade, segurança, composição, garantia, tamanho, modo de uso"></textarea>
+        </div>
+
+        <div>
+          <label>Descrição / A+ / informações complementares</label>
+          <textarea id="description" placeholder="Cole a descrição, A+ ou resumo da comunicação do produto"></textarea>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Qualidade da comunicação</label>
+        <div class="option-group" data-group="communicationQuality">
+          <button type="button" class="option-btn" data-value="Convincente">Convincente</button>
+          <button type="button" class="option-btn" data-value="Só características">Só características</button>
+          <button type="button" class="option-btn" data-value="Confusa">Confusa</button>
+          <button type="button" class="option-btn" data-value="Fraca">Fraca</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Qualidade da diferenciação</label>
+        <div class="option-group" data-group="differentiationQuality">
+          <button type="button" class="option-btn" data-value="Forte">Forte</button>
+          <button type="button" class="option-btn" data-value="Média">Média</button>
+          <button type="button" class="option-btn" data-value="Fraca">Fraca</button>
+          <button type="button" class="option-btn" data-value="Commodity">Commodity</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>A página cobre objeções?</label>
+        <div class="option-group" data-group="objectionCoverage">
+          <button type="button" class="option-btn" data-value="Cobre bem">Cobre bem</button>
+          <button type="button" class="option-btn" data-value="Cobre parcialmente">Cobre parcialmente</button>
+          <button type="button" class="option-btn" data-value="Não cobre">Não cobre</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ETAPA 4 -->
+    <section class="card step" data-step="3">
+      <p class="step-label">Etapa 4 de 5</p>
+      <h2>Prova social e confiança</h2>
+
+      <div class="form-grid">
+        <div>
+          <label>Reviews</label>
+          <input id="reviews" type="number" placeholder="Ex: 128">
+        </div>
+
+        <div>
+          <label>Rating médio</label>
+          <input id="rating" type="number" step="0.1" min="0" max="5" placeholder="Ex: 4.5">
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Tem A+?</label>
+        <div class="option-group" data-group="hasAplus">
+          <button type="button" class="option-btn" data-value="Sim">Sim</button>
+          <button type="button" class="option-btn" data-value="Não">Não</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Tem vídeo?</label>
+        <div class="option-group" data-group="hasVideo">
+          <button type="button" class="option-btn" data-value="Sim">Sim</button>
+          <button type="button" class="option-btn" data-value="Não">Não</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Tem fotos sociais / imagens de uso?</label>
+        <div class="option-group" data-group="hasSocialImages">
+          <button type="button" class="option-btn" data-value="Sim">Sim</button>
+          <button type="button" class="option-btn" data-value="Não">Não</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Nível de confiança percebida</label>
+        <div class="option-group" data-group="trustLevel">
+          <button type="button" class="option-btn" data-value="Alta">Alta</button>
+          <button type="button" class="option-btn" data-value="Média">Média</button>
+          <button type="button" class="option-btn" data-value="Baixa">Baixa</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ETAPA 5 -->
+    <section class="card step" data-step="4">
+      <p class="step-label">Etapa 5 de 5</p>
+      <h2>Oferta e preço percebido</h2>
+
+      <div class="form-grid">
+        <div>
+          <label>Preço atual (R$)</label>
+          <input id="price" type="number" step="0.01" placeholder="Ex: 89.90">
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Tem cupom/oferta?</label>
+        <div class="option-group" data-group="hasCoupon">
+          <button type="button" class="option-btn" data-value="Sim">Sim</button>
+          <button type="button" class="option-btn" data-value="Não">Não</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Oferta está alinhada ao valor percebido?</label>
+        <div class="option-group" data-group="offerAlignment">
+          <button type="button" class="option-btn" data-value="Alinhada">Alinhada</button>
+          <button type="button" class="option-btn" data-value="Parcial">Parcial</button>
+          <button type="button" class="option-btn" data-value="Desalinhada">Desalinhada</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="nav-actions">
+        <button class="btn-secondary" onclick="prevStep()">Voltar</button>
+        <button class="btn-primary" id="nextBtn" onclick="nextStep()">Continuar</button>
+      </div>
+
+      <p id="msg" style="color:var(--muted);font-size:13px;margin-top:16px;"></p>
+    </section>
+
+    <section id="resultArea" class="card" style="display:none;"></section>
+
+  </main>
+
+  <script type="module">
+    import { requireAuth } from "../js/auth.js";
+    import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
+    import { analisarPaginaBase } from "../js/cerebro2Engine.js";
+
+    await requireAuth();
+
+    const state = {};
+    let currentStep = 0;
+
+    const steps = Array.from(document.querySelectorAll(".step"));
+    const msg = document.getElementById("msg");
+    const resultArea = document.getElementById("resultArea");
+    const contextArea = document.getElementById("contextArea");
+    const nextBtn = document.getElementById("nextBtn");
+
+    let C1 = null;
+
+    try {
+      C1 = JSON.parse(localStorage.getItem("nx_c1") || "null");
+    } catch (e) {}
+
+    function renderContext() {
+      if (!C1) {
+        contextArea.innerHTML = `
+          <p class="step-label">Contexto obrigatório</p>
+          <h2>Cérebro 1 não encontrado</h2>
+
+          <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
+            Execute o Cérebro 1 antes de continuar. O Cérebro 2 precisa da leitura de performance para interpretar se a página explica o problema de CTR, CVR, mídia ou operação.
+          </p>
+
+          <button class="btn-primary" style="margin-top:18px;" onclick="location.href='./diagnostico.html'">
+            Ir para Cérebro 1
+          </button>
+        `;
+        return;
+      }
+
+      contextArea.innerHTML = `
+        <p class="step-label">Contexto recebido do Cérebro 1</p>
+        <h2>Hipótese inicial de performance</h2>
+
+        <div class="context-grid">
+          ${smallCard("Categoria", C1.subcategory || C1.sub || C1.category || C1.cat || "-")}
+          ${smallCard("CTR", (C1.ctr ?? "-") + "%")}
+          ${smallCard("CVR", (C1.cvr ?? "-") + "%")}
+          ${smallCard("Causa raiz", C1.root_cause || "-")}
+        </div>
+
+        <p style="color:var(--muted);margin-top:18px;line-height:1.7;">
+          O Cérebro 2 vai validar se a página confirma ou contradiz essa hipótese inicial.
+        </p>
+      `;
+    }
+
+    renderContext();
+
+    document.querySelectorAll(".option-group").forEach(group => {
+      group.querySelectorAll(".option-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          group.querySelectorAll(".option-btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          state[group.dataset.group] = btn.dataset.value;
+        });
+      });
     });
-  }
 
-  if (scores.comunicacao_valor < 75) {
-    list.push({
-      prioridade: "IMPORTANTE",
-      titulo: "Reestruturar bullets para vender benefício",
-      detalhe: "Transformar características em benefícios, responder objeções e deixar a promessa mais clara.",
-      impacto: "Melhora conversão e eficiência de tráfego"
-    });
-  }
+    function renderProgress() {
+      const progress = document.getElementById("progress");
+      progress.innerHTML = "";
 
-  if (scores.confianca < 75) {
-    list.push({
-      prioridade: "IMPORTANTE",
-      titulo: "Fortalecer prova social e confiança",
-      detalhe: "Trabalhar reviews, rating, vídeo, A+, fotos de uso e elementos que reduzam risco percebido.",
-      impacto: "Reduz fricção e aumenta segurança de compra"
-    });
-  }
+      steps.forEach((_, i) => {
+        const item = document.createElement("div");
+        item.className = "progress-item" + (i <= currentStep ? " active" : "");
+        progress.appendChild(item);
+      });
+    }
 
-  if (scores.diferenciacao < 75) {
-    list.push({
-      prioridade: "ESTRATÉGICO",
-      titulo: "Evidenciar diferenciais competitivos",
-      detalhe: "Deixar claro por que o produto deve ser escolhido em vez de opções parecidas.",
-      impacto: "Evita competição apenas por preço"
-    });
-  }
+    function renderStep() {
+      steps.forEach((s, i) => s.classList.toggle("active", i === currentStep));
+      nextBtn.textContent = currentStep === steps.length - 1 ? "Gerar análise de página" : "Continuar";
+      msg.textContent = "";
+      renderProgress();
+    }
 
-  if (scores.titulo_seo < 75) {
-    list.push({
-      prioridade: "ESTRATÉGICO",
-      titulo: "Melhorar título e alinhamento com busca",
-      detalhe: "Revisar keyword principal, clareza do produto e benefício central.",
-      impacto: "Melhora relevância, CTR e potencial orgânico"
-    });
-  }
+    window.nextStep = async function () {
+      if (!validarEtapa(currentStep)) return;
 
-  if (list.length === 0) {
-    list.push({
-      prioridade: "ESTRATÉGICO",
-      titulo: "Otimizar página para escala",
-      detalhe: "A página possui boa base. O próximo passo é testar melhorias incrementais em imagem, oferta e comunicação.",
-      impacto: "Gera ganhos marginais sem ruptura estrutural"
-    });
-  }
+      if (currentStep < steps.length - 1) {
+        currentStep++;
+        renderStep();
+        return;
+      }
 
-  return list.slice(0, 5);
-}
+      await gerarAnalisePagina();
+    };
 
-function gerarGaps(scores, d, c1) {
-  const gaps = [];
+    window.prevStep = function () {
+      if (currentStep > 0) {
+        currentStep--;
+        renderStep();
+      }
+    };
 
-  if (scores.atratividade_visual < 65) {
-    gaps.push({
-      nivel: "ALTO",
-      descricao: "A imagem e a apresentação visual podem estar limitando o clique."
-    });
-  }
+    function validarEtapa(step) {
+      if (!C1) {
+        msg.textContent = "Execute o Cérebro 1 antes.";
+        return false;
+      }
 
-  if (scores.comunicacao_valor < 65) {
-    gaps.push({
-      nivel: "CRÍTICO",
-      descricao: "A comunicação de valor não sustenta conversão com força suficiente."
-    });
-  }
+      if (step === 0) {
+        if (!state.imageClarity || !state.oneSecondUnderstanding || !state.benefitVisible || !state.competitiveContrast || !state.visualPerception) {
+          msg.textContent = "Preencha todos os pontos de imagem e atratividade.";
+          return false;
+        }
+      }
 
-  if (scores.confianca < 65) {
-    gaps.push({
-      nivel: "ALTO",
-      descricao: "A página precisa reforçar confiança e prova social."
-    });
-  }
+      if (step === 1) {
+        if (!v("title") || !v("keyword") || !v("mainBenefit")) {
+          msg.textContent = "Preencha título, palavra-chave principal e benefício.";
+          return false;
+        }
 
-  if (scores.diferenciacao < 65) {
-    gaps.push({
-      nivel: "ALTO",
-      descricao: "O produto não está suficientemente diferenciado."
-    });
-  }
+        if (!state.titleQuality || !state.seoQuality || !state.titleClarity) {
+          msg.textContent = "Selecione a qualidade do título, SEO e clareza.";
+          return false;
+        }
+      }
 
-  return gaps;
-}
+      if (step === 2) {
+        if (!v("bullets") || !v("differentials") || !v("objections")) {
+          msg.textContent = "Preencha bullets, diferenciais e objeções respondidas.";
+          return false;
+        }
 
-function classificarStatus(score) {
-  if (score < 40) return "Crítico";
-  if (score < 60) return "Em risco";
-  if (score < 75) return "Em atenção";
-  if (score < 90) return "Saudável";
-  return "Forte";
-}
+        if (!state.communicationQuality || !state.differentiationQuality || !state.objectionCoverage) {
+          msg.textContent = "Selecione comunicação, diferenciação e cobertura de objeções.";
+          return false;
+        }
+      }
 
-function bool(value) {
-  if (value === true || value === "true" || value === "Sim") return true;
-  if (value === false || value === "false" || value === "Não") return false;
-  return false;
-}
+      if (step === 3) {
+        if (!v("reviews") || !v("rating")) {
+          msg.textContent = "Preencha reviews e rating.";
+          return false;
+        }
 
-function num(v) {
-  const n = Number(String(v ?? "").replace(",", "."));
-  return Number.isFinite(n) ? n : 0;
-}
+        if (n("rating") < 0 || n("rating") > 5) {
+          msg.textContent = "O rating precisa estar entre 0 e 5.";
+          return false;
+        }
 
-function texto(v) {
-  return String(v ?? "").trim();
-}
+        if (!state.hasAplus || !state.hasVideo || !state.hasSocialImages || !state.trustLevel) {
+          msg.textContent = "Preencha todos os pontos de confiança.";
+          return false;
+        }
+      }
 
-function clamp(n) {
-  return Math.max(0, Math.min(100, Math.round(n)));
-}
+      if (step === 4) {
+        if (!v("price")) {
+          msg.textContent = "Preencha o preço atual.";
+          return false;
+        }
+
+        if (!state.hasCoupon || !state.offerAlignment) {
+          msg.textContent = "Preencha cupom/oferta e alinhamento da oferta.";
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    async function gerarAnalisePagina() {
+      const diagnosticId = getDiagnosticId();
+
+      if (!diagnosticId) {
+        msg.textContent = "Nenhum diagnóstico ativo. Volte ao dashboard e inicie um novo diagnóstico.";
+        return;
+      }
+
+      msg.textContent = "Gerando análise profunda do Cérebro 2...";
+
+      const data = {
+        imageClarity: state.imageClarity,
+        oneSecondUnderstanding: state.oneSecondUnderstanding,
+        benefitVisible: state.benefitVisible,
+        competitiveContrast: state.competitiveContrast,
+        visualPerception: state.visualPerception,
+
+        title: v("title"),
+        keyword: v("keyword"),
+        mainBenefit: v("mainBenefit"),
+        titleQuality: state.titleQuality,
+        seoQuality: state.seoQuality,
+        titleClarity: state.titleClarity,
+
+        bullets: v("bullets"),
+        differentials: v("differentials"),
+        objections: v("objections"),
+        description: v("description"),
+        communicationQuality: state.communicationQuality,
+        differentiationQuality: state.differentiationQuality,
+        objectionCoverage: state.objectionCoverage,
+
+        reviews: n("reviews"),
+        rating: n("rating"),
+        hasAplus: state.hasAplus,
+        hasVideo: state.hasVideo,
+        hasSocialImages: state.hasSocialImages,
+        trustLevel: state.trustLevel,
+
+        price: n("price"),
+        hasCoupon: state.hasCoupon,
+        offerAlignment: state.offerAlignment
+      };
+
+      const result = analisarPaginaBase(data, C1);
+
+      const fullResult = {
+        ...data,
+        ...result,
+        diagnostic_id: diagnosticId,
+        ts: new Date().toISOString()
+      };
+
+      localStorage.setItem("nx_c2", JSON.stringify(fullResult));
+
+      await updateDiagnostic(diagnosticId, {
+        status: "c2_completed"
+      });
+
+      await saveBrainResult({
+        diagnosticId,
+        brainCode: "c2",
+        brainName: "Cérebro 2 - Análise de Página",
+        score: result.score_pagina,
+        resultData: fullResult
+      });
+
+      renderResult(fullResult);
+      msg.textContent = "Análise do Cérebro 2 salva com sucesso.";
+    }
+
+    function renderResult(result) {
+      resultArea.style.display = "block";
+
+      resultArea.innerHTML = `
+        <p class="step-label">Resultado · Cérebro 2</p>
+        <h2>Análise de página</h2>
+
+        <div class="result-block">
+          <div style="display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-start;">
+            <div>
+              <p style="color:var(--muted);font-size:12px;">Score da página</p>
+              <div class="score-number">${escapeHtml(result.score_pagina ?? "-")}</div>
+              <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">/100 · ${escapeHtml(result.status || "-")}</p>
+            </div>
+
+            <div style="max-width:560px;">
+              <span class="pill-red">Problema principal da página</span>
+              <h3 style="margin-top:12px;">${escapeHtml(result.problema_principal)}</h3>
+              <p style="color:var(--muted);margin-top:10px;line-height:1.7;">
+                ${escapeHtml(result.gap_principal)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="context-grid" style="margin-top:18px;">
+          ${metricCard("Atratividade visual", scoreValue(result, "atratividade_visual"))}
+          ${metricCard("Título e SEO", scoreValue(result, "titulo_seo"))}
+          ${metricCard("Comunicação", scoreValue(result, "comunicacao_valor"))}
+          ${metricCard("Confiança", scoreValue(result, "confianca"))}
+          ${metricCard("Diferenciação", scoreValue(result, "diferenciacao"))}
+          ${metricCard("Oferta", scoreValue(result, "oferta"))}
+          ${metricCard("CTR-readiness", scoreValue(result, "ctr_readiness"))}
+          ${metricCard("CVR-readiness", scoreValue(result, "cvr_readiness"))}
+        </div>
+
+        <div class="result-block">
+          <h3>Diagnóstico executivo completo</h3>
+          <div class="analysis-text" style="margin-top:14px;">${escapeHtml(result.diagnostico_executivo)}</div>
+        </div>
+
+        <div class="result-block">
+          <h3>Impacto estratégico</h3>
+          <p style="color:var(--text-muted);line-height:1.8;margin-top:10px;">
+            ${escapeHtml(result.impacto)}
+          </p>
+        </div>
+
+        <div class="result-block">
+          <h3>Gaps detectados</h3>
+
+          <div style="display:grid;gap:12px;margin-top:14px;">
+            ${(result.gaps || []).map((g, i) => `
+              <div style="padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);">
+                <p style="color:var(--muted);font-size:12px;">${escapeHtml(g.nivel)}</p>
+                <strong>${i + 1}. ${escapeHtml(g.descricao)}</strong>
+              </div>
+            `).join("") || `<p style="color:var(--muted)">Nenhum gap crítico detectado.</p>`}
+          </div>
+        </div>
+
+        <div class="result-block">
+          <h3>Prioridades recomendadas</h3>
+
+          <div style="display:grid;gap:12px;margin-top:14px;">
+            ${(result.prioridades || []).map((p, i) => `
+              <div style="padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);">
+                <p style="color:var(--muted);font-size:12px;">${escapeHtml(p.prioridade)}</p>
+                <strong>${i + 1}. ${escapeHtml(p.titulo)}</strong>
+                <p style="color:var(--muted);margin-top:6px;line-height:1.6;">${escapeHtml(p.detalhe)}</p>
+                <p style="color:var(--text-muted);margin-top:6px;font-size:12px;">Impacto: ${escapeHtml(p.impacto)}</p>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn-secondary" onclick="location.href='./diagnostico.html'">
+            Voltar ao Cérebro 1
+          </button>
+
+          <button class="btn-primary" onclick="location.href='./mercado.html'">
+            Ir para Cérebro 3
+          </button>
+        </div>
+      `;
+
+      resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function metricCard(title, value) {
+      return `
+        <div class="metric-card">
+          <p>${escapeHtml(title)}</p>
+          <h3>${escapeHtml(value)}</h3>
+        </div>
+      `;
+    }
+
+    function smallCard(title, value) {
+      return `
+        <div class="metric-card">
+          <p>${escapeHtml(title)}</p>
+          <h3>${escapeHtml(value)}</h3>
+        </div>
+      `;
+    }
+
+    function scoreValue(result, key) {
+      const value = result?.scores?.[key];
+
+      if (value === undefined || value === null || Number.isNaN(value)) {
+        return "-";
+      }
+
+      return value + "/100";
+    }
+
+    function v(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function n(id) {
+      const value = document.getElementById(id).value;
+      const number = Number(String(value).replace(",", "."));
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    renderStep();
+  </script>
+</body>
+</html>
