@@ -510,12 +510,9 @@
       `;
     }
 
-    renderContext();
-    addCompetitor();
-    addCompetitor();
-    addCompetitor();
+  renderContext();
 
-    document.querySelectorAll(".option-group").forEach(group => {
+document.querySelectorAll(".option-group").forEach(group => {
       group.querySelectorAll(".option-btn").forEach(btn => {
         btn.addEventListener("click", () => {
           group.querySelectorAll(".option-btn").forEach(b => b.classList.remove("active"));
@@ -861,13 +858,22 @@ function aplicarResumoConcorrentesNoFormulario() {
 
   document.getElementById("mainCompetitors").value = competitors.length;
 
-  if (avgReviews > 0) {
-    document.getElementById("avgCompetitorReviews").value = Math.round(avgReviews);
+  const avgReviewsInput = document.getElementById("avgCompetitorReviews");
+  if (avgReviewsInput && avgReviews > 0) {
+    avgReviewsInput.value = Math.round(avgReviews);
   }
 
-  document.getElementById("competitorsWithStrongReviews").value = strongReviews;
+  const strongReviewsInput = document.getElementById("competitorsWithStrongReviews");
+  if (strongReviewsInput) {
+    strongReviewsInput.value = strongReviews;
+  }
 }
-    renderStep();
+
+addCompetitor();
+addCompetitor();
+addCompetitor();
+
+renderStep();
   </script>
 </body>
 </html>
