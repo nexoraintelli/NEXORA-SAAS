@@ -238,18 +238,18 @@
     }
 
     .hero {
-      position: relative;
-      padding: 76px 0 54px;
-      overflow: hidden;
-    }
+  position: relative;
+  padding: 46px 0 42px;
+  overflow: hidden;
+}
 
     .hero-grid {
-      display: grid;
-      grid-template-columns: minmax(0, .92fr) minmax(420px, .78fr);
-      gap: 54px;
-      align-items: center;
-      min-height: 690px;
-    }
+  display: grid;
+  grid-template-columns: minmax(0, .92fr) minmax(420px, .78fr);
+  gap: 54px;
+  align-items: center;
+  min-height: 560px;
+}
 
     .hero-copy {
       position: relative;
@@ -283,11 +283,11 @@
     }
 
     .hero h1 {
-      font-size: clamp(58px, 7.1vw, 104px);
-      line-height: .91;
-      font-weight: 800;
-      max-width: 730px;
-    }
+  font-size: clamp(46px, 5.2vw, 76px);
+  line-height: .94;
+  font-weight: 800;
+  max-width: 620px;
+}
 
     .hero h1 .orange {
       color: var(--orange-2);
@@ -758,8 +758,8 @@
       }
 
       .hero h1 {
-        font-size: 50px;
-      }
+  font-size: 42px;
+}
 
       .hero-sub {
         font-size: 16px;
@@ -808,6 +808,13 @@
         flex-direction: column;
       }
     }
+    .brand-image {
+  display: block;
+  width: 170px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
   </style>
 </head>
 
@@ -816,13 +823,9 @@
 
     <header class="header">
       <div class="container header-inner">
-        <a href="#" class="brand">
-          <div class="scanner-logo"></div>
-          <div class="brand-name">
-            NEXORA
-            <span>INTELLIGENCE</span>
-          </div>
-        </a>
+      <a href="./index.html" class="brand">
+  <img src="../logo-horizontal.png%20(2).png" alt="Nexora Intelligence" class="brand-image">
+</a>
 
         <nav class="nav">
           <a href="#como-funciona">Como funciona</a>
