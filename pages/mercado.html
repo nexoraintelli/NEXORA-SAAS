@@ -253,6 +253,149 @@
         grid-template-columns: 1fr;
       }
     }
+    /* Quadrante competitivo - Cérebro 3 */
+.competitive-quadrant-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  align-items: start;
+  margin-top: 16px;
+}
+
+.quadrant-map {
+  position: relative;
+  width: 100%;
+  min-height: 360px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 18px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255,255,255,.08) 1px, transparent 1px),
+    radial-gradient(circle at 50% 50%, rgba(179,38,38,.12), rgba(255,255,255,.02));
+  background-size: 50% 100%, 100% 50%, 100% 100%;
+  overflow: hidden;
+}
+
+.quadrant-label {
+  position: absolute;
+  font-family: Syne, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .9;
+}
+
+.quadrant-label.premium {
+  top: 14px;
+  left: 16px;
+  color: #b8a7ff;
+}
+
+.quadrant-label.leader {
+  top: 14px;
+  right: 16px;
+  color: #3ddc97;
+}
+
+.quadrant-label.niche {
+  bottom: 14px;
+  left: 16px;
+  color: #6aa8ff;
+}
+
+.quadrant-label.price {
+  bottom: 14px;
+  right: 16px;
+  color: #f0a33a;
+}
+
+.quadrant-axis-y,
+.quadrant-axis-x {
+  position: absolute;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .65;
+}
+
+.quadrant-axis-y {
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%) rotate(-90deg);
+  transform-origin: left center;
+}
+
+.quadrant-axis-x {
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+}
+
+.quadrant-dot {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #b32626, #7c5cff);
+  box-shadow: 0 0 0 8px rgba(179,38,38,.18);
+  transform: translate(-50%, -50%);
+  z-index: 4;
+}
+
+.quadrant-dot::after {
+  content: "Produto";
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  color: #fff;
+  background: rgba(0,0,0,.45);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 10px;
+}
+
+.quadrant-explanation {
+  display: grid;
+  gap: 12px;
+}
+
+.quadrant-info-card {
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.025);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.quadrant-info-card h4 {
+  font-family: Syne, sans-serif;
+  margin-bottom: 6px;
+}
+
+.quadrant-info-card p {
+  color: var(--muted);
+  line-height: 1.65;
+  font-size: 13px;
+}
+
+.quadrant-current {
+  border-color: rgba(179,38,38,.38);
+  background: rgba(139,30,30,.16);
+}
+
+@media (max-width: 900px) {
+  .competitive-quadrant-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .quadrant-map {
+    min-height: 300px;
+  }
+}
   </style>
 </head>
 
@@ -694,6 +837,8 @@ document.querySelectorAll(".option-group").forEach(group => {
           ${metricCard("Risco preço", result.scores?.risco_preco || "-")}
           ${metricCard("Risco reviews", result.scores?.risco_reviews || "-")}
         </div>
+        
+${renderCompetitiveQuadrant(result)}
 
         <div class="result-block">
           <h3>Problema principal</h3>
@@ -767,7 +912,133 @@ document.querySelectorAll(".option-group").forEach(group => {
         </div>
       `;
     }
+function getQuadrantPosition(result) {
+  const scores = result?.scores || {};
 
+  const priceScore = Number(scores.preco ?? 50);
+  const differentiationScore = Number(scores.diferenciacao ?? 50);
+  const competitivenessScore = Number(scores.competitividade ?? 50);
+  const opportunityScore = Number(scores.oportunidade ?? 50);
+
+  const avgCategoryPrice = Number(result?.avgCategoryPrice || 0);
+  const productPrice = Number(result?.productPrice || 0);
+
+  let priceRatio = 1;
+
+  if (avgCategoryPrice > 0 && productPrice > 0) {
+    priceRatio = productPrice / avgCategoryPrice;
+  }
+
+  /*
+    X = força competitiva / autoridade
+    Y = posicionamento de valor/preço
+  */
+
+  let x = Math.round((competitivenessScore * 0.45) + (opportunityScore * 0.35) + (differentiationScore * 0.20));
+  let y = Math.round((differentiationScore * 0.45) + (priceScore * 0.25) + (priceRatio > 1 ? 20 : 5));
+
+  x = Math.max(8, Math.min(92, x));
+  y = Math.max(8, Math.min(92, y));
+
+  let quadrant = "Niche Player";
+
+  if (y >= 55 && x < 55) {
+    quadrant = "Premium";
+  }
+
+  if (y >= 55 && x >= 55) {
+    quadrant = "Leader";
+  }
+
+  if (y < 55 && x >= 55) {
+    quadrant = "Price Fighter";
+  }
+
+  if (y < 55 && x < 55) {
+    quadrant = "Niche Player";
+  }
+
+  return {
+    x,
+    y: 100 - y,
+    quadrant
+  };
+}
+
+function getQuadrantExplanation(quadrant) {
+  const explanations = {
+    "Premium": {
+      title: "Premium",
+      text: "O produto está tentando sustentar uma percepção de valor acima da média. Para esse quadrante funcionar, a página precisa justificar o preço com diferenciação, confiança, imagens fortes, prova social e clareza de benefício.",
+      alert: "Risco principal: cobrar mais caro sem entregar percepção suficiente de valor."
+    },
+    "Leader": {
+      title: "Leader",
+      text: "O produto tem sinais de força competitiva e posicionamento saudável. Normalmente esse quadrante indica maior capacidade de sustentar preço, conversão e escala.",
+      alert: "Prioridade: proteger autoridade, manter diferenciação e escalar com controle."
+    },
+    "Niche Player": {
+      title: "Niche Player",
+      text: "O produto ainda não domina a categoria, mas pode encontrar espaço se tiver uma proposta clara para um público específico. É um quadrante comum para produtos em construção.",
+      alert: "Prioridade: encontrar diferenciação, melhorar página e criar sinais de confiança."
+    },
+    "Price Fighter": {
+      title: "Price Fighter",
+      text: "O produto tende a competir mais por preço, cupom ou oferta agressiva. Pode gerar volume, mas exige atenção à margem e ao ACOS.",
+      alert: "Risco principal: vender mais sem construir marca, margem ou autoridade."
+    }
+  };
+
+  return explanations[quadrant] || explanations["Niche Player"];
+}
+
+function renderCompetitiveQuadrant(result) {
+  const position = getQuadrantPosition(result);
+  const explanation = getQuadrantExplanation(position.quadrant);
+
+  return `
+    <div class="result-block">
+      <h3>Quadrante competitivo</h3>
+
+      <p style="color:var(--muted);line-height:1.7;margin-top:8px;">
+        Este mapa posiciona o produto de acordo com dois eixos: força competitiva e percepção de valor. Ele ajuda a entender se o produto está competindo como premium, líder, nicho ou brigador de preço.
+      </p>
+
+      <div class="competitive-quadrant-wrap">
+        <div class="quadrant-map">
+          <span class="quadrant-label premium">Premium</span>
+          <span class="quadrant-label leader">Leader</span>
+          <span class="quadrant-label niche">Niche Player</span>
+          <span class="quadrant-label price">Price Fighter</span>
+
+          <span class="quadrant-axis-y">Percepção de valor</span>
+          <span class="quadrant-axis-x">Força competitiva</span>
+
+          <span class="quadrant-dot" style="left:${position.x}%; top:${position.y}%;"></span>
+        </div>
+
+        <div class="quadrant-explanation">
+          <div class="quadrant-info-card quadrant-current">
+            <h4>Posição atual: ${escapeHtml(explanation.title)}</h4>
+            <p>${escapeHtml(explanation.text)}</p>
+          </div>
+
+          <div class="quadrant-info-card">
+            <h4>Leitura estratégica</h4>
+            <p>${escapeHtml(explanation.alert)}</p>
+          </div>
+
+          <div class="quadrant-info-card">
+            <h4>Como interpretar</h4>
+            <p>
+              Quanto mais à direita, maior a força competitiva percebida. Quanto mais acima, maior a percepção de valor/preço. Produtos no topo precisam sustentar valor; produtos à direita precisam defender autoridade; produtos abaixo tendem a competir mais por preço.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
     function scoreValue(result, key) {
       const value = result?.scores?.[key];
 
