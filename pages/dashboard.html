@@ -62,30 +62,52 @@
       justify-content: space-between;
     }
 
-    .brand-block {
-      padding: 0 8px 26px;
-    }
+   .brand-block {
+  padding: 0 8px 22px;
+}
 
-    .brand-logo {
-      font-family: Syne, sans-serif;
-      font-weight: 800;
-      letter-spacing: .08em;
-      font-size: 33px;
-      line-height: .95;
-    }
+.brand-image {
+  display: block;
+  width: 170px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
 
-    .brand-logo span {
-      display: inline-flex;
-      width: 27px;
-      height: 27px;
-      border-radius: 999px;
-      margin: 0 2px;
-      vertical-align: -3px;
-      border: 2px solid rgba(165,220,230,.8);
-      background:
-        radial-gradient(circle, #e9eef5 0 14%, #9b0000 15% 36%, #0b1118 37% 57%, transparent 58%);
-      box-shadow: 0 0 18px rgba(179,38,38,.35);
-    }
+.brand-sub {
+  font-family: Syne, sans-serif;
+  letter-spacing: .24em;
+  font-size: 11px;
+  color: rgba(255,255,255,.75);
+  margin-top: 8px;
+  padding-left: 2px;
+  white-space: nowrap;
+}
+   .brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-family: Syne, sans-serif;
+  font-weight: 800;
+  letter-spacing: .06em;
+  font-size: 26px;
+  line-height: 1;
+  white-space: nowrap;
+  flex-wrap: nowrap;
+}
+
+.brand-logo span {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  display: inline-block;
+  border-radius: 999px;
+  border: 2px solid rgba(165,220,230,.85);
+  background:
+    radial-gradient(circle, #e9eef5 0 14%, #9b0000 15% 36%, #0b1118 37% 57%, transparent 58%);
+  box-shadow: 0 0 18px rgba(179,38,38,.35);
+  vertical-align: middle;
+}
 
     .brand-sub {
       font-family: Syne, sans-serif;
@@ -598,9 +620,8 @@
     <aside class="sidebar">
       <div>
         <div class="brand-block">
-          <div class="brand-logo">NEX<span></span>RA</div>
-          <div class="brand-sub">INTELLIGENCE</div>
-        </div>
+  <img src="../assets/logo.png" alt="Nexora Intelligence" class="brand-image">
+</div>
 
         <nav class="nav">
           <button class="nav-item active" onclick="location.href='./dashboard.html'">
