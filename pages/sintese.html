@@ -4,38 +4,199 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Nexora · Síntese</title>
+  <title>Nexora · Síntese Final</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles/global.css">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --nexora-red: #8b1e1e;
+      --nexora-red-2: #b32626;
+      --nexora-red-soft: rgba(139, 30, 30, 0.18);
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 15% 20%, rgba(128,0,0,.45) 0%, transparent 30%),
+        radial-gradient(circle at 75% 25%, rgba(111,29,29,.40) 0%, transparent 28%),
+        radial-gradient(circle at 60% 80%, rgba(214,31,31,.22) 0%, transparent 22%),
+        linear-gradient(135deg, #0b0b0c 0%, #121212 35%, #1a0000 100%);
+    }
+
+    .step-label {
+      font-family: Syne, sans-serif;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-size: 11px;
+      margin-bottom: 10px;
+    }
+
+    .context-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .metric-card {
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,.03);
+    }
+
+    .metric-card p {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric-card h3 {
+      margin-top: 4px;
+      line-height: 1.25;
+    }
+
+    .result-block {
+      border: 1px solid var(--border);
+      background: var(--surface-strong);
+      border-radius: 16px;
+      padding: 18px;
+      margin-top: 16px;
+    }
+
+    .score-hero {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .score-number {
+      font-family: Syne, sans-serif;
+      font-size: 74px;
+      line-height: 1;
+      font-weight: 800;
+    }
+
+    .analysis-text {
+      color: var(--text-muted);
+      line-height: 1.85;
+      white-space: pre-wrap;
+      font-size: 14px;
+    }
+
+    .pill-red {
+      color: #fff;
+      background: var(--nexora-red-soft);
+      border: 1px solid rgba(179,38,38,.35);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      display: inline-flex;
+    }
+
+    .priority-card,
+    .gap-card,
+    .plan-card,
+    .matrix-card {
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      background: rgba(255,255,255,.03);
+    }
+
+    .priority-card strong,
+    .gap-card strong,
+    .plan-card strong,
+    .matrix-card strong {
+      display: block;
+      margin-top: 4px;
+    }
+
+    .priority-card p,
+    .gap-card p,
+    .plan-card p,
+    .matrix-card p {
+      color: var(--muted);
+      line-height: 1.65;
+      margin-top: 6px;
+      font-size: 13px;
+    }
+
+    .tag {
+      display: inline-flex;
+      border: 1px solid rgba(255,255,255,.12);
+      color: var(--text-muted);
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .tag-red {
+      background: rgba(139,30,30,.18);
+      border-color: rgba(179,38,38,.35);
+      color: #fff;
+    }
+
+    .actions-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .context-grid,
+      .score-grid,
+      .score-hero {
+        grid-template-columns: 1fr;
+      }
+
+      .score-number {
+        font-size: 58px;
+      }
+    }
+  </style>
 </head>
 
 <body>
   <main class="wrap">
 
     <section class="card">
-      <p style="font-family:Syne,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);font-size:11px;margin-bottom:12px;">
-        Nexora Intelligence · Síntese Final
+      <p class="step-label">Nexora Intelligence · Síntese Final</p>
+
+      <h1>Síntese estratégica final</h1>
+
+      <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
+        Cruzamento dos três cérebros: performance, página e mercado. A síntese identifica a causa raiz consolidada, a gravidade, os gaps principais e a ordem correta de ação.
       </p>
 
-      <h1>Síntese estratégica</h1>
+      <div class="actions-row">
+        <button class="btn-primary" onclick="gerarSintese()">
+          Gerar Síntese Final
+        </button>
 
-      <p style="color:var(--muted);margin-top:8px;line-height:1.6;">
-        Cruzamento dos três cérebros para identificar causa raiz, score geral e plano de ação.
-      </p>
-    </section>
-
-    <section id="statusArea" class="card"></section>
-
-    <section class="card">
-      <button class="btn-primary" style="width:100%;" onclick="gerarSintese()">
-        Gerar síntese estratégica
-      </button>
+        <button class="btn-secondary" onclick="location.href='./mercado.html'">
+          Voltar ao Cérebro 3
+        </button>
+      </div>
 
       <p id="msg" style="color:var(--muted);font-size:13px;margin-top:16px;"></p>
     </section>
+
+    <section id="contextArea" class="card"></section>
 
     <section id="resultArea" class="card" style="display:none;"></section>
 
@@ -44,208 +205,288 @@
   <script type="module">
     import { requireAuth } from "../js/auth.js";
     import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
-    import { gerarSinteseBase } from "../js/synthesisEngine.js";
+    import { gerarSinteseFinal } from "../js/synthesisEngine.js";
 
     await requireAuth();
 
     const msg = document.getElementById("msg");
-    const statusArea = document.getElementById("statusArea");
+    const contextArea = document.getElementById("contextArea");
     const resultArea = document.getElementById("resultArea");
 
     let C1 = null;
     let C2 = null;
     let C3 = null;
 
-    try { C1 = JSON.parse(localStorage.getItem("nx_c1") || "null"); } catch(e) {}
-    try { C2 = JSON.parse(localStorage.getItem("nx_c2") || "null"); } catch(e) {}
-    try { C3 = JSON.parse(localStorage.getItem("nx_c3") || "null"); } catch(e) {}
+    try {
+      C1 = JSON.parse(localStorage.getItem("nx_c1") || "null");
+    } catch (e) {}
 
-    function renderStatus() {
-      statusArea.innerHTML = `
-        <h2>Status dos cérebros</h2>
+    try {
+      C2 = JSON.parse(localStorage.getItem("nx_c2") || "null");
+    } catch (e) {}
 
-        <div class="grid-3" style="margin-top:18px;">
-          ${statusCard("Cérebro 1", C1 ? "Concluído" : "Pendente")}
-          ${statusCard("Cérebro 2", C2 ? "Concluído" : "Pendente")}
-          ${statusCard("Cérebro 3", C3 ? "Concluído" : "Pendente")}
-        </div>
+    try {
+      C3 = JSON.parse(localStorage.getItem("nx_c3") || "null");
+    } catch (e) {}
 
-        ${(!C1 || !C2 || !C3) ? `
-          <p style="color:var(--muted);margin-top:18px;line-height:1.6;">
-            Para gerar uma síntese completa, execute os três cérebros.
+    function renderContext() {
+      if (!C1 || !C2 || !C3) {
+        contextArea.innerHTML = `
+          <p class="step-label">Contexto obrigatório</p>
+          <h2>Cérebros anteriores não encontrados</h2>
+
+          <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
+            Para gerar a Síntese Final, execute primeiro o Cérebro 1, o Cérebro 2 e o Cérebro 3.
           </p>
-        ` : ""}
-      `;
-    }
 
-    renderStatus();
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;">
+            <button class="btn-secondary" onclick="location.href='./diagnostico.html'">
+              Ir para Cérebro 1
+            </button>
 
-    window.gerarSintese = async function () {
-      const diagnosticId = getDiagnosticId();
+            <button class="btn-secondary" onclick="location.href='./pagina.html'">
+              Ir para Cérebro 2
+            </button>
 
-      if (!diagnosticId) {
-        msg.textContent = "Nenhum diagnóstico ativo. Volte ao dashboard e inicie um diagnóstico.";
+            <button class="btn-primary" onclick="location.href='./mercado.html'">
+              Ir para Cérebro 3
+            </button>
+          </div>
+        `;
         return;
       }
 
+      contextArea.innerHTML = `
+        <p class="step-label">Contexto recebido</p>
+        <h2>Dados prontos para síntese</h2>
+
+        <div class="context-grid">
+          ${smallCard("Cérebro 1", `${C1.score_geral ?? "-"} / 100`, C1.root_cause || "Performance e métricas")}
+          ${smallCard("Cérebro 2", `${C2.score_pagina ?? "-"} / 100`, C2.problema_principal || "Página e conversão")}
+          ${smallCard("Cérebro 3", `${C3.score_mercado ?? "-"} / 100`, C3.dinamica_mercado || "Mercado e concorrência")}
+        </div>
+
+        <p style="color:var(--muted);margin-top:18px;line-height:1.7;">
+          A síntese vai cruzar esses sinais para definir a causa raiz consolidada e a ordem correta de ação.
+        </p>
+      `;
+    }
+
+    renderContext();
+
+    window.gerarSintese = async function () {
       if (!C1 || !C2 || !C3) {
         msg.textContent = "Execute os três cérebros antes de gerar a síntese.";
         return;
       }
 
-      msg.textContent = "Gerando síntese estratégica...";
+      const diagnosticId = getDiagnosticId();
 
-      const result = gerarSinteseBase(C1, C2, C3);
+      if (!diagnosticId) {
+        msg.textContent = "Nenhum diagnóstico ativo. Volte ao dashboard e inicie um novo diagnóstico.";
+        return;
+      }
+
+      msg.textContent = "Gerando Síntese Final Nexora...";
+
+      const result = gerarSinteseFinal(C1, C2, C3);
 
       const fullResult = {
         ...result,
         diagnostic_id: diagnosticId,
+        source: {
+          c1: C1,
+          c2: C2,
+          c3: C3
+        },
         ts: new Date().toISOString()
       };
 
-      localStorage.setItem("nexora_sintese_result", JSON.stringify(fullResult));
-      localStorage.setItem("nexora_relatorio_mapeado", JSON.stringify(buildReportPayload(fullResult)));
+      localStorage.setItem("nx_synth", JSON.stringify(fullResult));
 
-      await updateDiagnostic(diagnosticId, {
-        status: "completed",
-        final_score: result.score_geral,
-        root_cause: result.problema_raiz,
-        completed_at: new Date().toISOString()
-      });
+      try {
+        await updateDiagnostic(diagnosticId, {
+          status: "synthesis_completed"
+        });
 
-      await saveBrainResult({
-        diagnosticId,
-        brainCode: "synth",
-        brainName: "Síntese Estratégica Final",
-        score: result.score_geral,
-        resultData: fullResult
-      });
+        await saveBrainResult({
+          diagnosticId,
+          brainCode: "synth",
+          brainName: "Síntese Estratégica Final",
+          score: result.score_final,
+          resultData: fullResult
+        });
 
-      renderResult(fullResult);
-
-      msg.textContent = "Síntese salva com sucesso.";
+        renderResult(fullResult);
+        msg.textContent = "Síntese Final salva com sucesso.";
+      } catch (error) {
+        console.error("Erro ao salvar Síntese Final:", error);
+        renderResult(fullResult);
+        msg.textContent = "A síntese foi gerada, mas não foi salva no banco. Veja o console.";
+      }
     };
 
     function renderResult(result) {
       resultArea.style.display = "block";
 
       resultArea.innerHTML = `
-        <h2>Resultado final</h2>
+        <p class="step-label">Resultado · Síntese Final</p>
+        <h2>Diagnóstico estratégico consolidado</h2>
 
-        <div style="margin-top:18px;padding:18px;border:1px solid var(--border);border-radius:14px;background:var(--surface-strong);">
-          <p style="font-size:12px;color:var(--muted);">Score geral</p>
-          <h1 style="margin-top:6px;">${result.score_geral}/100</h1>
+        <div class="result-block">
+          <div class="score-hero">
+            <div>
+              <p style="color:var(--muted);font-size:12px;">Score final Nexora</p>
+              <div class="score-number">${escapeHtml(result.score_final ?? "-")}</div>
+              <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">/100 · Gravidade ${escapeHtml(result.gravidade || "-")}</p>
+            </div>
 
-          <p style="font-size:12px;color:var(--muted);margin-top:16px;">Causa raiz final</p>
-          <h3>${escapeHtml(result.problema_raiz)}</h3>
-
-          <p style="color:var(--muted);margin-top:12px;line-height:1.7;">
-            ${escapeHtml(result.diagnostico_executivo)}
-          </p>
-        </div>
-
-        <div style="margin-top:22px;">
-          <h3>Status por pilar</h3>
-
-          <div class="grid-3" style="margin-top:14px;">
-            ${pillarCard("Atração", result.pilares?.atracao)}
-            ${pillarCard("Conversão", result.pilares?.conversao)}
-            ${pillarCard("Mercado", result.pilares?.mercado)}
-            ${pillarCard("Operação", result.pilares?.operacao)}
+            <div>
+              <span class="pill-red">Causa raiz consolidada</span>
+              <h3 style="margin-top:12px;line-height:1.35;">
+                ${escapeHtml(result.causa_raiz_consolidada)}
+              </h3>
+              <p style="color:var(--muted);margin-top:12px;line-height:1.7;">
+                ${escapeHtml(result.resumo_cliente)}
+              </p>
+            </div>
           </div>
         </div>
 
-        <div style="margin-top:22px;">
-          <h3>Plano de ação</h3>
+        <div class="score-grid">
+          ${metricCard("Performance", scoreValue(result, "performance"))}
+          ${metricCard("Página", scoreValue(result, "pagina"))}
+          ${metricCard("Mercado", scoreValue(result, "mercado"))}
+          ${metricCard("Conversão total", scoreValue(result, "conversao_total"))}
+          ${metricCard("Diferenciação", scoreValue(result, "diferenciacao_total"))}
+        </div>
 
-          <div style="display:grid;gap:10px;margin-top:12px;">
-            ${(result.plano_acao || []).map((a, i) => `
-              <div style="padding:14px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.03);">
-                <p style="font-size:12px;color:var(--muted);">${escapeHtml(a.prioridade)}</p>
-                <strong>${i + 1}. ${escapeHtml(a.titulo)}</strong>
-                <p style="color:var(--muted);margin-top:5px;">${escapeHtml(a.detalhe)}</p>
-                <p style="color:var(--text-muted);margin-top:5px;font-size:12px;">Impacto: ${escapeHtml(a.impacto)}</p>
+        <div class="result-block">
+          <h3>Diagnóstico executivo completo</h3>
+          <div class="analysis-text" style="margin-top:14px;">${escapeHtml(result.diagnostico_executivo)}</div>
+        </div>
+
+        <div class="result-block">
+          <h3>Leitura cruzada dos 3 Cérebros</h3>
+          <div class="analysis-text" style="margin-top:14px;">${escapeHtml(result.leitura_cruzada)}</div>
+        </div>
+
+        <div class="result-block">
+          <h3>Gaps consolidados</h3>
+
+          <div style="display:grid;gap:12px;margin-top:14px;">
+            ${(result.gaps || []).map((gap, index) => `
+              <div class="gap-card">
+                <span class="tag ${gap.nivel === "CRÍTICO" ? "tag-red" : ""}">${escapeHtml(gap.nivel)}</span>
+                <strong>${index + 1}. ${escapeHtml(gap.titulo)}</strong>
+                <p>${escapeHtml(gap.descricao)}</p>
+                <p style="font-size:12px;color:var(--text-muted);">Origem: ${escapeHtml(gap.origem)}</p>
               </div>
             `).join("")}
           </div>
         </div>
 
-        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
+        <div class="result-block">
+          <h3>Prioridades finais</h3>
+
+          <div style="display:grid;gap:12px;margin-top:14px;">
+            ${(result.prioridades || []).map((p) => `
+              <div class="priority-card">
+                <span class="tag tag-red">Prioridade ${escapeHtml(p.prioridade)}</span>
+                <strong>${escapeHtml(p.titulo)}</strong>
+                <p>${escapeHtml(p.detalhe)}</p>
+                <p style="font-size:12px;color:var(--text-muted);">
+                  Área: ${escapeHtml(p.area)} · Impacto: ${escapeHtml(p.impacto)}
+                </p>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+        <div class="result-block">
+          <h3>Plano de ação recomendado</h3>
+
+          <div style="display:grid;gap:12px;margin-top:14px;">
+            ${(result.plano_acao || []).map((p) => `
+              <div class="plan-card">
+                <span class="tag">${escapeHtml(p.etapa)} · ${escapeHtml(p.prazo)}</span>
+                <strong>${escapeHtml(p.titulo)}</strong>
+                <p>${escapeHtml(p.descricao)}</p>
+                <p style="font-size:12px;color:var(--text-muted);">
+                  Objetivo: ${escapeHtml(p.objetivo)}
+                </p>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+        <div class="result-block">
+          <h3>Matriz de decisão Nexora</h3>
+
+          <div style="display:grid;gap:12px;margin-top:14px;">
+            ${(result.matriz_decisao || []).map((m) => `
+              <div class="matrix-card">
+                <span class="tag">${escapeHtml(m.eixo)}</span>
+                <strong>${escapeHtml(m.score)} / 100</strong>
+                <p>${escapeHtml(m.leitura)}</p>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+        <div class="result-block">
+          <h3>Recomendação estratégica final</h3>
+          <p style="color:var(--text-muted);line-height:1.8;margin-top:10px;">
+            ${escapeHtml(result.recomendacao)}
+          </p>
+        </div>
+
+        <div class="result-block">
+          <h3>Resumo para cliente</h3>
+          <div class="analysis-text" style="margin-top:14px;">${escapeHtml(result.resumo_cliente)}</div>
+        </div>
+
+        <div class="actions-row">
           <button class="btn-secondary" onclick="location.href='./mercado.html'">
             Voltar ao Cérebro 3
           </button>
 
           <button class="btn-primary" onclick="location.href='./relatorio.html'">
-            Abrir relatório
+            Ir para Relatório
           </button>
         </div>
       `;
+
+      resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    function buildReportPayload(result) {
-      return {
-        headline: `Score geral de ${result.score_geral}/100`,
-        coverSub: result.veredicto || "Síntese estratégica gerada pela Nexora.",
-        executiveSummary: result.diagnostico_executivo,
-        rootCause: result.problema_raiz,
-        metrics: [
-          {
-            title: "Atração",
-            score: result.pilares?.atracao?.status || "-",
-            level: normalizeLevel(result.pilares?.atracao?.status),
-            description: result.pilares?.atracao?.resumo || "-"
-          },
-          {
-            title: "Conversão",
-            score: result.pilares?.conversao?.status || "-",
-            level: normalizeLevel(result.pilares?.conversao?.status),
-            description: result.pilares?.conversao?.resumo || "-"
-          },
-          {
-            title: "Mercado",
-            score: result.pilares?.mercado?.status || "-",
-            level: normalizeLevel(result.pilares?.mercado?.status),
-            description: result.pilares?.mercado?.resumo || "-"
-          },
-          {
-            title: "Operação",
-            score: result.pilares?.operacao?.status || "-",
-            level: normalizeLevel(result.pilares?.operacao?.status),
-            description: result.pilares?.operacao?.resumo || "-"
-          }
-        ],
-        actions: (result.plano_acao || []).map(a => ({
-          title: a.titulo,
-          description: a.detalhe
-        }))
-      };
-    }
-
-    function normalizeLevel(status) {
-      if (status === "CRÍTICO") return "bad";
-      if (status === "ATENÇÃO") return "warn";
-      return "good";
-    }
-
-    function statusCard(title, status) {
+    function metricCard(title, value) {
       return `
-        <div style="padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);">
-          <p style="font-size:12px;color:var(--muted);">${escapeHtml(title)}</p>
-          <h3 style="margin-top:4px;">${escapeHtml(status)}</h3>
+        <div class="metric-card">
+          <p>${escapeHtml(title)}</p>
+          <h3>${escapeHtml(value)}</h3>
         </div>
       `;
     }
 
-    function pillarCard(title, pilar) {
+    function smallCard(title, value, detail) {
       return `
-        <div style="padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);">
-          <p style="font-size:12px;color:var(--muted);">${escapeHtml(title)}</p>
-          <h3 style="margin-top:4px;">${escapeHtml(pilar?.status || "-")}</h3>
-          <p style="color:var(--muted);margin-top:6px;font-size:13px;">
-            ${escapeHtml(pilar?.resumo || "-")}
-          </p>
+        <div class="metric-card">
+          <p>${escapeHtml(title)}</p>
+          <h3>${escapeHtml(value)}</h3>
+          <p style="margin-top:8px;line-height:1.5;">${escapeHtml(detail)}</p>
         </div>
       `;
+    }
+
+    function scoreValue(result, key) {
+      const value = result?.scores?.[key];
+
+      if (value === undefined || value === null || Number.isNaN(value)) {
+        return "-";
+      }
+
+      return value + "/100";
     }
 
     function escapeHtml(value) {
