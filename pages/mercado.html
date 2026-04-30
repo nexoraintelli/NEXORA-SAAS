@@ -783,10 +783,17 @@ document.querySelectorAll(".option-group").forEach(group => {
     }
 
     function n(id) {
-      const value = document.getElementById(id).value;
-      const number = Number(String(value).replace(",", "."));
-      return Number.isFinite(number) ? number : 0;
-    }
+  const el = document.getElementById(id);
+
+  if (!el) {
+    return 0;
+  }
+
+  const value = el.value;
+  const number = Number(String(value).replace(",", "."));
+
+  return Number.isFinite(number) ? number : 0;
+}
 
     function escapeHtml(value) {
       return String(value ?? "")
