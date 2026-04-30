@@ -653,7 +653,7 @@
             <span class="nav-icon">◌</span> Clientes
           </button>
 
-          <button class="nav-item" onclick="location.href='./relatorio.html'">
+          <button class="nav-item" onclick="abrirRelatorio()"
             <span class="nav-icon">▤</span> Relatórios
           </button>
 
@@ -783,7 +783,7 @@
             <p>Cruzamento dos três cérebros para definir causa raiz consolidada.</p>
           </div>
 
-          <div class="flow-card" onclick="location.href='./relatorio.html'">
+          <div class="flow-card" onclick="abrirRelatorio()"
             <span class="flow-step">05</span>
             <h3>Relatório</h3>
             <p>Entrega final com score, gaps, prioridades e plano de ação.</p>
@@ -831,7 +831,7 @@
                 <p>Acesse diagnósticos anteriores e acompanhe resultados.</p>
               </div>
 
-              <div class="quick-card" onclick="location.href='./relatorio.html'">
+              <div class="quick-card" onclick="abrirRelatorio()"
                 <strong>Ver relatório</strong>
                 <p>Consulte a última entrega final gerada pela Nexora.</p>
               </div>
@@ -887,7 +887,17 @@
 
       window.location.href = "./diagnostico.html";
     };
+window.abrirRelatorio = function () {
+  const synth = localStorage.getItem("nx_synth");
 
+  if (!synth) {
+    alert("Nenhuma Síntese Final encontrada. Gere a Síntese antes de abrir o relatório.");
+    window.location.href = "./sintese.html";
+    return;
+  }
+
+  window.location.href = "./relatorio.html";
+};
     window.loadDiagnostics = loadDiagnostics;
 
     async function loadDiagnostics(userId) {
