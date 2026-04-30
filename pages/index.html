@@ -959,6 +959,297 @@
     padding: 26px 0 24px !important;
   }
 }
+    /* ================================
+   AJUSTE FINAL DE ESCALA GLOBAL
+   Mantém o hero h1 atual e reduz o restante
+================================ */
+
+/* Header */
+.header-inner {
+  min-height: 66px !important;
+}
+
+.brand-image {
+  width: 145px !important;
+  height: auto !important;
+}
+
+.nav {
+  gap: 22px !important;
+  font-size: 13px !important;
+}
+
+.header .btn-primary {
+  padding: 11px 17px !important;
+  font-size: 13px !important;
+  border-radius: 13px !important;
+}
+
+/* Hero */
+.hero {
+  padding: 32px 0 32px !important;
+}
+
+.hero-grid {
+  grid-template-columns: minmax(0, .95fr) minmax(340px, .68fr) !important;
+  gap: 34px !important;
+  min-height: 445px !important;
+  align-items: center !important;
+}
+
+.eyebrow {
+  font-size: 9.5px !important;
+  padding: 7px 11px !important;
+  margin-bottom: 18px !important;
+  letter-spacing: .13em !important;
+}
+
+.hero-sub {
+  margin-top: 16px !important;
+  max-width: 520px !important;
+  font-size: 14.5px !important;
+  line-height: 1.65 !important;
+}
+
+.hero-actions {
+  margin-top: 22px !important;
+  gap: 10px !important;
+}
+
+.btn {
+  padding: 10px 14px !important;
+  font-size: 12.5px !important;
+  border-radius: 12px !important;
+}
+
+/* Scanner */
+.hero-scanner {
+  min-height: 345px !important;
+}
+
+.scanner-orbit {
+  width: min(315px, 100%) !important;
+}
+
+.scanner-status {
+  bottom: 4px !important;
+  min-width: 250px !important;
+  padding: 11px 13px !important;
+  border-radius: 13px !important;
+}
+
+.scanner-status strong {
+  font-size: 12.5px !important;
+}
+
+.scanner-status span {
+  font-size: 10.5px !important;
+}
+
+/* Métricas do hero */
+.hero-stats {
+  margin-top: 24px !important;
+  max-width: 560px !important;
+}
+
+.stat {
+  padding: 11px 12px !important;
+  gap: 8px !important;
+}
+
+.stat-icon {
+  font-size: 17px !important;
+}
+
+.stat strong {
+  font-size: 20px !important;
+}
+
+.stat span {
+  font-size: 10.5px !important;
+  line-height: 1.3 !important;
+}
+
+/* Seções gerais */
+.section {
+  padding: 44px 0 !important;
+}
+
+.section-header {
+  gap: 28px !important;
+  margin-bottom: 20px !important;
+}
+
+.section-kicker {
+  font-size: 9.5px !important;
+  margin-bottom: 10px !important;
+  letter-spacing: .16em !important;
+}
+
+.section h2 {
+  font-size: clamp(28px, 3vw, 42px) !important;
+  line-height: 1.04 !important;
+  max-width: 620px !important;
+}
+
+.section-desc {
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+}
+
+/* Cards */
+.grid-4,
+.grid-3 {
+  gap: 13px !important;
+}
+
+.card {
+  border-radius: 18px !important;
+  padding: 18px !important;
+}
+
+.card-icon {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 12px !important;
+  font-size: 17px !important;
+  margin-bottom: 14px !important;
+}
+
+.card h3 {
+  font-size: 15.5px !important;
+  line-height: 1.25 !important;
+  margin-bottom: 8px !important;
+}
+
+.card p {
+  font-size: 12.5px !important;
+  line-height: 1.62 !important;
+}
+
+/* Cards dos cérebros */
+.how-section {
+  padding-top: 48px !important;
+}
+
+.brain-card {
+  min-height: 215px !important;
+}
+
+.brain-number {
+  font-size: 10.5px !important;
+  margin-bottom: 12px !important;
+}
+
+.brain-symbol {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 14px !important;
+  font-size: 20px !important;
+  margin-bottom: 14px !important;
+}
+
+.brain-card h3 {
+  font-size: 18px !important;
+  line-height: 1.15 !important;
+}
+
+/* Para quem é */
+.audience {
+  padding-top: 48px !important;
+}
+
+/* CTA final */
+.cta {
+  padding: 48px 0 54px !important;
+}
+
+.cta-inner {
+  padding: 32px 38px !important;
+  gap: 24px !important;
+}
+
+.cta h2 {
+  font-size: clamp(28px, 3vw, 42px) !important;
+  line-height: 1.04 !important;
+}
+
+.cta p {
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+  margin-top: 10px !important;
+}
+
+.cta-box {
+  border-radius: 22px !important;
+}
+
+/* Footer */
+.footer {
+  padding: 22px 0 30px !important;
+}
+
+.footer-inner {
+  font-size: 12px !important;
+  align-items: center !important;
+}
+
+.footer-logo {
+  width: 125px !important;
+}
+
+/* Responsivo */
+@media (max-width: 1100px) {
+  .hero-grid,
+  .section-header,
+  .cta-inner {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hero-scanner {
+    min-height: 300px !important;
+  }
+
+  .scanner-orbit {
+    width: min(280px, 100%) !important;
+  }
+
+  .section h2,
+  .cta h2 {
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .hero h1 {
+    font-size: 38px !important;
+  }
+
+  .hero {
+    padding: 28px 0 28px !important;
+  }
+
+  .hero-grid {
+    gap: 24px !important;
+  }
+
+  .brand-image {
+    width: 130px !important;
+  }
+
+  .section {
+    padding: 36px 0 !important;
+  }
+
+  .section h2,
+  .cta h2 {
+    font-size: 30px !important;
+  }
+
+  .card {
+    padding: 16px !important;
+  }
+}
   </style>
 </head>
 
