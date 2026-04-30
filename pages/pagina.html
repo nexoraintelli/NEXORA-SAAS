@@ -10,96 +10,452 @@
   <link rel="stylesheet" href="../styles/global.css">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --nexora-red: #8b1e1e;
+      --nexora-red-2: #b32626;
+      --nexora-red-soft: rgba(139, 30, 30, 0.18);
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 15% 20%, rgba(128,0,0,.45) 0%, transparent 30%),
+        radial-gradient(circle at 75% 25%, rgba(111,29,29,.40) 0%, transparent 28%),
+        radial-gradient(circle at 60% 80%, rgba(214,31,31,.22) 0%, transparent 22%),
+        linear-gradient(135deg, #0b0b0c 0%, #121212 35%, #1a0000 100%);
+    }
+
+    .step {
+      display: none;
+    }
+
+    .step.active {
+      display: block;
+    }
+
+    .progress {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin: 24px 0;
+    }
+
+    .progress-item {
+      height: 6px;
+      background: rgba(255,255,255,.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-item.active {
+      background: linear-gradient(135deg, var(--nexora-red), var(--nexora-red-2));
+    }
+
+    .step-label {
+      font-family: Syne, sans-serif;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-size: 11px;
+      margin-bottom: 10px;
+    }
+
+    .option-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .option-btn {
+      min-width: 128px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.03);
+      color: var(--text-muted);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-family: DM Sans, sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: .15s ease;
+      text-align: center;
+      justify-content: center;
+    }
+
+    .option-btn.active {
+      background: var(--nexora-red-soft);
+      border-color: var(--nexora-red-2);
+      color: #fff;
+    }
+
+    .nav-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+
+    .context-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .metric-card {
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,.03);
+    }
+
+    .metric-card p {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric-card h3 {
+      margin-top: 4px;
+    }
+
+    .result-block {
+      border: 1px solid var(--border);
+      background: var(--surface-strong);
+      border-radius: 16px;
+      padding: 18px;
+      margin-top: 16px;
+    }
+
+    .score-number {
+      font-family: Syne, sans-serif;
+      font-size: 54px;
+      line-height: 1;
+      font-weight: 800;
+    }
+
+    .analysis-text {
+      color: var(--text-muted);
+      line-height: 1.85;
+      white-space: pre-wrap;
+      font-size: 14px;
+    }
+
+    .pill-red {
+      color: #fff;
+      background: var(--nexora-red-soft);
+      border: 1px solid rgba(179,38,38,.35);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      display: inline-flex;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    .form-grid-full {
+      display: grid;
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    .option-block {
+      margin-top: 20px;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    @media (max-width: 900px) {
+      .context-grid,
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .progress {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 
 <body>
   <main class="wrap">
 
     <section class="card">
-      <p style="font-family:Syne,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);font-size:11px;margin-bottom:12px;">
-        Nexora Intelligence · Cérebro 2
-      </p>
+      <p class="step-label">Nexora Intelligence · Cérebro 2</p>
 
       <h1>Análise de página</h1>
 
-      <p style="color:var(--muted);margin-top:8px;line-height:1.6;">
-        Analise título, bullets, descrição, prova social e elementos de conversão da página.
+      <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
+        Leitura profunda da página do produto: imagem, título, SEO, comunicação, diferenciação, confiança e oferta.
       </p>
+
+      <div class="progress" id="progress"></div>
     </section>
 
     <section id="contextArea" class="card"></section>
 
-    <section class="card">
-      <h2>Dados da página</h2>
+    <!-- ETAPA 1 -->
+    <section class="card step active" data-step="0">
+      <p class="step-label">Etapa 1 de 5</p>
+      <h2>Imagem principal e atratividade</h2>
 
-      <div style="display:grid;gap:16px;margin-top:20px;">
-        <div>
-          <label>Título do produto</label>
-          <textarea id="title" rows="3" placeholder="Cole o título do anúncio"></textarea>
+      <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
+        Aqui avaliamos se a página sustenta o clique. Essa etapa conversa diretamente com problemas de CTR identificados no Cérebro 1.
+      </p>
+
+      <div class="option-block">
+        <label>Imagem principal é clara?</label>
+        <div class="option-group" data-group="imageClarity">
+          <button type="button" class="option-btn" data-value="Forte">Forte</button>
+          <button type="button" class="option-btn" data-value="Média">Média</button>
+          <button type="button" class="option-btn" data-value="Fraca">Fraca</button>
         </div>
+      </div>
 
-        <div>
-          <label>Bullets / principais argumentos</label>
-          <textarea id="bullets" rows="5" placeholder="Cole os bullets ou principais argumentos da página"></textarea>
+      <div class="option-block">
+        <label>O cliente entende o produto em 1 segundo?</label>
+        <div class="option-group" data-group="oneSecondUnderstanding">
+          <button type="button" class="option-btn" data-value="Sim">Sim</button>
+          <button type="button" class="option-btn" data-value="Parcial">Parcial</button>
+          <button type="button" class="option-btn" data-value="Não">Não</button>
         </div>
+      </div>
 
-        <div>
-          <label>Descrição / A+ / informações complementares</label>
-          <textarea id="description" rows="5" placeholder="Cole a descrição, A+ ou resumo da comunicação do produto"></textarea>
+      <div class="option-block">
+        <label>O benefício principal aparece visualmente?</label>
+        <div class="option-group" data-group="benefitVisible">
+          <button type="button" class="option-btn" data-value="Sim">Sim</button>
+          <button type="button" class="option-btn" data-value="Parcial">Parcial</button>
+          <button type="button" class="option-btn" data-value="Não">Não</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Contraste competitivo no resultado de busca</label>
+        <div class="option-group" data-group="competitiveContrast">
+          <button type="button" class="option-btn" data-value="Alto">Alto</button>
+          <button type="button" class="option-btn" data-value="Médio">Médio</button>
+          <button type="button" class="option-btn" data-value="Baixo">Baixo</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Percepção visual</label>
+        <div class="option-group" data-group="visualPerception">
+          <button type="button" class="option-btn" data-value="Premium">Premium</button>
+          <button type="button" class="option-btn" data-value="Boa">Boa</button>
+          <button type="button" class="option-btn" data-value="Pouco premium">Pouco premium</button>
+          <button type="button" class="option-btn" data-value="Genérica">Genérica</button>
         </div>
       </div>
     </section>
 
-    <section class="card">
-      <h2>Prova social e oferta</h2>
+    <!-- ETAPA 2 -->
+    <section class="card step" data-step="1">
+      <p class="step-label">Etapa 2 de 5</p>
+      <h2>Título e SEO</h2>
 
-      <div class="grid-3" style="margin-top:20px;">
+      <div class="form-grid-full">
         <div>
-          <label>Preço atual (R$)</label>
-          <input id="price" type="number" step="0.01" placeholder="Ex: 89.90">
+          <label>Título do produto</label>
+          <textarea id="title" placeholder="Cole o título atual do produto"></textarea>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div>
+          <label>Palavra-chave principal</label>
+          <input id="keyword" placeholder="Ex: vela aromática, vitamina C, suporte celular">
         </div>
 
+        <div>
+          <label>Benefício principal</label>
+          <input id="mainBenefit" placeholder="Ex: relaxamento, clareamento, organização, resistência">
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Qualidade do título</label>
+        <div class="option-group" data-group="titleQuality">
+          <button type="button" class="option-btn" data-value="Bom">Bom</button>
+          <button type="button" class="option-btn" data-value="Genérico">Genérico</button>
+          <button type="button" class="option-btn" data-value="Poluído">Poluído</button>
+          <button type="button" class="option-btn" data-value="Fraco em SEO">Fraco em SEO</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Qualidade de SEO</label>
+        <div class="option-group" data-group="seoQuality">
+          <button type="button" class="option-btn" data-value="Forte">Forte</button>
+          <button type="button" class="option-btn" data-value="Médio">Médio</button>
+          <button type="button" class="option-btn" data-value="Fraco">Fraco</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Clareza do título</label>
+        <div class="option-group" data-group="titleClarity">
+          <button type="button" class="option-btn" data-value="Clara">Clara</button>
+          <button type="button" class="option-btn" data-value="Parcial">Parcial</button>
+          <button type="button" class="option-btn" data-value="Confuso">Confuso</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ETAPA 3 -->
+    <section class="card step" data-step="2">
+      <p class="step-label">Etapa 3 de 5</p>
+      <h2>Bullets e comunicação de valor</h2>
+
+      <div class="form-grid-full">
+        <div>
+          <label>Bullets / principais argumentos</label>
+          <textarea id="bullets" placeholder="Cole os bullets ou principais argumentos da página"></textarea>
+        </div>
+
+        <div>
+          <label>Diferenciais do produto</label>
+          <textarea id="differentials" placeholder="Quais diferenciais a página comunica?"></textarea>
+        </div>
+
+        <div>
+          <label>Objeções respondidas</label>
+          <textarea id="objections" placeholder="Ex: durabilidade, segurança, composição, garantia, tamanho, modo de uso"></textarea>
+        </div>
+
+        <div>
+          <label>Descrição / A+ / informações complementares</label>
+          <textarea id="description" placeholder="Cole a descrição, A+ ou resumo da comunicação do produto"></textarea>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Qualidade da comunicação</label>
+        <div class="option-group" data-group="communicationQuality">
+          <button type="button" class="option-btn" data-value="Convincente">Convincente</button>
+          <button type="button" class="option-btn" data-value="Só características">Só características</button>
+          <button type="button" class="option-btn" data-value="Confusa">Confusa</button>
+          <button type="button" class="option-btn" data-value="Fraca">Fraca</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Qualidade da diferenciação</label>
+        <div class="option-group" data-group="differentiationQuality">
+          <button type="button" class="option-btn" data-value="Forte">Forte</button>
+          <button type="button" class="option-btn" data-value="Média">Média</button>
+          <button type="button" class="option-btn" data-value="Fraca">Fraca</button>
+          <button type="button" class="option-btn" data-value="Commodity">Commodity</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>A página cobre objeções?</label>
+        <div class="option-group" data-group="objectionCoverage">
+          <button type="button" class="option-btn" data-value="Cobre bem">Cobre bem</button>
+          <button type="button" class="option-btn" data-value="Cobre parcialmente">Cobre parcialmente</button>
+          <button type="button" class="option-btn" data-value="Não cobre">Não cobre</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ETAPA 4 -->
+    <section class="card step" data-step="3">
+      <p class="step-label">Etapa 4 de 5</p>
+      <h2>Prova social e confiança</h2>
+
+      <div class="form-grid">
         <div>
           <label>Reviews</label>
           <input id="reviews" type="number" placeholder="Ex: 128">
         </div>
 
         <div>
-          <label>Rating</label>
+          <label>Rating médio</label>
           <input id="rating" type="number" step="0.1" min="0" max="5" placeholder="Ex: 4.5">
-        </div>
-
-        <div>
-          <label>Imagem principal forte?</label>
-          <select id="hasMainImage">
-            <option value="">Selecione</option>
-            <option value="true">Sim</option>
-            <option value="false">Não / fraca</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Tem vídeo?</label>
-          <select id="hasVideo">
-            <option value="">Selecione</option>
-            <option value="true">Sim</option>
-            <option value="false">Não</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Tem cupom/oferta?</label>
-          <select id="hasCoupon">
-            <option value="">Selecione</option>
-            <option value="true">Sim</option>
-            <option value="false">Não</option>
-          </select>
         </div>
       </div>
 
-      <button class="btn-primary" style="margin-top:24px;width:100%;" onclick="gerarAnalisePagina()">
-        Analisar página
-      </button>
+      <div class="option-block">
+        <label>Tem A+?</label>
+        <div class="option-group" data-group="hasAplus">
+          <button type="button" class="option-btn" data-value="Sim">Sim</button>
+          <button type="button" class="option-btn" data-value="Não">Não</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Tem vídeo?</label>
+        <div class="option-group" data-group="hasVideo">
+          <button type="button" class="option-btn" data-value="Sim">Sim</button>
+          <button type="button" class="option-btn" data-value="Não">Não</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Tem fotos sociais / imagens de uso?</label>
+        <div class="option-group" data-group="hasSocialImages">
+          <button type="button" class="option-btn" data-value="Sim">Sim</button>
+          <button type="button" class="option-btn" data-value="Não">Não</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Nível de confiança percebida</label>
+        <div class="option-group" data-group="trustLevel">
+          <button type="button" class="option-btn" data-value="Alta">Alta</button>
+          <button type="button" class="option-btn" data-value="Média">Média</button>
+          <button type="button" class="option-btn" data-value="Baixa">Baixa</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ETAPA 5 -->
+    <section class="card step" data-step="4">
+      <p class="step-label">Etapa 5 de 5</p>
+      <h2>Oferta e preço percebido</h2>
+
+      <div class="form-grid">
+        <div>
+          <label>Preço atual (R$)</label>
+          <input id="price" type="number" step="0.01" placeholder="Ex: 89.90">
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Tem cupom/oferta?</label>
+        <div class="option-group" data-group="hasCoupon">
+          <button type="button" class="option-btn" data-value="Sim">Sim</button>
+          <button type="button" class="option-btn" data-value="Não">Não</button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <label>Oferta está alinhada ao valor percebido?</label>
+        <div class="option-group" data-group="offerAlignment">
+          <button type="button" class="option-btn" data-value="Alinhada">Alinhada</button>
+          <button type="button" class="option-btn" data-value="Parcial">Parcial</button>
+          <button type="button" class="option-btn" data-value="Desalinhada">Desalinhada</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="nav-actions">
+        <button class="btn-secondary" onclick="prevStep()">Voltar</button>
+        <button class="btn-primary" id="nextBtn" onclick="nextStep()">Continuar</button>
+      </div>
 
       <p id="msg" style="color:var(--muted);font-size:13px;margin-top:16px;"></p>
     </section>
@@ -115,9 +471,14 @@
 
     await requireAuth();
 
+    const state = {};
+    let currentStep = 0;
+
+    const steps = Array.from(document.querySelectorAll(".step"));
     const msg = document.getElementById("msg");
     const resultArea = document.getElementById("resultArea");
     const contextArea = document.getElementById("contextArea");
+    const nextBtn = document.getElementById("nextBtn");
 
     let C1 = null;
 
@@ -125,12 +486,14 @@
       C1 = JSON.parse(localStorage.getItem("nx_c1") || "null");
     } catch (e) {}
 
-    function loadContext() {
+    function renderContext() {
       if (!C1) {
         contextArea.innerHTML = `
+          <p class="step-label">Contexto obrigatório</p>
           <h2>Cérebro 1 não encontrado</h2>
-          <p style="color:var(--muted);margin-top:8px;line-height:1.6;">
-            Execute o Cérebro 1 antes da análise de página. O Cérebro 2 depende da leitura de métricas para interpretar a página corretamente.
+
+          <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
+            Execute o Cérebro 1 antes de continuar. O Cérebro 2 precisa da leitura de performance para interpretar se a página explica o problema de CTR, CVR, mídia ou operação.
           </p>
 
           <button class="btn-primary" style="margin-top:18px;" onclick="location.href='./diagnostico.html'">
@@ -141,98 +504,182 @@
       }
 
       contextArea.innerHTML = `
-        <h2>Contexto do Cérebro 1</h2>
+        <p class="step-label">Contexto recebido do Cérebro 1</p>
+        <h2>Hipótese inicial de performance</h2>
 
-        <div class="grid-3" style="margin-top:18px;">
-          ${infoCard("Categoria", C1.subcategory || C1.sub || C1.category || C1.cat || "-")}
-          ${infoCard("CTR", (C1.ctr ?? "-") + "%")}
-          ${infoCard("CVR", (C1.cvr ?? "-") + "%")}
-          ${infoCard("Causa raiz inicial", C1.root_cause || "-")}
+        <div class="context-grid">
+          ${smallCard("Categoria", C1.subcategory || C1.sub || C1.category || C1.cat || "-")}
+          ${smallCard("CTR", (C1.ctr ?? "-") + "%")}
+          ${smallCard("CVR", (C1.cvr ?? "-") + "%")}
+          ${smallCard("Causa raiz", C1.root_cause || "-")}
         </div>
+
+        <p style="color:var(--muted);margin-top:18px;line-height:1.7;">
+          O Cérebro 2 vai validar se a página confirma ou contradiz essa hipótese inicial.
+        </p>
       `;
     }
 
-    loadContext();
+    renderContext();
 
-    function v(id) {
-      return document.getElementById(id).value.trim();
+    document.querySelectorAll(".option-group").forEach(group => {
+      group.querySelectorAll(".option-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          group.querySelectorAll(".option-btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          state[group.dataset.group] = btn.dataset.value;
+        });
+      });
+    });
+
+    function renderProgress() {
+      const progress = document.getElementById("progress");
+      progress.innerHTML = "";
+
+      steps.forEach((_, i) => {
+        const item = document.createElement("div");
+        item.className = "progress-item" + (i <= currentStep ? " active" : "");
+        progress.appendChild(item);
+      });
     }
 
-    function n(id) {
-      return Number(document.getElementById(id).value || 0);
+    function renderStep() {
+      steps.forEach((s, i) => s.classList.toggle("active", i === currentStep));
+      nextBtn.textContent = currentStep === steps.length - 1 ? "Gerar análise de página" : "Continuar";
+      msg.textContent = "";
+      renderProgress();
     }
 
-    function bool(id) {
-      const value = document.getElementById(id).value;
-      if (value === "true") return true;
-      if (value === "false") return false;
-      return null;
-    }
+    window.nextStep = async function () {
+      if (!validarEtapa(currentStep)) return;
 
-    function validar() {
+      if (currentStep < steps.length - 1) {
+        currentStep++;
+        renderStep();
+        return;
+      }
+
+      await gerarAnalisePagina();
+    };
+
+    window.prevStep = function () {
+      if (currentStep > 0) {
+        currentStep--;
+        renderStep();
+      }
+    };
+
+    function validarEtapa(step) {
       if (!C1) {
         msg.textContent = "Execute o Cérebro 1 antes.";
         return false;
       }
 
-      const diagnosticId = getDiagnosticId();
-
-      if (!diagnosticId) {
-        msg.textContent = "Nenhum diagnóstico ativo. Volte ao dashboard e inicie um novo diagnóstico.";
-        return false;
+      if (step === 0) {
+        if (!state.imageClarity || !state.oneSecondUnderstanding || !state.benefitVisible || !state.competitiveContrast || !state.visualPerception) {
+          msg.textContent = "Preencha todos os pontos de imagem e atratividade.";
+          return false;
+        }
       }
 
-      const title = v("title");
-      const bullets = v("bullets");
-      const description = v("description");
+      if (step === 1) {
+        if (!v("title") || !v("keyword") || !v("mainBenefit")) {
+          msg.textContent = "Preencha título, palavra-chave principal e benefício.";
+          return false;
+        }
 
-      if (!title && !bullets && !description) {
-        msg.textContent = "Preencha pelo menos título, bullets ou descrição.";
-        return false;
+        if (!state.titleQuality || !state.seoQuality || !state.titleClarity) {
+          msg.textContent = "Selecione a qualidade do título, SEO e clareza.";
+          return false;
+        }
       }
 
-      const rating = n("rating");
+      if (step === 2) {
+        if (!v("bullets") || !v("differentials") || !v("objections")) {
+          msg.textContent = "Preencha bullets, diferenciais e objeções respondidas.";
+          return false;
+        }
 
-      if (rating && (rating < 0 || rating > 5)) {
-        msg.textContent = "O rating precisa estar entre 0 e 5.";
-        return false;
+        if (!state.communicationQuality || !state.differentiationQuality || !state.objectionCoverage) {
+          msg.textContent = "Selecione comunicação, diferenciação e cobertura de objeções.";
+          return false;
+        }
       }
 
-      if (bool("hasMainImage") === null) {
-        msg.textContent = "Informe se a imagem principal é forte.";
-        return false;
+      if (step === 3) {
+        if (!v("reviews") || !v("rating")) {
+          msg.textContent = "Preencha reviews e rating.";
+          return false;
+        }
+
+        if (n("rating") < 0 || n("rating") > 5) {
+          msg.textContent = "O rating precisa estar entre 0 e 5.";
+          return false;
+        }
+
+        if (!state.hasAplus || !state.hasVideo || !state.hasSocialImages || !state.trustLevel) {
+          msg.textContent = "Preencha todos os pontos de confiança.";
+          return false;
+        }
       }
 
-      if (bool("hasVideo") === null) {
-        msg.textContent = "Informe se o produto tem vídeo.";
-        return false;
-      }
+      if (step === 4) {
+        if (!v("price")) {
+          msg.textContent = "Preencha o preço atual.";
+          return false;
+        }
 
-      if (bool("hasCoupon") === null) {
-        msg.textContent = "Informe se o produto tem cupom ou oferta.";
-        return false;
+        if (!state.hasCoupon || !state.offerAlignment) {
+          msg.textContent = "Preencha cupom/oferta e alinhamento da oferta.";
+          return false;
+        }
       }
 
       return true;
     }
 
-    window.gerarAnalisePagina = async function () {
-      if (!validar()) return;
-
+    async function gerarAnalisePagina() {
       const diagnosticId = getDiagnosticId();
 
-      msg.textContent = "Analisando página...";
+      if (!diagnosticId) {
+        msg.textContent = "Nenhum diagnóstico ativo. Volte ao dashboard e inicie um novo diagnóstico.";
+        return;
+      }
+
+      msg.textContent = "Gerando análise profunda do Cérebro 2...";
 
       const data = {
+        imageClarity: state.imageClarity,
+        oneSecondUnderstanding: state.oneSecondUnderstanding,
+        benefitVisible: state.benefitVisible,
+        competitiveContrast: state.competitiveContrast,
+        visualPerception: state.visualPerception,
+
         title: v("title"),
+        keyword: v("keyword"),
+        mainBenefit: v("mainBenefit"),
+        titleQuality: state.titleQuality,
+        seoQuality: state.seoQuality,
+        titleClarity: state.titleClarity,
+
         bullets: v("bullets"),
+        differentials: v("differentials"),
+        objections: v("objections"),
         description: v("description"),
-        price: n("price"),
+        communicationQuality: state.communicationQuality,
+        differentiationQuality: state.differentiationQuality,
+        objectionCoverage: state.objectionCoverage,
+
         reviews: n("reviews"),
         rating: n("rating"),
-        hasMainImage: bool("hasMainImage"),
-        hasVideo: bool("hasVideo"),
-        hasCoupon: bool("hasCoupon")
+        hasAplus: state.hasAplus,
+        hasVideo: state.hasVideo,
+        hasSocialImages: state.hasSocialImages,
+        trustLevel: state.trustLevel,
+
+        price: n("price"),
+        hasCoupon: state.hasCoupon,
+        offerAlignment: state.offerAlignment
       };
 
       const result = analisarPaginaBase(data, C1);
@@ -254,62 +701,85 @@
         diagnosticId,
         brainCode: "c2",
         brainName: "Cérebro 2 - Análise de Página",
-        score: result.scores?.cvr_readiness || 0,
+        score: result.score_pagina,
         resultData: fullResult
       });
 
       renderResult(fullResult);
-
-      msg.textContent = "Análise de página salva com sucesso.";
-    };
+      msg.textContent = "Análise do Cérebro 2 salva com sucesso.";
+    }
 
     function renderResult(result) {
       resultArea.style.display = "block";
 
       resultArea.innerHTML = `
-        <h2>Resultado do Cérebro 2</h2>
+        <p class="step-label">Resultado · Cérebro 2</p>
+        <h2>Análise de página</h2>
 
-        <div style="margin-top:18px;padding:16px;border:1px solid var(--border);border-radius:14px;background:var(--surface-strong);">
-          <p style="font-family:Syne,sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);">
-            Problema principal da página
-          </p>
+        <div class="result-block">
+          <div style="display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-start;">
+            <div>
+              <p style="color:var(--muted);font-size:12px;">Score da página</p>
+              <div class="score-number">${escapeHtml(result.score_pagina ?? "-")}</div>
+              <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">/100 · ${escapeHtml(result.status || "-")}</p>
+            </div>
 
-          <h3 style="margin-top:8px;color:var(--text);">
-            ${escapeHtml(result.problema_principal)}
-          </h3>
+            <div style="max-width:560px;">
+              <span class="pill-red">Problema principal da página</span>
+              <h3 style="margin-top:12px;">${escapeHtml(result.problema_principal)}</h3>
+              <p style="color:var(--muted);margin-top:10px;line-height:1.7;">
+                ${escapeHtml(result.gap_principal)}
+              </p>
+            </div>
+          </div>
+        </div>
 
-          <p style="color:var(--muted);margin-top:10px;line-height:1.6;">
-            ${escapeHtml(result.diagnostico)}
+        <div class="context-grid" style="margin-top:18px;">
+          ${metricCard("Atratividade visual", scoreValue(result, "atratividade_visual"))}
+          ${metricCard("Título e SEO", scoreValue(result, "titulo_seo"))}
+          ${metricCard("Comunicação", scoreValue(result, "comunicacao_valor"))}
+          ${metricCard("Confiança", scoreValue(result, "confianca"))}
+          ${metricCard("Diferenciação", scoreValue(result, "diferenciacao"))}
+          ${metricCard("Oferta", scoreValue(result, "oferta"))}
+          ${metricCard("CTR-readiness", scoreValue(result, "ctr_readiness"))}
+          ${metricCard("CVR-readiness", scoreValue(result, "cvr_readiness"))}
+        </div>
+
+        <div class="result-block">
+          <h3>Diagnóstico executivo completo</h3>
+          <div class="analysis-text" style="margin-top:14px;">${escapeHtml(result.diagnostico_executivo)}</div>
+        </div>
+
+        <div class="result-block">
+          <h3>Impacto estratégico</h3>
+          <p style="color:var(--text-muted);line-height:1.8;margin-top:10px;">
+            ${escapeHtml(result.impacto)}
           </p>
         </div>
 
-        <div class="grid-3" style="margin-top:18px;">
-          ${metricCard("CTR-readiness", result.scores.ctr_readiness + "/100")}
-          ${metricCard("CVR-readiness", result.scores.cvr_readiness + "/100")}
-          ${metricCard("Diferenciação", result.scores.diferenciacao + "/100")}
-          ${metricCard("Confiança", result.scores.confianca + "/100")}
-        </div>
-
-        <div style="margin-top:22px;">
+        <div class="result-block">
           <h3>Gaps detectados</h3>
 
-          <div style="display:grid;gap:10px;margin-top:12px;">
+          <div style="display:grid;gap:12px;margin-top:14px;">
             ${(result.gaps || []).map((g, i) => `
-              <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.03);">
-                <strong>${i + 1}. ${escapeHtml(g.nivel)}</strong>
-                <p style="color:var(--muted);margin-top:4px;">${escapeHtml(g.descricao)}</p>
+              <div style="padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);">
+                <p style="color:var(--muted);font-size:12px;">${escapeHtml(g.nivel)}</p>
+                <strong>${i + 1}. ${escapeHtml(g.descricao)}</strong>
               </div>
             `).join("") || `<p style="color:var(--muted)">Nenhum gap crítico detectado.</p>`}
           </div>
         </div>
 
-        <div style="margin-top:22px;">
-          <h3>Prioridades</h3>
+        <div class="result-block">
+          <h3>Prioridades recomendadas</h3>
 
-          <div style="display:grid;gap:10px;margin-top:12px;">
+          <div style="display:grid;gap:12px;margin-top:14px;">
             ${(result.prioridades || []).map((p, i) => `
-              <div style="padding:12px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.03);">
-                <strong>${i + 1}. ${escapeHtml(p)}</strong>
+              <div style="padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);">
+                <p style="color:var(--muted);font-size:12px;">${escapeHtml(p.prioridade)}</p>
+                <strong>${i + 1}. ${escapeHtml(p.titulo)}</strong>
+                <p style="color:var(--muted);margin-top:6px;line-height:1.6;">${escapeHtml(p.detalhe)}</p>
+                <p style="color:var(--text-muted);margin-top:6px;font-size:12px;">Impacto: ${escapeHtml(p.impacto)}</p>
               </div>
             `).join("")}
           </div>
@@ -325,24 +795,46 @@
           </button>
         </div>
       `;
+
+      resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     function metricCard(title, value) {
       return `
-        <div style="padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);">
-          <p style="font-size:12px;color:var(--muted);">${escapeHtml(title)}</p>
-          <h3 style="margin-top:4px;">${escapeHtml(value)}</h3>
+        <div class="metric-card">
+          <p>${escapeHtml(title)}</p>
+          <h3>${escapeHtml(value)}</h3>
         </div>
       `;
     }
 
-    function infoCard(title, value) {
+    function smallCard(title, value) {
       return `
-        <div style="padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);">
-          <p style="font-size:12px;color:var(--muted);">${escapeHtml(title)}</p>
-          <h3 style="margin-top:4px;">${escapeHtml(value)}</h3>
+        <div class="metric-card">
+          <p>${escapeHtml(title)}</p>
+          <h3>${escapeHtml(value)}</h3>
         </div>
       `;
+    }
+
+    function scoreValue(result, key) {
+      const value = result?.scores?.[key];
+
+      if (value === undefined || value === null || Number.isNaN(value)) {
+        return "-";
+      }
+
+      return value + "/100";
+    }
+
+    function v(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function n(id) {
+      const value = document.getElementById(id).value;
+      const number = Number(String(value).replace(",", "."));
+      return Number.isFinite(number) ? number : 0;
     }
 
     function escapeHtml(value) {
@@ -353,6 +845,8 @@
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
     }
+
+    renderStep();
   </script>
 </body>
 </html>
