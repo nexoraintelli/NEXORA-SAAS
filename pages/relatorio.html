@@ -310,6 +310,102 @@
         break-inside: avoid;
       }
     }
+    /* Correção de layout do relatório */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  display: block !important;
+  min-height: 100vh;
+}
+
+.report-wrap {
+  width: 100% !important;
+  max-width: 1080px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}
+
+.report {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  display: block !important;
+  position: relative !important;
+}
+
+.topbar,
+.cover,
+.content,
+.signature {
+  width: 100% !important;
+  max-width: 100% !important;
+  position: relative !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+}
+
+.cover-grid {
+  width: 100% !important;
+}
+
+.section {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-wrap: break-word;
+}
+
+.analysis-text,
+.section p,
+.item-card p,
+.root-panel,
+.score-panel {
+  max-width: 100% !important;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+.report * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.metrics-grid {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+}
+
+.cover-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+}
+
+.item-card {
+  grid-template-columns: 42px minmax(0, 1fr) !important;
+}
+
+.analysis-text,
+#executiveSummary,
+#crossReading,
+#clientSummary,
+#recommendation {
+  width: 100% !important;
+  max-width: 100% !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+}
+
+@media (max-width: 900px) {
+  .cover-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+    
   </style>
 </head>
 
