@@ -180,7 +180,68 @@
       min-height: 120px;
       resize: vertical;
     }
+.competitor-head,
+.competitor-row {
+  display: grid;
+  grid-template-columns: 1.5fr .8fr .8fr .7fr .7fr 44px;
+  gap: 10px;
+  align-items: center;
+}
 
+.competitor-head {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-top: 18px;
+  padding: 0 4px;
+}
+
+.competitors-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.competitor-row {
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 14px;
+  background: rgba(255,255,255,.025);
+}
+
+.competitor-row input {
+  width: 100%;
+}
+
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.03);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  border-color: var(--nexora-red-2);
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .competitor-head {
+    display: none;
+  }
+
+  .competitor-row {
+    grid-template-columns: 1fr;
+  }
+
+  .icon-btn {
+    width: 100%;
+  }
+}
     @media (max-width: 900px) {
       .context-grid,
       .form-grid,
@@ -238,17 +299,31 @@
         </div>
       </div>
 
-      <div class="form-grid">
-        <div>
-          <label>Concorrentes fortes em reviews</label>
-          <input id="competitorsWithStrongReviews" type="number" placeholder="Ex: 8">
-        </div>
+     <div class="result-block" style="margin-top:22px;">
+  <div style="display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;">
+    <div>
+      <h3>Top concorrentes</h3>
+      <p style="color:var(--muted);font-size:13px;line-height:1.6;margin-top:6px;">
+        Adicione os principais concorrentes da página de busca para comparar preço, reviews, rating e força competitiva.
+      </p>
+    </div>
 
-        <div>
-          <label>Média de reviews dos concorrentes</label>
-          <input id="avgCompetitorReviews" type="number" placeholder="Ex: 450">
-        </div>
-      </div>
+    <button type="button" class="btn-secondary" onclick="addCompetitor()">
+      + Adicionar concorrente
+    </button>
+  </div>
+
+  <div class="competitor-head">
+    <span>Concorrente / ASIN</span>
+    <span>Preço</span>
+    <span>Reviews</span>
+    <span>Rating</span>
+    <span>Posição</span>
+    <span></span>
+  </div>
+
+  <div id="competitorsList" class="competitors-list"></div>
+</div>
     </section>
 
     <!-- ETAPA 2 -->
@@ -436,6 +511,9 @@
     }
 
     renderContext();
+    addCompetitor();
+    addCompetitor();
+    addCompetitor();
 
     document.querySelectorAll(".option-group").forEach(group => {
       group.querySelectorAll(".option-btn").forEach(btn => {
@@ -465,8 +543,12 @@
       renderProgress();
     }
 
-    window.nextStep = async function () {
-      if (!validarEtapa(currentStep)) return;
+  window.nextStep = async function () {
+  if (currentStep === 0) {
+    aplicarResumoConcorrentesNoFormulario();
+  }
+
+  if (!validarEtapa(currentStep)) return;
 
       if (currentStep < steps.length - 1) {
         currentStep++;
@@ -544,6 +626,7 @@
         entryBarrier: state.entryBarrier,
 
         marketObservation: v("marketObservation")
+        competitors: getCompetitors(),
       };
 
       const result = analisarMercadoBase(data, C1, C2);
@@ -716,7 +799,74 @@
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
     }
+let competitorIndex = 0;
 
+window.addCompetitor = function (item = {}) {
+  const list = document.getElementById("competitorsList");
+  if (!list) return;
+
+  competitorIndex++;
+
+  const row = document.createElement("div");
+  row.className = "competitor-row";
+  row.dataset.index = competitorIndex;
+
+  row.innerHTML = `
+    <input class="competitor-name" placeholder="Nome ou ASIN" value="${escapeHtml(item.name || "")}">
+    <input class="competitor-price" type="number" step="0.01" placeholder="R$" value="${escapeHtml(item.price || "")}">
+    <input class="competitor-reviews" type="number" placeholder="Reviews" value="${escapeHtml(item.reviews || "")}">
+    <input class="competitor-rating" type="number" step="0.1" min="0" max="5" placeholder="4.5" value="${escapeHtml(item.rating || "")}">
+    <input class="competitor-position" type="number" placeholder="Pos." value="${escapeHtml(item.position || "")}">
+    <button type="button" class="icon-btn" onclick="removeCompetitor(this)">×</button>
+  `;
+
+  list.appendChild(row);
+};
+
+window.removeCompetitor = function (button) {
+  button.closest(".competitor-row")?.remove();
+};
+
+function getCompetitors() {
+  return Array.from(document.querySelectorAll(".competitor-row")).map(row => ({
+    name: row.querySelector(".competitor-name")?.value.trim() || "",
+    price: Number(row.querySelector(".competitor-price")?.value || 0),
+    reviews: Number(row.querySelector(".competitor-reviews")?.value || 0),
+    rating: Number(row.querySelector(".competitor-rating")?.value || 0),
+    position: Number(row.querySelector(".competitor-position")?.value || 0)
+  })).filter(c => c.name || c.price || c.reviews || c.rating || c.position);
+}
+
+function aplicarResumoConcorrentesNoFormulario() {
+  const competitors = getCompetitors();
+
+  if (!competitors.length) return;
+
+  const prices = competitors.map(c => c.price).filter(v => v > 0);
+  const reviews = competitors.map(c => c.reviews).filter(v => v > 0);
+
+  const avgPrice = prices.length
+    ? prices.reduce((a, b) => a + b, 0) / prices.length
+    : 0;
+
+  const avgReviews = reviews.length
+    ? reviews.reduce((a, b) => a + b, 0) / reviews.length
+    : 0;
+
+  const strongReviews = competitors.filter(c => c.reviews >= 100).length;
+
+  if (avgPrice > 0) {
+    document.getElementById("avgCategoryPrice").value = avgPrice.toFixed(2);
+  }
+
+  document.getElementById("mainCompetitors").value = competitors.length;
+
+  if (avgReviews > 0) {
+    document.getElementById("avgCompetitorReviews").value = Math.round(avgReviews);
+  }
+
+  document.getElementById("competitorsWithStrongReviews").value = strongReviews;
+}
     renderStep();
   </script>
 </body>
