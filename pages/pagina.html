@@ -951,22 +951,22 @@ input[type="file"],
     }
 
     function metricCard(title, value) {
-      return `
-        <div class="metric-card">
-          <p>${escapeHtml(title)}</p>
-          <h3>${escapeHtml(value)}</h3>
-        </div>
-      `;
-    }
+  return `
+    <div class="metric-card">
+      <p>${escapeHtml(title)}</p>
+      <h3>${escapeHtml(value)}</h3>
+    </div>
+  `;
+}
 
-    function smallCard(title, value) {
-      return `
-        <div class="metric-card">
-          <p>${escapeHtml(title)}</p>
-          <h3>${escapeHtml(value)}</h3>
-        </div>
-      `;
-    }
+function smallCard(title, value) {
+  return `
+    <div class="small-card">
+      <p>${escapeHtml(title)}</p>
+      <h3>${escapeHtml(value)}</h3>
+    </div>
+  `;
+}
 
     function scoreValue(result, key) {
       const value = result?.scores?.[key];
