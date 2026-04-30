@@ -3,93 +3,838 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Nexora Intelligence</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../styles/global.css">
+  <link rel="stylesheet" href="./styles/global.css">
+  <link rel="icon" href="./assets/logo.png">
+
+  <style>
+    :root {
+      --nx-red: #8b1e1e;
+      --nx-red-2: #b32626;
+      --nx-orange: #bc741e;
+      --nx-dark: #08090d;
+      --nx-card: rgba(18, 20, 28, 0.82);
+      --nx-card-2: rgba(255,255,255,0.035);
+      --nx-border: rgba(255,255,255,0.11);
+      --nx-muted: #9ca3c7;
+      --nx-text: #f7f7fb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--nx-text);
+      background:
+        radial-gradient(circle at 12% 12%, rgba(139,30,30,.42), transparent 24%),
+        radial-gradient(circle at 86% 18%, rgba(179,38,38,.20), transparent 28%),
+        radial-gradient(circle at 45% 72%, rgba(80,0,0,.36), transparent 34%),
+        linear-gradient(135deg, #07090e 0%, #111216 42%, #1a0000 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(255,255,255,.024) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.024) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: radial-gradient(circle at center, black, transparent 76%);
+      opacity: .45;
+      z-index: 0;
+    }
+
+    .site {
+      position: relative;
+      z-index: 1;
+    }
+
+    .nav {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 22px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 2px solid rgba(165,220,230,.85);
+      background:
+        radial-gradient(circle, #e9eef5 0 13%, #9b0000 14% 35%, #0b1118 36% 58%, transparent 59%);
+      box-shadow: 0 0 22px rgba(179,38,38,.48);
+      flex: 0 0 auto;
+    }
+
+    .brand-text {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      letter-spacing: .08em;
+      line-height: .95;
+      font-size: 18px;
+    }
+
+    .brand-text small {
+      display: block;
+      font-size: 9px;
+      letter-spacing: .34em;
+      color: rgba(255,255,255,.65);
+      margin-top: 5px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-red {
+      border: 1px solid rgba(255,100,100,.34);
+      background: linear-gradient(135deg, #8b1e1e, #b32626);
+      color: #fff;
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 800;
+      font-family: DM Sans, sans-serif;
+      box-shadow: 0 16px 34px rgba(139,30,30,.28);
+      transition: .18s ease;
+    }
+
+    .btn-red:hover {
+      transform: translateY(-1px);
+      background: linear-gradient(135deg, #9f2424, #d13a3a);
+    }
+
+    .btn-ghost {
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.035);
+      color: #fff;
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 800;
+      font-family: DM Sans, sans-serif;
+      transition: .18s ease;
+    }
+
+    .btn-ghost:hover {
+      border-color: rgba(179,38,38,.42);
+      background: rgba(139,30,30,.14);
+      transform: translateY(-1px);
+    }
+
+    .hero {
+      width: min(1180px, calc(100% - 40px));
+      margin: 34px auto 0;
+      min-height: calc(100vh - 130px);
+      display: grid;
+      grid-template-columns: minmax(0, 1.03fr) minmax(360px, .86fr);
+      gap: 34px;
+      align-items: center;
+      padding-bottom: 70px;
+    }
+
+    .hero-copy {
+      min-width: 0;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(188,116,30,.30);
+      background: rgba(188,116,30,.08);
+      color: #f0a33a;
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-family: Syne, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 22px;
+    }
+
+    .hero h1 {
+      font-size: clamp(48px, 7vw, 86px);
+      line-height: .93;
+      letter-spacing: -.055em;
+      max-width: 800px;
+    }
+
+    .hero h1 .orange {
+      color: var(--nx-orange);
+    }
+
+    .hero-sub {
+      color: rgba(230,232,245,.78);
+      line-height: 1.85;
+      font-size: 17px;
+      max-width: 660px;
+      margin-top: 24px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 32px;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 46px;
+      max-width: 760px;
+    }
+
+    .stat {
+      border-top: 1px solid rgba(255,255,255,.12);
+      padding-top: 14px;
+    }
+
+    .stat strong {
+      font-family: Syne, sans-serif;
+      font-size: 26px;
+      display: block;
+    }
+
+    .stat span {
+      display: block;
+      color: var(--nx-muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-top: 3px;
+    }
+
+    .diagnostic-preview {
+      border: 1px solid rgba(179,38,38,.32);
+      border-radius: 26px;
+      padding: 20px;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(179,38,38,.22), transparent 36%),
+        linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.018));
+      box-shadow: 0 30px 100px rgba(0,0,0,.42);
+      min-width: 0;
+    }
+
+    .preview-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+
+    .preview-title {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .live-pill {
+      border: 1px solid rgba(61,220,151,.28);
+      color: #78f0bd;
+      background: rgba(61,220,151,.08);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .score-box {
+      margin-top: 18px;
+      border-radius: 20px;
+      padding: 22px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(8,10,16,.66);
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr);
+      gap: 18px;
+      align-items: center;
+    }
+
+    .score-big {
+      font-family: Syne, sans-serif;
+      font-size: 76px;
+      font-weight: 800;
+      line-height: .95;
+    }
+
+    .score-box p {
+      color: var(--nx-muted);
+      line-height: 1.65;
+      font-size: 13px;
+    }
+
+    .brain-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .brain-item {
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.035);
+      border-radius: 16px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .brain-num {
+      width: 38px;
+      height: 38px;
+      border-radius: 13px;
+      border: 1px solid rgba(179,38,38,.38);
+      background: rgba(139,30,30,.18);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .brain-item strong {
+      font-family: Syne, sans-serif;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .brain-item span {
+      color: var(--nx-muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .section {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 74px 0;
+    }
+
+    .section-header {
+      max-width: 780px;
+      margin-bottom: 28px;
+    }
+
+    .section-kicker {
+      color: #6aa8ff;
+      font-family: Syne, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .section h2 {
+      font-size: clamp(34px, 4vw, 54px);
+      line-height: .98;
+      letter-spacing: -.035em;
+    }
+
+    .section-header p {
+      margin-top: 16px;
+      color: var(--nx-muted);
+      line-height: 1.8;
+      font-size: 16px;
+    }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .problem-card,
+    .brain-card,
+    .audience-card,
+    .cta-card {
+      border: 1px solid var(--nx-border);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.016));
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 18px 55px rgba(0,0,0,.20);
+      min-width: 0;
+    }
+
+    .problem-card .icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(179,38,38,.35);
+      background: rgba(139,30,30,.14);
+      margin-bottom: 14px;
+    }
+
+    .problem-card h3,
+    .brain-card h3,
+    .audience-card h3 {
+      font-size: 16px;
+      line-height: 1.3;
+    }
+
+    .problem-card p,
+    .brain-card p,
+    .audience-card p {
+      color: var(--nx-muted);
+      font-size: 13px;
+      line-height: 1.75;
+      margin-top: 9px;
+    }
+
+    .brains-layout {
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .brain-map {
+      border: 1px solid rgba(179,38,38,.28);
+      border-radius: 24px;
+      padding: 24px;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(179,38,38,.22), transparent 30%),
+        linear-gradient(135deg, rgba(255,255,255,.04), rgba(255,255,255,.015));
+      min-height: 410px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brain-map::before {
+      content: "";
+      width: 280px;
+      height: 280px;
+      border-radius: 999px;
+      border: 1px solid rgba(179,38,38,.24);
+      box-shadow:
+        0 0 0 48px rgba(179,38,38,.035),
+        0 0 0 96px rgba(179,38,38,.025),
+        0 0 0 144px rgba(179,38,38,.015);
+    }
+
+    .brain-map::after {
+      content: "NEXORA";
+      position: absolute;
+      font-family: Syne, sans-serif;
+      letter-spacing: .18em;
+      font-weight: 800;
+      color: rgba(255,255,255,.82);
+    }
+
+    .brain-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .brain-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brain-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #7c5cff, #b32626, #bc741e);
+      opacity: .8;
+    }
+
+    .brain-label {
+      color: #b8a7ff;
+      font-family: Syne, sans-serif;
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-weight: 800;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .audience-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .cta-card {
+      padding: 42px;
+      text-align: center;
+      border-color: rgba(179,38,38,.30);
+      background:
+        radial-gradient(circle at 50% 0%, rgba(179,38,38,.24), transparent 38%),
+        linear-gradient(135deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
+    }
+
+    .cta-card h2 {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .cta-card p {
+      color: var(--nx-muted);
+      line-height: 1.8;
+      margin: 16px auto 26px;
+      max-width: 640px;
+    }
+
+    .footer {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 26px 0 40px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      color: rgba(255,255,255,.45);
+      font-size: 12px;
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .brains-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        min-height: auto;
+        padding-top: 40px;
+      }
+
+      .problem-grid,
+      .audience-grid,
+      .brain-grid,
+      .hero-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .nav {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .hero,
+      .section,
+      .footer,
+      .nav {
+        width: min(100% - 28px, 1180px);
+      }
+
+      .score-box,
+      .problem-grid,
+      .audience-grid,
+      .brain-grid,
+      .hero-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .hero h1 {
+        font-size: 46px;
+      }
+
+      .cta-card {
+        padding: 28px 20px;
+      }
+
+      .footer {
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <main class="wrap">
+  <div class="site">
 
-    <section class="card" style="padding:48px 28px">
-      <p style="font-family:Syne,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);font-size:12px;margin-bottom:18px">
-        NEXORA INTELLIGENCE
-      </p>
+    <header class="nav">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div class="brand-text">
+          NEXORA
+          <small>INTELLIGENCE</small>
+        </div>
+      </div>
 
-      <h1 style="font-size:48px;line-height:1.05;max-width:760px">
-        Diagnóstico estratégico para descobrir o que está travando sua performance na Amazon.
-      </h1>
-
-      <p style="color:var(--text-muted);font-size:18px;line-height:1.7;max-width:720px;margin-top:22px">
-        A Nexora cruza métricas, página de produto e contexto de mercado para identificar a causa raiz do problema — antes de você gastar mais dinheiro tentando resolver o ponto errado.
-      </p>
-
-      <div style="margin-top:32px;display:flex;gap:12px;flex-wrap:wrap">
-        <button class="btn-primary" onclick="location.href='./login.html'">
-          Acessar plataforma
+      <div class="nav-actions">
+        <button class="btn-ghost" onclick="document.getElementById('como-funciona').scrollIntoView({ behavior: 'smooth' })">
+          Como funciona
         </button>
 
-        <button class="btn-secondary" onclick="location.href='./dashboard.html'">
-          Ir para dashboard
+        <button class="btn-red" onclick="location.href='./pages/login.html'">
+          Entrar no sistema →
         </button>
       </div>
-    </section>
+    </header>
 
-    <section class="grid-3">
-      <div class="card">
-        <h3>Cérebro 1</h3>
-        <p style="color:var(--muted);margin-top:8px">
-          Diagnóstico de métricas: CTR, CVR, ACOS, TACOS, BuyBox, estoque e operação.
-        </p>
-      </div>
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">Diagnóstico sistêmico Amazon</div>
 
-      <div class="card">
-        <h3>Cérebro 2</h3>
-        <p style="color:var(--muted);margin-top:8px">
-          Análise da página: imagens, título, bullets, A+, prova social, confiança e conversão.
-        </p>
-      </div>
+          <h1>
+            Seu produto<br>
+            trava.<br>
+            A Nexora<br>
+            encontra<br>
+            o <span class="orange">porquê.</span>
+          </h1>
 
-      <div class="card">
-        <h3>Cérebro 3</h3>
-        <p style="color:var(--muted);margin-top:8px">
-          Leitura de mercado: concorrência, preço médio, review barrier, saturação e posicionamento.
-        </p>
-      </div>
-    </section>
+          <p class="hero-sub">
+            Não analisamos só métricas. Analisamos o ecossistema completo — mercado, página, operação e economia — para identificar a causa raiz real da sua performance.
+          </p>
 
-    <section class="card">
-      <h2>Para sellers, consultores e agências</h2>
-      <p style="color:var(--text-muted);margin-top:12px;line-height:1.8">
-        A Nexora foi criada para transformar análises soltas em um processo claro: diagnosticar, priorizar, gerar relatório e acompanhar evolução. Ideal para quem precisa explicar com clareza por que um produto não vende, por que uma campanha não escala ou por que uma página não converte.
-      </p>
-    </section>
+          <div class="hero-actions">
+            <button class="btn-red" onclick="location.href='./pages/login.html'">
+              → Iniciar diagnóstico
+            </button>
 
-    <section class="card">
-      <h2>O que a Nexora entrega</h2>
+            <button class="btn-ghost" onclick="document.getElementById('como-funciona').scrollIntoView({ behavior: 'smooth' })">
+              Como funciona
+            </button>
+          </div>
 
-      <div style="display:grid;gap:14px;margin-top:18px">
-        <p>✔ Diagnóstico de causa raiz</p>
-        <p>✔ Leitura de performance e benchmarks</p>
-        <p>✔ Análise de página e conversão</p>
-        <p>✔ Diagnóstico competitivo de mercado</p>
-        <p>✔ Síntese estratégica final</p>
-        <p>✔ Relatório para apresentação ao cliente</p>
-      </div>
-    </section>
+          <div class="hero-stats">
+            <div class="stat">
+              <strong>273+</strong>
+              <span>subcategorias mapeadas</span>
+            </div>
 
-    <section class="card" style="text-align:center;padding:38px 24px">
-      <h2>Pronta para analisar um produto?</h2>
-      <p style="color:var(--muted);margin:12px 0 24px">
-        Entre na plataforma e inicie um diagnóstico completo.
-      </p>
+            <div class="stat">
+              <strong>3</strong>
+              <span>cérebros de análise</span>
+            </div>
 
-      <button class="btn-primary" onclick="location.href='./login.html'">
-        Começar agora
-      </button>
-    </section>
+            <div class="stat">
+              <strong>5</strong>
+              <span>sistemas avaliados</span>
+            </div>
 
-  </main>
+            <div class="stat">
+              <strong>1</strong>
+              <span>diagnóstico completo</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="diagnostic-preview">
+          <div class="preview-top">
+            <div>
+              <div class="preview-title">Nexora Intelligence Scan</div>
+              <p style="color:var(--nx-muted);font-size:12px;margin-top:4px;">Prévia do diagnóstico estratégico</p>
+            </div>
+
+            <span class="live-pill">Sistema ativo</span>
+          </div>
+
+          <div class="score-box">
+            <div>
+              <div style="color:var(--nx-muted);font-size:12px;">Score Nexora</div>
+              <div class="score-big">73</div>
+              <div style="color:var(--nx-muted);font-size:12px;">/100 · Em atenção</div>
+            </div>
+
+            <p>
+              Causa raiz provável: a página recebe tráfego, mas não transforma interesse em decisão de compra com força suficiente.
+            </p>
+          </div>
+
+          <div class="brain-list">
+            <div class="brain-item">
+              <div class="brain-num">01</div>
+              <div>
+                <strong>Cérebro 1 · Performance</strong>
+                <span>CTR, CVR, ACOS, TACOS, Buy Box, estoque e sinais operacionais.</span>
+              </div>
+            </div>
+
+            <div class="brain-item">
+              <div class="brain-num">02</div>
+              <div>
+                <strong>Cérebro 2 · Página</strong>
+                <span>Imagem, título, bullets, A+, prova social, oferta e confiança.</span>
+              </div>
+            </div>
+
+            <div class="brain-item">
+              <div class="brain-num">03</div>
+              <div>
+                <strong>Cérebro 3 · Mercado</strong>
+                <span>Preço, concorrência, review barrier, saturação e quadrante competitivo.</span>
+              </div>
+            </div>
+
+            <div class="brain-item">
+              <div class="brain-num">04</div>
+              <div>
+                <strong>Síntese final</strong>
+                <span>Causa raiz consolidada, gaps, prioridades e plano de ação.</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div class="section-kicker">O problema</div>
+          <h2>A maioria dos diagnósticos Amazon olham só o sintoma</h2>
+          <p>
+            CTR baixo, CVR fraco, ACOS alto. Você vê os números, mas não sabe por que estão assim — nem o que fazer primeiro.
+          </p>
+        </div>
+
+        <div class="problem-grid">
+          <div class="problem-card">
+            <div class="icon">◆</div>
+            <h3>Otimizações às cegas</h3>
+            <p>Você muda título, imagem, bid — mas sem entender o gargalo real. Custa energia e dinheiro no lugar errado.</p>
+          </div>
+
+          <div class="problem-card">
+            <div class="icon">◆</div>
+            <h3>Métrica isolada</h3>
+            <p>Nenhuma ferramenta te diz se o problema é do produto, da página ou do mercado em que você escolheu competir.</p>
+          </div>
+
+          <div class="problem-card">
+            <div class="icon">◆</div>
+            <h3>Causa raiz escondida</h3>
+            <p>O sintoma é conversão baixa. A causa pode ser posicionamento errado, barreira de reviews ou preço fora da faixa.</p>
+          </div>
+
+          <div class="problem-card">
+            <div class="icon">◆</div>
+            <h3>Escala sem lucro</h3>
+            <p>Produto vendendo bem nem sempre significa crescimento saudável. Sem diagnóstico, crescer faz você perder mais.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="como-funciona">
+        <div class="section-header">
+          <div class="section-kicker">Como funciona</div>
+          <h2>3 cérebros. 1 diagnóstico completo.</h2>
+          <p>
+            A Nexora analisa cada camada do seu produto em sequência e entrega um diagnóstico executivo com causa raiz e plano de ação.
+          </p>
+        </div>
+
+        <div class="brains-layout">
+          <div class="brain-map"></div>
+
+          <div class="brain-grid">
+            <div class="brain-card">
+              <span class="brain-label">Cérebro 1</span>
+              <h3>Estrutural</h3>
+              <p>Analisa métricas e benchmarks reais por categoria. Identifica o pilar crítico: atração, conversão, PPC ou operação.</p>
+            </div>
+
+            <div class="brain-card">
+              <span class="brain-label">Cérebro 2</span>
+              <h3>Página</h3>
+              <p>Avalia se a listing sustenta clique e compra. Analisa thumbnail, título, bullets, A+ e confiança com IA.</p>
+            </div>
+
+            <div class="brain-card">
+              <span class="brain-label">Cérebro 3</span>
+              <h3>Mercado</h3>
+              <p>Mede concorrentes e detecta se o problema é de pricing, nível de concorrência, reviews ou posicionamento.</p>
+            </div>
+
+            <div class="brain-card">
+              <span class="brain-label">Síntese</span>
+              <h3>Estratégica</h3>
+              <p>Cruza tudo e gera score geral, diagnóstico executivo completo e plano de ação priorizado.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div class="section-kicker">Para quem é</div>
+          <h2>Para quem quer crescer com inteligência na Amazon</h2>
+        </div>
+
+        <div class="audience-grid">
+          <div class="audience-card">
+            <h3>Donos de marca / Private Label</h3>
+            <p>Produto bom, mas performance travada. A Nexora encontra o gargalo e aponta o caminho para escalar.</p>
+          </div>
+
+          <div class="audience-card">
+            <h3>Gestores de e-commerce</h3>
+            <p>Múltiplos produtos para gerenciar. A Nexora prioriza onde agir primeiro com base em impacto real.</p>
+          </div>
+
+          <div class="audience-card">
+            <h3>Agências e consultores</h3>
+            <p>Diagnóstico sistêmico para entregar mais valor aos clientes com análise profunda e estruturada.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="cta-card">
+          <div class="section-kicker">Próximo passo</div>
+          <h2>Pronto para descobrir o real problema?</h2>
+          <p>
+            Entre agora e faça o diagnóstico completo do seu produto Amazon.
+          </p>
+
+          <button class="btn-red" onclick="location.href='./pages/login.html'">
+            → Iniciar diagnóstico agora
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div>Nexora Intelligence</div>
+      <div>© 2026 Nexora Intelligence</div>
+    </footer>
+
+  </div>
 </body>
 </html>
