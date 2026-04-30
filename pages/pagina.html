@@ -183,7 +183,44 @@
       .progress {
         grid-template-columns: 1fr;
       }
-    }
+.image-preview {
+  margin-top: 12px;
+  min-height: 120px;
+  border: 1px dashed rgba(255,255,255,.16);
+  border-radius: 14px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.03);
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 180px;
+  border-radius: 10px;
+  object-fit: contain;
+}
+
+.image-preview-grid {
+  margin-top: 12px;
+  min-height: 120px;
+  border: 1px dashed rgba(255,255,255,.16);
+  border-radius: 14px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background: rgba(255,255,255,.03);
+}
+
+.image-preview-grid img {
+  width: 100%;
+  height: 86px;
+  border-radius: 10px;
+  object-fit: cover;
+}      
+    
   </style>
 </head>
 
@@ -212,6 +249,32 @@
       <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
         Aqui avaliamos se a página sustenta o clique. Essa etapa conversa diretamente com problemas de CTR identificados no Cérebro 1.
       </p>
+      <div class="result-block" style="margin-top:20px;">
+  <h3>Arquivos de imagem do anúncio</h3>
+
+  <p style="color:var(--muted);font-size:13px;line-height:1.6;margin-top:6px;">
+    Envie a imagem principal e, se quiser, as imagens secundárias do listing para apoiar a leitura visual da página.
+  </p>
+
+  <div class="form-grid" style="margin-top:18px;">
+    <div>
+      <label>Imagem principal</label>
+      <input id="mainImageFile" type="file" accept="image/*" onchange="previewSingleImage(event, 'mainImagePreview')">
+      <div id="mainImagePreview" class="image-preview"></div>
+    </div>
+
+    <div>
+      <label>Imagens secundárias</label>
+      <input id="secondaryImageFiles" type="file" accept="image/*" multiple onchange="previewMultipleImages(event, 'secondaryImagesPreview')">
+      <div id="secondaryImagesPreview" class="image-preview-grid"></div>
+    </div>
+  </div>
+
+  <div style="margin-top:18px;">
+    <label>Observações sobre as imagens</label>
+    <textarea id="imageNotes" placeholder="Ex: imagem principal confusa, fundo poluído, pouco destaque do benefício, imagens secundárias não explicam uso..."></textarea>
+  </div>
+</div>
 
       <div class="option-block">
         <label>Imagem principal é clara?</label>
@@ -654,6 +717,9 @@
         benefitVisible: state.benefitVisible,
         competitiveContrast: state.competitiveContrast,
         visualPerception: state.visualPerception,
+        imageNotes: v("imageNotes"),
+        mainImageFileName: document.getElementById("mainImageFile")?.files?.[0]?.name || "",
+        secondaryImageCount: document.getElementById("secondaryImageFiles")?.files?.length || 0,
 
         title: v("title"),
         keyword: v("keyword"),
@@ -845,7 +911,42 @@
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
     }
+window.previewSingleImage = function (event, targetId) {
+  const file = event.target.files?.[0];
+  const target = document.getElementById(targetId);
 
+  if (!file || !target) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    target.innerHTML = `<img src="${e.target.result}" alt="Prévia da imagem principal">`;
+  };
+
+  reader.readAsDataURL(file);
+};
+
+window.previewMultipleImages = function (event, targetId) {
+  const files = Array.from(event.target.files || []);
+  const target = document.getElementById(targetId);
+
+  if (!files.length || !target) return;
+
+  target.innerHTML = "";
+
+  files.slice(0, 8).forEach(file => {
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+      const img = document.createElement("img");
+      img.src = e.target.result;
+      img.alt = "Prévia de imagem secundária";
+      target.appendChild(img);
+    };
+
+    reader.readAsDataURL(file);
+  });
+};
     renderStep();
   </script>
 </body>
