@@ -56,7 +56,7 @@
       font-weight: 800;
     }
 
-    .cover {
+   .report-cover {
       padding: 52px 34px;
       border-bottom: 1px solid var(--border);
       background:
@@ -134,13 +134,13 @@
       color: #fff;
     }
 
-    .content {
+   .report-content {
       padding: 30px;
       display: grid;
       gap: 20px;
     }
 
-    .section {
+    .report-section {
       background: var(--surface-strong);
       border: 1px solid var(--border);
       border-radius: 18px;
@@ -148,11 +148,11 @@
       break-inside: avoid;
     }
 
-    .section h2 {
+    .report-section h2 {
       margin-bottom: 12px;
     }
 
-    .section p {
+    .report-section p {
       color: var(--text-muted);
       line-height: 1.8;
     }
@@ -340,9 +340,9 @@ body {
   position: relative !important;
 }
 
+.report-content,
+.report-cover,
 .topbar,
-.cover,
-.content,
 .signature {
   width: 100% !important;
   max-width: 100% !important;
@@ -356,7 +356,7 @@ body {
   width: 100% !important;
 }
 
-.section {
+.report-section {
   width: 100% !important;
   max-width: 100% !important;
   overflow-wrap: break-word;
@@ -426,7 +426,7 @@ body {
   gap: 24px !important;
 }
 
-.content {
+.report-content {
   display: grid !important;
   grid-template-columns: 1fr !important;
   width: 100% !important;
@@ -437,7 +437,7 @@ body {
   transform: none !important;
 }
 
-.section {
+.report-section {
   display: block !important;
   width: 100% !important;
   max-width: 100% !important;
@@ -480,8 +480,107 @@ body {
     grid-template-columns: 1fr !important;
   }
 
-  .content {
+.report-content {
     padding: 20px !important;
+  }
+}
+    /* RESET FINAL ISOLADO DO RELATÓRIO */
+.report-wrap {
+  width: 100% !important;
+  max-width: 1080px !important;
+  margin: 0 auto !important;
+  padding: 0 20px !important;
+}
+
+.report {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.report-cover {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+  position: relative !important;
+  min-height: auto !important;
+  padding: 52px 34px !important;
+}
+
+.report-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 20px !important;
+  padding: 30px !important;
+  position: relative !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+}
+
+.report-section {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+  position: relative !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+  overflow-wrap: break-word !important;
+}
+
+.cover-grid {
+  display: grid !important;
+  grid-template-columns: 1.1fr 1fr !important;
+  width: 100% !important;
+  gap: 24px !important;
+}
+
+.metrics-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+  width: 100% !important;
+}
+
+.list-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  width: 100% !important;
+}
+
+.item-card {
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) !important;
+  width: 100% !important;
+}
+
+.analysis-text,
+#executiveSummary,
+#crossReading,
+#clientSummary,
+#recommendation {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: break-word !important;
+}
+
+@media (max-width: 900px) {
+  .report-cover {
+    padding: 34px 22px !important;
+  }
+
+  .report-content {
+    padding: 22px !important;
+  }
+
+  .cover-grid {
+    grid-template-columns: 1fr !important;
   }
 }
   </style>
@@ -513,7 +612,7 @@ body {
   </button>
 </div>
 
-      <section class="cover">
+      <section class="report-cover">
         <p class="eyebrow">Relatório Final Nexora</p>
 
         <h1>Diagnóstico estratégico consolidado</h1>
@@ -537,49 +636,49 @@ body {
         </div>
       </section>
 
-      <main class="content">
+    <main class="report-content">
 
-        <section class="section">
+       <section class="report-section">
           <h2>Resumo executivo</h2>
           <div class="analysis-text" id="executiveSummary">-</div>
         </section>
 
-        <section class="section">
+       <section class="report-section">
           <h2>Scores principais</h2>
           <div class="metrics-grid" id="metricsGrid"></div>
         </section>
 
-        <section class="section">
+        <section class="report-section">
           <h2>Leitura cruzada dos 3 Cérebros</h2>
           <div class="analysis-text" id="crossReading">-</div>
         </section>
 
-        <section class="section">
+        <section class="report-section">
           <h2>Gaps consolidados</h2>
           <div class="list-grid" id="gapsList"></div>
         </section>
 
-        <section class="section">
+       <section class="report-section">
           <h2>Prioridades finais</h2>
           <div class="list-grid" id="prioritiesList"></div>
         </section>
 
-        <section class="section">
+        <section class="report-section">
           <h2>Plano de ação recomendado</h2>
           <div class="list-grid" id="actionPlanList"></div>
         </section>
 
-        <section class="section">
+       <section class="report-section">
           <h2>Matriz de decisão Nexora</h2>
           <div class="metrics-grid" id="decisionMatrix"></div>
         </section>
 
-        <section class="section">
+        <section class="report-section">
           <h2>Recomendação estratégica final</h2>
           <p id="recommendation">-</p>
         </section>
 
-        <section class="section">
+        <section class="report-section">
           <h2>Resumo para cliente</h2>
           <div class="analysis-text" id="clientSummary">-</div>
         </section>
