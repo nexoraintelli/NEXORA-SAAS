@@ -405,7 +405,85 @@ body {
     grid-template-columns: 1fr !important;
   }
 }
-    
+    /* RESET FINAL DO LAYOUT DO RELATÓRIO */
+.report {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.cover {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: auto !important;
+}
+
+.cover-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  width: 100% !important;
+  gap: 24px !important;
+}
+
+.content {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 30px !important;
+  gap: 20px !important;
+  position: static !important;
+  transform: none !important;
+}
+
+.section {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  position: static !important;
+  transform: none !important;
+}
+
+.metrics-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+  width: 100% !important;
+}
+
+.list-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  width: 100% !important;
+}
+
+.item-card {
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) !important;
+  width: 100% !important;
+}
+
+.analysis-text,
+#executiveSummary,
+#crossReading,
+#clientSummary,
+#recommendation {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: break-word !important;
+}
+
+@media (max-width: 900px) {
+  .cover-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .content {
+    padding: 20px !important;
+  }
+}
   </style>
 </head>
 
