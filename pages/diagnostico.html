@@ -147,6 +147,41 @@
         grid-template-columns: 1fr;
       }
     }
+    .context-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(360px, 1.3fr);
+  gap: 34px;
+  align-items: start;
+  margin-top: 24px;
+}
+
+.context-column {
+  display: grid;
+  gap: 18px;
+}
+
+.option-block {
+  display: grid;
+  gap: 10px;
+}
+
+.option-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.option-btn {
+  min-width: 128px;
+  justify-content: center;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .context-layout {
+    grid-template-columns: 1fr;
+  }
+}
   </style>
 </head>
 
@@ -166,52 +201,60 @@
     </section>
 
     <!-- ETAPA 1 -->
-    <section class="card step active" data-step="0">
-      <p class="step-label">Etapa 1 de 5</p>
-      <h2>Contexto do produto</h2>
+<section class="card step active" data-step="0">
+  <p class="step-label">Etapa 1 de 5</p>
+  <h2>Contexto do produto</h2>
 
-      <div class="grid-3" style="margin-top:20px;">
-        <div>
-<div>
-  <label>Categoria</label>
-  <select id="category" onchange="atualizarSubcategorias()">
-    <option value="">Selecione</option>
-    <option>Beleza</option>
-    <option>Saúde e cuidados pessoais</option>
-    <option>Suplementos</option>
-    <option>Casa</option>
-    <option>Cozinha</option>
-    <option>Decoração</option>
-    <option>Pet</option>
-    <option>Bebês</option>
-    <option>Brinquedos</option>
-    <option>Eletrônicos</option>
-    <option>Informática</option>
-    <option>Celulares e acessórios</option>
-    <option>Moda</option>
-    <option>Calçados</option>
-    <option>Esportes</option>
-    <option>Ferramentas</option>
-    <option>Automotivo</option>
-    <option>Alimentos e bebidas</option>
-    <option>Papelaria e escritório</option>
-    <option>Livros</option>
-    <option>Outros</option>
-  </select>
-</div>
-        <div>
-  <label>Subcategoria</label>
-  <select id="subcategory">
-    <option value="">Selecione uma categoria primeiro</option>
-  </select>
-</div>
-        <div>
-          <label>Nome/ASIN do produto</label>
-          <input id="product" placeholder="Ex: B0XXXX ou nome do produto">
-        </div>
+  <div class="context-layout">
+
+    <div class="context-column">
+      <div>
+        <label>Categoria</label>
+        <select id="category" onchange="atualizarSubcategorias()">
+          <option value="">Selecione a categoria</option>
+          <option>Automotivo</option>
+          <option>Bebês</option>
+          <option>Beleza</option>
+          <option>Brinquedos e Jogos</option>
+          <option>Casa</option>
+          <option>Casa e Cozinha</option>
+          <option>Celulares e Comunicação</option>
+          <option>Computadores e Informática</option>
+          <option>Cozinha</option>
+          <option>Decoração</option>
+          <option>Eletrônicos</option>
+          <option>Esportes e Aventura</option>
+          <option>Ferramentas e Construção</option>
+          <option>Games</option>
+          <option>Jardim e Piscina</option>
+          <option>Livros</option>
+          <option>Moda</option>
+          <option>Papelaria e Escritório</option>
+          <option>Pet Shop</option>
+          <option>Saúde e Cuidados Pessoais</option>
+          <option>Suplementos Alimentares</option>
+          <option>Alimentos e Bebidas</option>
+          <option>Relógios</option>
+          <option>Calçados</option>
+          <option>Bolsas e Acessórios</option>
+        </select>
       </div>
 
-      <div style="margin-top:22px;">
+      <div>
+        <label>Subcategoria</label>
+        <select id="subcategory">
+          <option value="">Selecione uma categoria primeiro</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Nome/ASIN do produto</label>
+        <input id="product" placeholder="Ex: B0XXXX ou nome do produto">
+      </div>
+    </div>
+
+    <div class="context-column">
+      <div class="option-block">
         <label>Modelo de negócio</label>
         <div class="option-group" data-group="modelo">
           <button type="button" class="option-btn" data-value="Private Label">Private Label</button>
@@ -221,7 +264,7 @@
         </div>
       </div>
 
-      <div style="margin-top:22px;">
+      <div class="option-block">
         <label>Força dominante da categoria</label>
         <div class="option-group" data-group="force">
           <button type="button" class="option-btn" data-value="Preço">Preço</button>
@@ -232,17 +275,19 @@
         </div>
       </div>
 
-      <div style="margin-top:22px;">
+      <div class="option-block">
         <label>Posicionamento atual</label>
         <div class="option-group" data-group="pos">
-          <button type="button" class="option-btn" data-value="Premium">Premium</button>
-          <button type="button" class="option-btn" data-value="Intermediário">Intermediário</button>
-          <button type="button" class="option-btn" data-value="Preço baixo">Preço baixo</button>
-          <button type="button" class="option-btn" data-value="Nicho">Nicho</button>
+          <button type="button" class="option-btn" data-value="Category Leader">Category Leader</button>
+          <button type="button" class="option-btn" data-value="Premium Brand">Premium Brand</button>
+          <button type="button" class="option-btn" data-value="Niche Player">Niche Player</button>
+          <button type="button" class="option-btn" data-value="Price Fighter">Price Fighter</button>
         </div>
       </div>
-    </section>
+    </div>
 
+  </div>
+</section>
     <!-- ETAPA 2 -->
     <section class="card step" data-step="1">
       <p class="step-label">Etapa 2 de 5</p>
@@ -414,48 +459,117 @@
       });
     }
 const subcategoriasPorCategoria = {
+  "Automotivo": [
+    "Acessórios automotivos",
+    "Limpeza automotiva",
+    "Peças e reposição",
+    "Som automotivo",
+    "Moto",
+    "Capas automotivas",
+    "Organizadores automotivos",
+    "Ferramentas automotivas",
+    "Óleos e fluidos",
+    "Iluminação automotiva"
+  ],
+
+  "Bebês": [
+    "Fraldas",
+    "Lenços umedecidos",
+    "Higiene bebê",
+    "Alimentação bebê",
+    "Mamadeiras",
+    "Chupetas",
+    "Carrinhos",
+    "Bebê conforto",
+    "Brinquedos bebê",
+    "Quarto bebê"
+  ],
+
   "Beleza": [
     "Skincare",
-    "Haircare",
+    "Séruns faciais",
+    "Hidratantes faciais",
+    "Limpeza facial",
+    "Protetor solar",
     "Maquiagem",
     "Perfumes",
+    "Haircare",
+    "Shampoo",
+    "Condicionador",
+    "Máscaras capilares",
     "Cuidados corporais",
     "Cuidados com unhas",
     "Barba e depilação",
-    "Protetor solar",
-    "Dermocosméticos",
-    "Outro"
+    "Dermocosméticos"
   ],
-  "Saúde e cuidados pessoais": [
-    "Higiene oral",
-    "Cuidados íntimos",
-    "Aparelhos de saúde",
-    "Massagem e relaxamento",
-    "Primeiros socorros",
-    "Cuidados pessoais",
-    "Outro"
+
+  "Brinquedos e Jogos": [
+    "Brinquedos educativos",
+    "Bonecas",
+    "Carrinhos",
+    "Jogos de tabuleiro",
+    "Quebra-cabeças",
+    "Pelúcias",
+    "Colecionáveis",
+    "Massinha e artes",
+    "Brinquedos eletrônicos"
   ],
-  "Suplementos": [
-    "Vitaminas",
-    "Whey protein",
-    "Creatina",
-    "Ômega 3",
-    "Colágeno",
-    "Pré-treino",
-    "Termogênicos",
-    "Suplementos naturais",
-    "Outro"
-  ],
+
   "Casa": [
     "Organização",
     "Limpeza",
     "Cama, mesa e banho",
     "Velas aromáticas",
     "Difusores",
+    "Aromatizadores",
     "Iluminação",
     "Utilidades domésticas",
-    "Outro"
+    "Lavanderia",
+    "Banheiro"
   ],
+
+  "Casa e Cozinha": [
+    "Panelas",
+    "Frigideiras",
+    "Utensílios de cozinha",
+    "Facas",
+    "Tábuas",
+    "Eletroportáteis",
+    "Air fryer",
+    "Cafeteiras",
+    "Copos e garrafas",
+    "Potes herméticos",
+    "Organização de cozinha",
+    "Formas e assadeiras"
+  ],
+
+  "Celulares e Comunicação": [
+    "Capas",
+    "Películas",
+    "Carregadores",
+    "Cabos",
+    "Fones",
+    "Suportes",
+    "Power banks",
+    "Adaptadores",
+    "Acessórios para iPhone",
+    "Acessórios para Samsung"
+  ],
+
+  "Computadores e Informática": [
+    "Notebooks",
+    "Monitores",
+    "Teclados",
+    "Mouses",
+    "Headsets",
+    "Webcams",
+    "SSDs",
+    "HDs externos",
+    "Impressoras",
+    "Roteadores",
+    "Acessórios para notebook"
+  ],
+
   "Cozinha": [
     "Panelas",
     "Utensílios",
@@ -463,142 +577,222 @@ const subcategoriasPorCategoria = {
     "Copos e garrafas",
     "Organização de cozinha",
     "Café e chá",
-    "Outro"
+    "Potes e armazenamento",
+    "Formas e assadeiras"
   ],
+
   "Decoração": [
     "Velas decorativas",
+    "Velas aromáticas",
     "Aromatizadores",
+    "Difusores",
     "Quadros",
     "Vasos",
     "Objetos decorativos",
     "Luminárias",
-    "Outro"
+    "Almofadas decorativas",
+    "Bandejas decorativas",
+    "Espelhos"
   ],
-  "Pet": [
-    "Alimentos pet",
-    "Higiene pet",
-    "Brinquedos pet",
-    "Camas e casinhas",
-    "Coleiras e guias",
-    "Saúde pet",
-    "Outro"
-  ],
-  "Bebês": [
-    "Fraldas",
-    "Higiene bebê",
-    "Alimentação bebê",
-    "Carrinhos",
-    "Brinquedos bebê",
-    "Quarto bebê",
-    "Outro"
-  ],
-  "Brinquedos": [
-    "Educativos",
-    "Bonecas",
-    "Carrinhos",
-    "Jogos",
-    "Pelúcias",
-    "Colecionáveis",
-    "Outro"
-  ],
+
   "Eletrônicos": [
     "Áudio",
+    "Fones de ouvido",
+    "Caixas de som",
     "Smart home",
     "Câmeras",
     "Acessórios eletrônicos",
     "TV e vídeo",
     "Games",
-    "Outro"
-  ],
-  "Informática": [
-    "Notebooks",
-    "Monitores",
-    "Teclados e mouses",
-    "Armazenamento",
-    "Impressoras",
-    "Acessórios",
-    "Outro"
-  ],
-  "Celulares e acessórios": [
-    "Capas",
+    "Controles",
     "Carregadores",
-    "Películas",
-    "Fones",
-    "Suportes",
-    "Cabos",
-    "Outro"
+    "Cabos"
   ],
-  "Moda": [
-    "Roupas femininas",
-    "Roupas masculinas",
-    "Bolsas",
-    "Acessórios",
-    "Relógios",
-    "Moda fitness",
-    "Outro"
-  ],
-  "Calçados": [
-    "Tênis",
-    "Sandálias",
-    "Botas",
-    "Sapatos sociais",
-    "Calçados infantis",
-    "Outro"
-  ],
-  "Esportes": [
+
+  "Esportes e Aventura": [
     "Fitness",
+    "Musculação",
     "Yoga e pilates",
     "Ciclismo",
     "Futebol",
-    "Musculação",
+    "Corrida",
+    "Natação",
     "Camping",
-    "Outro"
+    "Acessórios esportivos"
   ],
-  "Ferramentas": [
+
+  "Ferramentas e Construção": [
     "Ferramentas manuais",
     "Ferramentas elétricas",
+    "Furadeiras",
+    "Parafusadeiras",
     "Jardinagem",
     "Construção",
     "Segurança",
-    "Outro"
+    "Medição",
+    "Organização de ferramentas",
+    "Pintura"
   ],
-  "Automotivo": [
-    "Acessórios automotivos",
-    "Limpeza automotiva",
-    "Peças",
-    "Som automotivo",
-    "Moto",
-    "Outro"
+
+  "Games": [
+    "Consoles",
+    "Jogos",
+    "Controles",
+    "Headsets gamer",
+    "Acessórios gamer",
+    "Cadeiras gamer",
+    "Teclados gamer",
+    "Mouses gamer"
   ],
-  "Alimentos e bebidas": [
+
+  "Jardim e Piscina": [
+    "Jardinagem",
+    "Ferramentas de jardim",
+    "Piscina",
+    "Churrasco",
+    "Área externa",
+    "Móveis externos",
+    "Iluminação externa"
+  ],
+
+  "Livros": [
+    "Negócios",
+    "Marketing",
+    "Autoajuda",
+    "Ficção",
+    "Infantil",
+    "Educação",
+    "Técnicos",
+    "Biografias",
+    "Saúde e bem-estar",
+    "Desenvolvimento pessoal"
+  ],
+
+  "Moda": [
+    "Roupas femininas",
+    "Roupas masculinas",
+    "Moda fitness",
+    "Bolsas",
+    "Mochilas",
+    "Carteiras",
+    "Relógios",
+    "Bijuterias",
+    "Óculos",
+    "Acessórios de moda"
+  ],
+
+  "Papelaria e Escritório": [
+    "Cadernos",
+    "Canetas",
+    "Organizadores",
+    "Planners",
+    "Material escolar",
+    "Material de escritório",
+    "Pastas",
+    "Etiquetas",
+    "Quadros e lousas",
+    "Calculadoras"
+  ],
+
+  "Pet Shop": [
+    "Alimentos pet",
+    "Petiscos",
+    "Higiene pet",
+    "Tapetes higiênicos",
+    "Shampoo pet",
+    "Brinquedos pet",
+    "Camas e casinhas",
+    "Coleiras e guias",
+    "Saúde pet",
+    "Areia higiênica"
+  ],
+
+  "Saúde e Cuidados Pessoais": [
+    "Higiene oral",
+    "Escovas de dente",
+    "Cremes dentais",
+    "Fio dental",
+    "Enxaguante bucal",
+    "Cuidados íntimos",
+    "Aparelhos de saúde",
+    "Medidores de pressão",
+    "Termômetros",
+    "Massagem e relaxamento",
+    "Primeiros socorros",
+    "Cuidados pessoais"
+  ],
+
+  "Suplementos Alimentares": [
+    "Vitaminas",
+    "Multivitamínicos",
+    "Vitamina C",
+    "Vitamina D",
+    "Ômega 3",
+    "Magnésio",
+    "Colágeno",
+    "Whey protein",
+    "Creatina",
+    "Pré-treino",
+    "Termogênicos",
+    "Aminoácidos",
+    "Probióticos"
+  ],
+
+  "Alimentos e Bebidas": [
     "Café",
     "Chás",
     "Snacks",
     "Alimentos saudáveis",
     "Bebidas não alcoólicas",
     "Temperos",
-    "Outro"
+    "Molhos",
+    "Doces",
+    "Grãos e cereais",
+    "Produtos naturais"
   ],
-  "Papelaria e escritório": [
-    "Cadernos",
-    "Canetas",
-    "Organizadores",
-    "Material escolar",
-    "Material de escritório",
-    "Outro"
+
+  "Relógios": [
+    "Relógios masculinos",
+    "Relógios femininos",
+    "Smartwatches",
+    "Relógios esportivos",
+    "Pulseiras para relógio",
+    "Acessórios para relógio"
   ],
-  "Livros": [
-    "Negócios",
-    "Autoajuda",
-    "Ficção",
-    "Infantil",
-    "Educação",
-    "Técnicos",
-    "Outro"
+
+  "Calçados": [
+    "Tênis",
+    "Tênis esportivo",
+    "Tênis casual",
+    "Sandálias",
+    "Botas",
+    "Sapatos sociais",
+    "Chinelos",
+    "Calçados infantis",
+    "Palmilhas"
   ],
-  "Outros": [
-    "Outro"
+
+  "Bolsas e Acessórios": [
+    "Bolsas femininas",
+    "Mochilas",
+    "Carteiras",
+    "Necessaires",
+    "Malas",
+    "Pochetes",
+    "Acessórios de viagem",
+    "Organizadores de bolsa"
   ]
+};
+   window.atualizarSubcategorias = function () {
+  const category = document.getElementById("category").value;
+  const subcategory = document.getElementById("subcategory");
+
+  const lista = subcategoriasPorCategoria[category] || [];
+
+  subcategory.innerHTML = `
+    <option value="">Selecione</option>
+    ${lista.map(item => `<option>${item}</option>`).join("")}
+  `;
 };
 
 window.atualizarSubcategorias = function () {
