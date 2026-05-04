@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -602,9 +601,9 @@ input[type="file"],
         <button class="btn-secondary" onclick="prevStep()">Voltar</button>
 
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          <button class="btn-secondary" id="aiBtn" style="display:none;" onclick="aprofundarPaginaResultadoComIA()">
-            Aprofundar com IA
-          </button>
+         <button class="btn-secondary" id="aiBtn" style="display:none;" onclick="aprofundarResultadoC2ComIA()">
+  Aprofundar com IA
+</button>
 
           <button class="btn-primary" id="nextBtn" onclick="nextStep()">Continuar</button>
         </div>
@@ -1362,7 +1361,317 @@ Retorne exatamente este JSON:
         </div>
       `;
     }
+async function aprofundarPaginaComIA(data, c1, baseResult) {
+  const prompt = `
+Você é a camada de IA estratégica da Nexora Intelligence, especializada em análise de páginas de produto na Amazon.
 
+A engine da Nexora já avaliou a página com base em imagem, título, SEO, comunicação, diferenciação, confiança, prova social, oferta e preço percebido.
+
+Sua função NÃO é substituir a análise base.
+Sua função é complementar a leitura com profundidade consultiva, explicando por que a página sustenta ou trava conversão.
+
+REGRAS:
+- Não invente dados.
+- Não contradiga a análise base da Nexora.
+- Não seja genérico.
+- Não seja curto.
+- Não use markdown.
+- Não use aspas duplas dentro dos textos.
+- Retorne SOMENTE JSON válido.
+- Todas as strings precisam estar em uma única linha.
+- Use no mínimo 900 caracteres em diagnostico_executivo_aprofundado.
+- Use exatamente 5 ações no plano_de_acao.
+
+CONTEXTO DO CÉREBRO 1:
+${JSON.stringify(c1, null, 2)}
+
+DADOS DA PÁGINA:
+${JSON.stringify(data, null, 2)}
+
+ANÁLISE BASE DO CÉREBRO 2:
+${JSON.stringify(baseResult, null, 2)}
+
+Retorne exatamente este JSON:
+
+{
+  "diagnostico_executivo_aprofundado": "texto consultivo longo conectando imagem, título, SEO, comunicação, confiança, oferta e o problema vindo do Cérebro 1",
+  "hipotese_estrategica": "explicação da hipótese central sobre por que a página está ou não convertendo",
+  "risco_de_nao_corrigir": "explicação do risco comercial de manter a página como está",
+  "leitura_por_pilar": {
+    "imagem": "leitura da imagem principal e secundárias",
+    "titulo_seo": "leitura do título, palavra-chave e clareza de busca",
+    "comunicacao": "leitura dos bullets, diferenciais e objeções",
+    "confianca": "leitura de reviews, rating, A+, vídeo e prova social",
+    "oferta": "leitura de preço, cupom e valor percebido",
+    "prioridade_sistemica": "qual pilar deve ser priorizado primeiro e por quê"
+  },
+  "plano_de_acao": [
+    {
+      "prioridade": "URGENTE",
+      "titulo": "ação 1",
+      "detalhe": "explicação prática e específica",
+      "impacto": "impacto esperado"
+    },
+    {
+      "prioridade": "ALTA",
+      "titulo": "ação 2",
+      "detalhe": "explicação prática e específica",
+      "impacto": "impacto esperado"
+    },
+    {
+      "prioridade": "MÉDIA",
+      "titulo": "ação 3",
+      "detalhe": "explicação prática e específica",
+      "impacto": "impacto esperado"
+    },
+    {
+      "prioridade": "ESTRATÉGICA",
+      "titulo": "ação 4",
+      "detalhe": "explicação prática e específica",
+      "impacto": "impacto esperado"
+    },
+    {
+      "prioridade": "MONITORAMENTO",
+      "titulo": "ação 5",
+      "detalhe": "explicação prática e específica",
+      "impacto": "impacto esperado"
+    }
+  ]
+}
+`;
+
+  try {
+    const aiText = await chamarIANexora({
+      task: "c2",
+      maxTokens: 2200,
+      responseMimeType: "application/json",
+      messages: [
+        {
+          role: "user",
+          content: prompt
+        }
+      ]
+    });
+
+    if (!aiText) return null;
+
+    return parseJsonSafe(aiText);
+  } catch (error) {
+    console.error("Erro ao aprofundar Cérebro 2 com IA:", error);
+    return null;
+  }
+}
+
+window.aprofundarResultadoC2ComIA = async function () {
+  const raw = localStorage.getItem("nx_c2");
+
+  if (!raw) {
+    msg.textContent = "Gere a análise de página primeiro.";
+    return;
+  }
+
+  const diagnosticId = getDiagnosticId();
+
+  if (!diagnosticId) {
+    msg.textContent = "Nenhum diagnóstico ativo encontrado.";
+    return;
+  }
+
+  let fullResult = null;
+
+  try {
+    fullResult = JSON.parse(raw);
+  } catch (error) {
+    msg.textContent = "Não foi possível ler a análise de página salva.";
+    return;
+  }
+
+  msg.textContent = "Aprofundando análise de página com IA Nexora...";
+
+  if (aiBtn) {
+    aiBtn.disabled = true;
+    aiBtn.textContent = "IA analisando...";
+  }
+
+  const aiResult = await aprofundarPaginaComIA(fullResult, C1, fullResult);
+
+  if (!aiResult) {
+    if (aiBtn) {
+      aiBtn.disabled = false;
+      aiBtn.textContent = "Tentar IA novamente";
+    }
+
+    msg.textContent = "A IA não respondeu neste momento. A análise base do Cérebro 2 continua válida.";
+    return;
+  }
+
+  const updated = {
+    ...fullResult,
+
+    diagnostico_executivo_base: fullResult.diagnostico_executivo,
+    impacto_base: fullResult.impacto,
+    gaps_base: fullResult.gaps,
+    prioridades_base: fullResult.prioridades,
+
+    diagnostico_ia: aiResult.diagnostico_executivo_aprofundado || "",
+    hipotese_ia: aiResult.hipotese_estrategica || "",
+    risco_ia: aiResult.risco_de_nao_corrigir || "",
+    leitura_por_pilar_ia: aiResult.leitura_por_pilar || null,
+    plano_de_acao_ia: Array.isArray(aiResult.plano_de_acao) ? aiResult.plano_de_acao : [],
+
+    diagnostico_executivo: [
+      fullResult.diagnostico_executivo || "",
+      aiResult.diagnostico_executivo_aprofundado
+        ? "\n\nLeitura complementar da IA Nexora:\n" + aiResult.diagnostico_executivo_aprofundado
+        : ""
+    ].join("").trim(),
+
+    impacto: aiResult.risco_de_nao_corrigir || fullResult.impacto,
+
+    prioridades: Array.isArray(aiResult.plano_de_acao) && aiResult.plano_de_acao.length
+      ? aiResult.plano_de_acao
+      : fullResult.prioridades,
+
+    ia_usada: true,
+    ia_updated_at: new Date().toISOString()
+  };
+
+  localStorage.setItem("nx_c2", JSON.stringify(updated));
+
+  try {
+    await saveBrainResult({
+      diagnosticId,
+      brainCode: "c2",
+      brainName: "Cérebro 2 - Análise de Página",
+      score: updated.score_pagina,
+      resultData: updated
+    });
+
+    await updateDiagnostic(diagnosticId, {
+      status: "c2_ai_completed"
+    });
+  } catch (error) {
+    console.warn("IA aplicada no Cérebro 2, mas houve erro ao salvar:", error);
+  }
+
+  renderResult(updated);
+
+  if (aiBtn) {
+    aiBtn.disabled = false;
+    aiBtn.textContent = "Aprofundar novamente com IA";
+  }
+
+  msg.textContent = "Análise de página aprofundada com IA aplicada.";
+};
+
+async function chamarIANexora(payload) {
+  const endpoints = [
+    "/api/chat.js",
+    "/api/chat",
+    "../api/chat.js",
+    "../api/chat"
+  ];
+
+  let lastError = null;
+
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        lastError = `${endpoint} retornou ${response.status}`;
+        continue;
+      }
+
+      const data = await response.json().catch(() => null);
+
+      if (!data) {
+        lastError = `${endpoint} não retornou JSON válido`;
+        continue;
+      }
+
+      const text =
+        data.text ||
+        data.content ||
+        data.response ||
+        data.reply ||
+        data.message ||
+        data.result ||
+        data.output ||
+        "";
+
+      if (text) return text;
+
+      lastError = `${endpoint} respondeu, mas sem texto reconhecido`;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  console.warn("Nenhum endpoint de IA funcionou:", lastError);
+  return null;
+}
+
+function parseJsonSafe(raw) {
+  if (!raw) return null;
+
+  if (typeof raw === "object") return raw;
+
+  let clean = String(raw)
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
+
+  try {
+    return JSON.parse(clean);
+  } catch (e) {}
+
+  const firstBrace = clean.indexOf("{");
+  const lastBrace = clean.lastIndexOf("}");
+
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    const jsonLike = clean.slice(firstBrace, lastBrace + 1);
+
+    try {
+      return JSON.parse(jsonLike);
+    } catch (e) {
+      console.warn("JSON da IA inválido, usando fallback textual:", jsonLike);
+    }
+  }
+
+  return {
+    diagnostico_executivo_aprofundado: clean,
+    hipotese_estrategica: "A IA retornou uma leitura estratégica fora do formato estruturado esperado, mas o conteúdo foi preservado como complemento textual.",
+    risco_de_nao_corrigir: "A análise complementar reforça a necessidade de corrigir a página antes de escalar tráfego ou mídia.",
+    leitura_por_pilar: {
+      imagem: "Usar a leitura base da Nexora para avaliar imagem e atratividade.",
+      titulo_seo: "Usar a leitura base da Nexora para avaliar título e SEO.",
+      comunicacao: "Usar a leitura base da Nexora para avaliar comunicação de valor.",
+      confianca: "Usar a leitura base da Nexora para avaliar confiança e prova social.",
+      oferta: "Usar a leitura base da Nexora para avaliar oferta e preço.",
+      prioridade_sistemica: "Priorizar o principal problema indicado pela engine Nexora."
+    },
+    plano_de_acao: []
+  };
+}
+
+function smallTextCard(title, text) {
+  return `
+    <div class="metric-card">
+      <p>${escapeHtml(title)}</p>
+      <div style="color:var(--text-muted);font-size:12.5px;line-height:1.65;margin-top:8px;">
+        ${escapeHtml(text || "-")}
+      </div>
+    </div>
+  `;
+}
+    
     function metricCard(title, value) {
   return `
     <div class="metric-card">
