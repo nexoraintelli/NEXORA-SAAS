@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -433,8 +434,7 @@
     import { requireAuth } from "../js/auth.js";
     import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
     import { gerarDiagnosticoBaseC1 } from "../js/cerebro1Engine.js";
-    
-    
+
     await requireAuth();
 
     const state = {};
@@ -445,6 +445,8 @@
     const resultArea = document.getElementById("resultArea");
     const nextBtn = document.getElementById("nextBtn");
     const aiBtn = document.getElementById("aiBtn");
+    const categorySelect = document.getElementById("category");
+    const subcategorySelect = document.getElementById("subcategory");
 
     document.querySelectorAll(".option-group").forEach(group => {
       group.querySelectorAll(".option-btn").forEach(btn => {
@@ -466,6 +468,7 @@
         progress.appendChild(item);
       });
     }
+
 const subcategoriasPorCategoria = {
   "Automotivo": [
     "Acessórios automotivos",
@@ -792,33 +795,55 @@ const subcategoriasPorCategoria = {
   ]
 };
 
-window.atualizarSubcategorias = function () {
-  const categoryEl = document.getElementById("category");
-  const subcategoryEl = document.getElementById("subcategory");
+    function normalizarTexto(value) {
+      return String(value || "")
+        .trim()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+    }
 
-  if (!categoryEl || !subcategoryEl) return;
+    function encontrarCategoriaSelecionada(categoryValue) {
+      const alvo = normalizarTexto(categoryValue);
+      return Object.keys(subcategoriasPorCategoria).find(key => normalizarTexto(key) === alvo);
+    }
 
-  const category = categoryEl.value.trim();
-  const lista = subcategoriasPorCategoria[category] || [];
+    window.atualizarSubcategorias = function () {
+      if (!categorySelect || !subcategorySelect) return;
 
-  if (!category || !lista.length) {
-    subcategoryEl.innerHTML = `
-      <option value="">Selecione uma categoria primeiro</option>
-    `;
-    return;
-  }
+      const categoryValue = categorySelect.value;
+      const categoryKey = encontrarCategoriaSelecionada(categoryValue);
+      const lista = categoryKey ? subcategoriasPorCategoria[categoryKey] : [];
 
-  subcategoryEl.innerHTML = `
-    <option value="">Selecione a subcategoria</option>
-    ${lista.map(item => `<option value="${item}">${item}</option>`).join("")}
-  `;
-};
-    const categorySelect = document.getElementById("category");
+      subcategorySelect.innerHTML = "";
 
-if (categorySelect) {
-  categorySelect.addEventListener("change", window.atualizarSubcategorias);
-  window.atualizarSubcategorias();
-}
+      if (!categoryValue || !lista.length) {
+        const option = document.createElement("option");
+        option.value = "";
+        option.textContent = "Selecione uma categoria primeiro";
+        subcategorySelect.appendChild(option);
+        return;
+      }
+
+      const firstOption = document.createElement("option");
+      firstOption.value = "";
+      firstOption.textContent = "Selecione a subcategoria";
+      subcategorySelect.appendChild(firstOption);
+
+      lista.forEach(item => {
+        const option = document.createElement("option");
+        option.value = item;
+        option.textContent = item;
+        subcategorySelect.appendChild(option);
+      });
+    };
+
+    if (categorySelect) {
+      categorySelect.addEventListener("change", window.atualizarSubcategorias);
+      categorySelect.addEventListener("input", window.atualizarSubcategorias);
+      window.atualizarSubcategorias();
+    }
+
     function renderStep() {
       steps.forEach((s, i) => s.classList.toggle("active", i === currentStep));
       nextBtn.textContent = currentStep === steps.length - 1 ? "Gerar diagnóstico" : "Continuar";
@@ -903,30 +928,24 @@ if (categorySelect) {
         category: v("category"),
         subcategory: v("subcategory"),
         product: v("product"),
-
         modelo: state.modelo,
         force: state.force,
         pos: state.pos,
-
         impressions: n("impressions"),
         clicks: n("clicks"),
         ctr: n("ctr"),
-
         sales: n("sales"),
         cvr: n("cvr"),
         reviews: n("reviews"),
         rating: n("rating"),
-
         acos: n("acos"),
         tacos: n("tacos"),
         margin: n("margin"),
         roas: n("roas"),
-
         fulfillment: state.fulfillment,
         buybox: state.buybox,
         stock: state.stock,
         price: n("price"),
-
         cat: v("category"),
         sub: v("subcategory"),
         bb: state.buybox,
@@ -946,12 +965,12 @@ if (categorySelect) {
         rating: 4.3
       };
 
-     let result = gerarDiagnosticoBaseC1(data, benchmark);
+      let result = gerarDiagnosticoBaseC1(data, benchmark);
 
-result = {
-  ...result,
-  ia_usada: false
-};
+      result = {
+        ...result,
+        ia_usada: false
+      };
 
       const fullResult = {
         ...data,
@@ -987,8 +1006,9 @@ result = {
       renderResult(fullResult);
       msg.textContent = "Diagnóstico salvo com sucesso.";
     }
-async function aprofundarComIA(data, benchmark, baseResult) {
-  const prompt = `
+
+    async function aprofundarComIA(data, benchmark, baseResult) {
+      const prompt = `
 Você é a Nexora Intelligence, uma inteligência estratégica especializada em diagnóstico de performance na Amazon.
 
 A engine base da Nexora já calculou os scores, causa raiz, gaps e prioridades.
@@ -1043,153 +1063,156 @@ Retorne exatamente neste formato:
 }
 `;
 
-  try {
-    const aiText = await chamarIANexora({
-  task: "c1",
-  maxTokens: 1400,
-  responseMimeType: "application/json",
-  messages: [
-    {
-      role: "user",
-      content: prompt
+      try {
+        const aiText = await chamarIANexora({
+          task: "c1",
+          maxTokens: 1400,
+          responseMimeType: "application/json",
+          messages: [
+            {
+              role: "user",
+              content: prompt
+            }
+          ]
+        });
+
+        if (!aiText) {
+          console.warn("IA não retornou texto no Cérebro 1.");
+          return null;
+        }
+
+        const parsed = parseJsonSafe(aiText);
+
+        if (!parsed) {
+          console.warn("IA retornou texto, mas não retornou JSON válido:", aiText);
+          return null;
+        }
+
+        return parsed;
+      } catch (error) {
+        console.error("Erro ao aprofundar Cérebro 1 com IA:", error);
+        return null;
+      }
     }
-  ]
-});
 
-   if (!aiText) {
-  console.warn("IA não retornou texto no Cérebro 1.");
-  return null;
-}
+    async function chamarIANexora(payload) {
+      const endpoints = ["/api/chat.js", "/api/chat", "../api/chat.js", "../api/chat"];
+      let lastError = null;
 
-const parsed = parseJsonSafe(aiText);
+      for (const endpoint of endpoints) {
+        try {
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+          });
 
-if (!parsed) {
-  console.warn("IA retornou texto, mas não retornou JSON válido:", aiText);
-  return null;
-}
+          const data = await response.json().catch(() => null);
 
-return parsed;
-}
-async function chamarIANexora(payload) {
-  const endpoints = [
-    "/api/chat",
-    "/api/chat.js",
-    "../api/chat",
-    "../api/chat.js"
-  ];
+          if (!response.ok) {
+            lastError = data || `${endpoint} retornou ${response.status}`;
+            continue;
+          }
 
-  let lastError = null;
+          if (!data) {
+            lastError = `${endpoint} não retornou JSON válido`;
+            continue;
+          }
 
-  for (const endpoint of endpoints) {
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
+          const text =
+            data.text ||
+            data.content ||
+            data.response ||
+            data.reply ||
+            data.message ||
+            data.result ||
+            data.output ||
+            data?.choices?.[0]?.message?.content ||
+            data?.content?.[0]?.text ||
+            "";
 
-      if (!response.ok) {
-        lastError = `${endpoint} retornou ${response.status}`;
-        continue;
+          if (text) return text;
+
+          lastError = `${endpoint} respondeu, mas sem texto reconhecido`;
+        } catch (error) {
+          lastError = error;
+        }
       }
 
-      const data = await response.json().catch(() => null);
-
-      if (!data) {
-        lastError = `${endpoint} não retornou JSON válido`;
-        continue;
-      }
-
-      const text =
-        data.text ||
-        data.content ||
-        data.response ||
-        data.reply ||
-        data.message ||
-        data.result ||
-        data.output ||
-        data?.choices?.[0]?.message?.content ||
-        data?.content?.[0]?.text ||
-        "";
-
-      if (text) {
-        return text;
-      }
-
-      lastError = `${endpoint} respondeu, mas sem texto reconhecido`;
-    } catch (error) {
-      lastError = error;
+      console.warn("Nenhum endpoint de IA funcionou:", lastError);
+      return null;
     }
-  }
 
-  console.warn("Nenhum endpoint de IA funcionou:", lastError);
-  return null;
-}
-    
-function parseJsonSafe(raw) {
-  if (!raw) return null;
+    function parseJsonSafe(raw) {
+      if (!raw) return null;
 
-  if (typeof raw === "object") {
-    return raw;
-  }
+      if (typeof raw === "object") {
+        return raw;
+      }
 
-  let clean = String(raw)
-    .replace(/```json/gi, "")
-    .replace(/```/g, "")
-    .trim();
+      let clean = String(raw)
+        .replace(/```json/gi, "")
+        .replace(/```/g, "")
+        .trim();
 
-  try {
-    return JSON.parse(clean);
-  } catch (e) {}
+      try {
+        return JSON.parse(clean);
+      } catch (e) {}
 
-  const firstBrace = clean.indexOf("{");
-  const lastBrace = clean.lastIndexOf("}");
+      const firstBrace = clean.indexOf("{");
+      const lastBrace = clean.lastIndexOf("}");
 
-  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
-    console.warn("IA respondeu, mas não veio JSON:", clean);
-    return null;
-  }
+      if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+        console.warn("IA respondeu, mas não veio JSON:", clean);
+        return null;
+      }
 
-  clean = clean.slice(firstBrace, lastBrace + 1);
+      clean = clean.slice(firstBrace, lastBrace + 1);
 
-  try {
-    return JSON.parse(clean);
-  } catch (e) {
-    console.warn("JSON da IA inválido:", clean, e);
-    return null;
-  }
-}
+      try {
+        return JSON.parse(clean);
+      } catch (e) {
+        console.warn("JSON da IA inválido:", clean, e);
+        return null;
+      }
+    }
+
     function renderResult(result) {
       resultArea.style.display = "block";
-      if (aiBtn) {
-  aiBtn.style.display = "inline-flex";
-}
 
-if (nextBtn) {
-  nextBtn.textContent = "Regerar diagnóstico";
-}
+      if (aiBtn) {
+        aiBtn.style.display = "inline-flex";
+        aiBtn.disabled = false;
+        aiBtn.textContent = result.ia_usada ? "IA aplicada" : "Aprofundar com IA";
+      }
+
+      if (nextBtn) {
+        nextBtn.textContent = "Regerar diagnóstico";
+      }
+
+      const scores = result.scores || {};
 
       resultArea.innerHTML = `
         <p class="step-label">Resultado · Cérebro 1</p>
         <h2>Diagnóstico de performance</h2>
-        
+
         ${result.ia_usada ? `
-        <div class="result-block" style="border-color:rgba(216,139,45,.35);background:rgba(216,139,45,.06);">
-        <strong style="color:#f0a33a;">IA Nexora aplicada</strong>
-        <p style="color:var(--muted);margin-top:6px;font-size:13px;line-height:1.6;">
-      Esta análise foi aprofundada com a camada de IA da Nexora.
-        </p>
-      </div>
-` : ""}
+          <div class="result-block" style="border-color:rgba(216,139,45,.35);background:rgba(216,139,45,.06);">
+            <strong style="color:#f0a33a;">IA Nexora aplicada</strong>
+            <p style="color:var(--muted);margin-top:6px;font-size:13px;line-height:1.6;">
+              Esta análise foi aprofundada com a camada de IA da Nexora.
+            </p>
+          </div>
+        ` : ""}
 
         <div class="result-block">
           <div style="display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-start;">
             <div>
               <p style="color:var(--muted);font-size:12px;">Score geral</p>
-              <div class="score-number">${escapeHtml(result.score_geral)}</div>
-              <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">/100 · ${escapeHtml(result.status)}</p>
+              <div class="score-number">${escapeHtml(result.score_geral ?? "-")}</div>
+              <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">/100 · ${escapeHtml(result.status || "-")}</p>
             </div>
 
             <div style="max-width:520px;">
@@ -1203,11 +1226,11 @@ if (nextBtn) {
         </div>
 
         <div class="grid-3" style="margin-top:18px;">
-          ${metricCard("Atração", result.scores.atracao + "/100", result.scores.ctr)}
-          ${metricCard("Conversão", result.scores.conversao + "/100", result.scores.cvr)}
-          ${metricCard("PPC", result.scores.ppc + "/100", result.scores.acos)}
-          ${metricCard("Rentabilidade", result.scores.rentabilidade + "/100", result.scores.tacos)}
-          ${metricCard("Operação", result.scores.operacao + "/100", result.scores.ops)}
+          ${metricCard("Atração", scoreText(scores.atracao), scores.ctr)}
+          ${metricCard("Conversão", scoreText(scores.conversao), scores.cvr)}
+          ${metricCard("PPC", scoreText(scores.ppc), scores.acos)}
+          ${metricCard("Rentabilidade", scoreText(scores.rentabilidade), scores.tacos)}
+          ${metricCard("Operação", scoreText(scores.operacao), scores.ops)}
           ${metricCard("ROAS", result.roas || "-", "Retorno mídia")}
         </div>
 
@@ -1239,110 +1262,111 @@ if (nextBtn) {
         </div>
 
         <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
-         <button class="btn-secondary" onclick="location.href='./dashboard.html'">
-  Voltar para Dashboard
-</button>
+          <button class="btn-secondary" onclick="location.href='./dashboard.html'">
+            Voltar para Dashboard
+          </button>
 
-<button class="btn-secondary" onclick="aprofundarResultadoComIA()">
-  Aprofundar com IA
-</button>
+          <button class="btn-secondary" onclick="aprofundarResultadoComIA()">
+            ${result.ia_usada ? "Aprofundar novamente com IA" : "Aprofundar com IA"}
+          </button>
 
-<button class="btn-primary" onclick="location.href='./pagina.html'">
-  Ir para Cérebro 2
-</button>
+          <button class="btn-primary" onclick="location.href='./pagina.html'">
+            Ir para Cérebro 2
+          </button>
         </div>
       `;
 
       resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-window.aprofundarResultadoComIA = async function () {
-  const raw = localStorage.getItem("nx_c1");
 
-  if (!raw) {
-    msg.textContent = "Gere o diagnóstico primeiro.";
-    return;
-  }
+    window.aprofundarResultadoComIA = async function () {
+      const raw = localStorage.getItem("nx_c1");
 
-  const diagnosticId = getDiagnosticId();
+      if (!raw) {
+        msg.textContent = "Gere o diagnóstico primeiro.";
+        return;
+      }
 
-  if (!diagnosticId) {
-    msg.textContent = "Nenhum diagnóstico ativo encontrado.";
-    return;
-  }
+      const diagnosticId = getDiagnosticId();
 
-  let fullResult = null;
+      if (!diagnosticId) {
+        msg.textContent = "Nenhum diagnóstico ativo encontrado.";
+        return;
+      }
 
-  try {
-    fullResult = JSON.parse(raw);
-  } catch (error) {
-    msg.textContent = "Não foi possível ler o diagnóstico salvo.";
-    return;
-  }
+      let fullResult = null;
 
-  msg.textContent = "Aprofundando análise com IA Nexora... isso pode levar alguns segundos.";
+      try {
+        fullResult = JSON.parse(raw);
+      } catch (error) {
+        msg.textContent = "Não foi possível ler o diagnóstico salvo.";
+        return;
+      }
 
-if (aiBtn) {
-  aiBtn.disabled = true;
-  aiBtn.textContent = "IA analisando...";
-}
+      msg.textContent = "Aprofundando análise com IA Nexora... isso pode levar alguns segundos.";
 
-  const aiResult = await aprofundarComIA(
-    fullResult,
-    fullResult.benchmark || fullResult.bm || {},
-    fullResult
-  );
+      if (aiBtn) {
+        aiBtn.disabled = true;
+        aiBtn.textContent = "IA analisando...";
+      }
 
- if (!aiResult) {
-  if (aiBtn) {
-    aiBtn.disabled = false;
-    aiBtn.textContent = "Tentar IA novamente";
-  }
+      const aiResult = await aprofundarComIA(
+        fullResult,
+        fullResult.benchmark || fullResult.bm || {},
+        fullResult
+      );
 
-  msg.textContent = "A IA não respondeu neste momento. A análise da engine Nexora continua válida.";
-  return;
-}
+      if (!aiResult) {
+        if (aiBtn) {
+          aiBtn.disabled = false;
+          aiBtn.textContent = "Tentar IA novamente";
+        }
 
-  const updated = {
-    ...fullResult,
-    diagnostico_executivo: aiResult.diagnostico_executivo || fullResult.diagnostico_executivo,
-    impacto: aiResult.impacto || fullResult.impacto,
-    gap_principal: aiResult.gap_principal || fullResult.gap_principal,
-    prioridades: Array.isArray(aiResult.prioridades) ? aiResult.prioridades : fullResult.prioridades,
-    ia_usada: true,
-    ia_updated_at: new Date().toISOString()
-  };
+        msg.textContent = "A IA não respondeu neste momento. A análise da engine Nexora continua válida.";
+        return;
+      }
 
-  localStorage.setItem("nx_c1", JSON.stringify(updated));
+      const updated = {
+        ...fullResult,
+        diagnostico_executivo: aiResult.diagnostico_executivo || fullResult.diagnostico_executivo,
+        impacto: aiResult.impacto || fullResult.impacto,
+        gap_principal: aiResult.gap_principal || fullResult.gap_principal,
+        prioridades: Array.isArray(aiResult.prioridades) ? aiResult.prioridades : fullResult.prioridades,
+        ia_usada: true,
+        ia_updated_at: new Date().toISOString()
+      };
 
-  try {
-    await saveBrainResult({
-      diagnosticId,
-      brainCode: "c1",
-      brainName: "Cérebro 1 - Diagnóstico de Performance",
-      score: updated.score_geral,
-      resultData: updated
-    });
+      localStorage.setItem("nx_c1", JSON.stringify(updated));
 
-    await updateDiagnostic(diagnosticId, {
-      status: "c1_ai_completed",
-      root_cause: updated.root_cause,
-      final_score: updated.score_geral
-    });
-  } catch (error) {
-    console.warn("IA aplicada, mas houve erro ao salvar no banco:", error);
-  }
+      try {
+        await saveBrainResult({
+          diagnosticId,
+          brainCode: "c1",
+          brainName: "Cérebro 1 - Diagnóstico de Performance",
+          score: updated.score_geral,
+          resultData: updated
+        });
 
-renderResult(updated);
+        await updateDiagnostic(diagnosticId, {
+          status: "c1_ai_completed",
+          root_cause: updated.root_cause,
+          final_score: updated.score_geral
+        });
+      } catch (error) {
+        console.warn("IA aplicada, mas houve erro ao salvar no banco:", error);
+      }
 
-if (aiBtn) {
-  aiBtn.disabled = false;
-  aiBtn.textContent = "Aprofundar com IA";
-}
+      renderResult(updated);
 
-msg.textContent = "Análise aprofundada com IA aplicada.";
-};
+      if (aiBtn) {
+        aiBtn.disabled = false;
+        aiBtn.textContent = "IA aplicada";
+      }
 
-function metricCard(title, value, status) {
+      msg.textContent = "Análise aprofundada com IA aplicada.";
+    };
+
+    function metricCard(title, value, status) {
       return `
         <div class="metric-card">
           <p>${escapeHtml(title)}</p>
@@ -1352,12 +1376,19 @@ function metricCard(title, value, status) {
       `;
     }
 
+    function scoreText(value) {
+      if (value === undefined || value === null || Number.isNaN(value)) return "-";
+      return `${value}/100`;
+    }
+
     function v(id) {
-      return document.getElementById(id).value.trim();
+      const el = document.getElementById(id);
+      return el ? String(el.value || "").trim() : "";
     }
 
     function n(id) {
-      const value = document.getElementById(id).value;
+      const el = document.getElementById(id);
+      const value = el ? el.value : "";
       const number = Number(String(value).replace(",", "."));
       return Number.isFinite(number) ? number : 0;
     }
