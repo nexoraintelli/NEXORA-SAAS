@@ -722,7 +722,132 @@
     grid-template-columns: 1fr;
   }
 }
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.70);
+  backdrop-filter: blur(14px);
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+}
 
+.modal-card {
+  width: min(920px, 100%);
+  max-height: 92vh;
+  overflow: auto;
+  border: 1px solid rgba(255,255,255,.12);
+  background:
+    radial-gradient(circle at top left, rgba(139,30,30,.30), transparent 32%),
+    linear-gradient(135deg, rgba(11,13,18,.98), rgba(30,7,7,.98));
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 30px 90px rgba(0,0,0,.48);
+}
+
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.modal-head h2 {
+  margin: 0;
+  font-family: Syne, sans-serif;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.modal-head p {
+  color: var(--nx-muted);
+  margin-top: 8px;
+  line-height: 1.6;
+}
+
+.modal-kicker {
+  font-family: Syne, sans-serif;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: rgba(255,255,255,.58);
+  margin-bottom: 8px;
+}
+
+.modal-close {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  color: #fff;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.modal-grid label {
+  display: block;
+  color: var(--nx-muted);
+  font-size: 12px;
+  margin-bottom: 7px;
+}
+
+.modal-grid input,
+.modal-grid select {
+  width: 100%;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.045);
+  color: #fff;
+  border-radius: 14px;
+  padding: 13px 14px;
+  outline: none;
+  font-family: DM Sans, sans-serif;
+}
+
+.modal-grid input:focus,
+.modal-grid select:focus {
+  border-color: rgba(179,38,38,.55);
+  box-shadow: 0 0 0 3px rgba(139,30,30,.16);
+}
+
+.modal-grid select option {
+  background: #111;
+  color: #fff;
+}
+
+.modal-full {
+  grid-column: 1 / -1;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+
+.modal-msg {
+  color: var(--nx-muted);
+  font-size: 13px;
+  margin-top: 14px;
+  line-height: 1.6;
+}
+
+@media (max-width: 720px) {
+  .modal-grid {
+    grid-template-columns: 1fr;
+  }
+}
   </style>
 </head>
 
@@ -741,12 +866,16 @@
           </button>
 
           <button class="nav-item" onclick="novoDiagnostico()">
-            <span class="nav-icon">＋</span> Novo diagnóstico
-          </button>
+  <span class="nav-icon">＋</span> Novo diagnóstico
+</button>
 
-          <button class="nav-item" onclick="scrollToDiagnostics()">
-            <span class="nav-icon">↺</span> Histórico
-          </button>
+<button class="nav-item" onclick="abrirModalProduto()">
+  <span class="nav-icon">◇</span> Produtos
+</button>
+
+<button class="nav-item" onclick="scrollToDiagnostics()">
+  <span class="nav-icon">↺</span> Histórico
+</button>
 
           <button class="nav-item" onclick="alert('Área de clientes será ativada em breve.')">
             <span class="nav-icon">◌</span> Clientes
@@ -786,9 +915,13 @@
             Sair
           </button>
 
-          <button class="btn-primary" onclick="novoDiagnostico()">
-            + Novo diagnóstico
-          </button>
+          <button class="btn-secondary" onclick="abrirModalProduto()">
+  + Adicionar produto
+</button>
+
+<button class="btn-primary" onclick="novoDiagnostico()">
+  + Novo diagnóstico
+</button>
         </div>
       </header>
 
@@ -942,6 +1075,11 @@
             <h2>Ações rápidas</h2>
 
             <div class="quick-grid">
+              
+              <div class="quick-card" onclick="abrirModalProduto()">
+                <strong>Adicionar produto</strong>
+                <p>Cadastre um produto para acompanhar evolução e iniciar um diagnóstico vinculado.</p>
+              </div>
               <div class="quick-card" onclick="novoDiagnostico()">
                 <strong>Iniciar novo diagnóstico</strong>
                 <p>Comece uma nova análise completa da operação.</p>
@@ -971,11 +1109,133 @@
 
     </main>
   </div>
+<div id="productModal" class="modal-backdrop" style="display:none;">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <p class="modal-kicker">Nexora Intelligence</p>
+        <h2>Adicionar produto</h2>
+        <p>
+          Cadastre um produto real para acompanhar diagnósticos, histórico de performance e evolução dentro da Nexora.
+        </p>
+      </div>
 
+      <button class="modal-close" onclick="fecharModalProduto()">×</button>
+    </div>
+
+    <div class="modal-grid">
+      <div>
+        <label>Nome do produto *</label>
+        <input id="modalProductName" placeholder="Ex: Organizador de ferramentas">
+      </div>
+
+      <div>
+        <label>ASIN</label>
+        <input id="modalProductAsin" placeholder="Ex: B0XXXXXXX">
+      </div>
+
+      <div>
+        <label>SKU</label>
+        <input id="modalSku" placeholder="Ex: SKU-001">
+      </div>
+
+      <div>
+        <label>Marca</label>
+        <input id="modalBrand" placeholder="Ex: Marca própria">
+      </div>
+
+      <div>
+        <label>Marketplace</label>
+        <select id="modalMarketplace">
+          <option>Amazon BR</option>
+          <option>Amazon US</option>
+          <option>Amazon DE</option>
+          <option>Amazon MX</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Categoria *</label>
+        <input id="modalCategory" placeholder="Ex: Ferramentas e Construção">
+      </div>
+
+      <div>
+        <label>Subcategoria *</label>
+        <input id="modalSubcategory" placeholder="Ex: Organização de ferramentas">
+      </div>
+
+      <div>
+        <label>Nicho</label>
+        <input id="modalNiche" placeholder="Ex: Organização doméstica">
+      </div>
+
+      <div>
+        <label>Fase do produto</label>
+        <select id="modalProductPhase">
+          <option value="">Selecione</option>
+          <option value="Lançamento">Lançamento</option>
+          <option value="Crescimento">Crescimento</option>
+          <option value="Estável">Estável</option>
+          <option value="Travado">Travado</option>
+          <option value="Queda de performance">Queda de performance</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Fulfillment</label>
+        <select id="modalFulfillmentType">
+          <option value="">Selecione</option>
+          <option value="FBA">FBA</option>
+          <option value="FBM">FBM</option>
+          <option value="DBA">DBA</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Preço atual</label>
+        <input id="modalCurrentPrice" type="number" step="0.01" placeholder="Ex: 89.90">
+      </div>
+
+      <div>
+        <label>Reviews atuais</label>
+        <input id="modalCurrentReviews" type="number" placeholder="Ex: 145">
+      </div>
+
+      <div>
+        <label>Rating atual</label>
+        <input id="modalCurrentRating" type="number" step="0.1" placeholder="Ex: 4.5">
+      </div>
+
+      <div class="modal-full">
+        <label>URL do produto</label>
+        <input id="modalProductUrl" placeholder="Link da página do produto na Amazon">
+      </div>
+
+      <div class="modal-full">
+        <label>Imagem do produto</label>
+        <input id="modalImageUrl" placeholder="URL da imagem principal">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="fecharModalProduto()">
+        Cancelar
+      </button>
+
+      <button class="btn-primary" onclick="salvarProdutoEIniciarDiagnostico()">
+        Salvar e iniciar diagnóstico
+      </button>
+    </div>
+
+    <p id="productModalMsg" class="modal-msg"></p>
+  </div>
+</div>
   <script type="module">
     import { sb } from "../js/supabaseClient.js";
-    import { requireAuth, logout } from "../js/auth.js";
-    import { createDiagnostic } from "../js/diagnostics.js";
+import { requireAuth, logout } from "../js/auth.js";
+import { createDiagnostic } from "../js/diagnostics.js";
+import { createProduct } from "../js/product.js";
 
     let currentUserId = null;
 
@@ -1024,6 +1284,102 @@ window.abrirRelatorio = function () {
   window.location.href = "./relatorio.html";
 };
     window.loadDiagnostics = loadDiagnostics;
+    window.abrirModalProduto = function () {
+  const modal = document.getElementById("productModal");
+  const msg = document.getElementById("productModalMsg");
+
+  if (msg) msg.textContent = "";
+  if (modal) modal.style.display = "grid";
+};
+
+window.fecharModalProduto = function () {
+  const modal = document.getElementById("productModal");
+
+  if (modal) modal.style.display = "none";
+};
+
+window.salvarProdutoEIniciarDiagnostico = async function () {
+  const msg = document.getElementById("productModalMsg");
+
+  const productName = getModalValue("modalProductName");
+  const category = getModalValue("modalCategory");
+  const subcategory = getModalValue("modalSubcategory");
+
+  if (!productName) {
+    msg.textContent = "Informe o nome do produto para continuar.";
+    return;
+  }
+
+  if (!category || !subcategory) {
+    msg.textContent = "Informe categoria e subcategoria para continuar.";
+    return;
+  }
+
+  try {
+    msg.textContent = "Salvando produto na Nexora...";
+
+    const product = await createProduct({
+      product_name: productName,
+      name: productName,
+      asin: getModalValue("modalProductAsin"),
+      sku: getModalValue("modalSku"),
+      brand: getModalValue("modalBrand"),
+      marketplace: getModalValue("modalMarketplace"),
+      category,
+      subcategory,
+      niche: getModalValue("modalNiche"),
+      product_phase: getModalValue("modalProductPhase"),
+      fullfilment_type: getModalValue("modalFulfillmentType"),
+      current_price: getModalValue("modalCurrentPrice"),
+      current_reviews: getModalValue("modalCurrentReviews"),
+      current_rating: getModalValue("modalCurrentRating"),
+      product_url: getModalValue("modalProductUrl"),
+      image_url: getModalValue("modalImageUrl")
+    });
+
+    localStorage.setItem("nx_product_id", product.id);
+    localStorage.setItem("nx_current_product", JSON.stringify(product));
+
+    msg.textContent = "Produto salvo. Criando diagnóstico vinculado...";
+
+    const diagnostic = await createDiagnostic({
+      productId: product.id
+    });
+
+    localStorage.setItem("nx_diagnostic_id", diagnostic.id);
+
+    [
+      "nx_c1",
+      "nx_c2",
+      "nx_c3",
+      "nx_synth",
+      "nexora_sintese_result",
+      "nexora_relatorio_mapeado"
+    ].forEach(k => localStorage.removeItem(k));
+
+    window.location.href =
+      `./diagnostico.html?product_id=${encodeURIComponent(product.id)}&diagnostic_id=${encodeURIComponent(diagnostic.id)}`;
+  } catch (error) {
+    console.error("Erro ao salvar produto:", error);
+    msg.textContent = "Não foi possível salvar o produto. Verifique o Supabase e tente novamente.";
+  }
+};
+
+window.abrirProdutoAtual = function () {
+  const diagnosticId = localStorage.getItem("nx_diagnostic_id");
+
+  if (!diagnosticId) {
+    alert("Nenhum diagnóstico ativo encontrado. Abra um diagnóstico recente ou inicie uma nova análise.");
+    return;
+  }
+
+  window.location.href = `./produto.html?diagnostic_id=${encodeURIComponent(diagnosticId)}`;
+};
+
+function getModalValue(id) {
+  const el = document.getElementById(id);
+  return el ? String(el.value || "").trim() : "";
+}
     
     window.abrirProduto = function (diagnosticId) {
   if (!diagnosticId) {
