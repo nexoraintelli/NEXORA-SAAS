@@ -810,7 +810,29 @@ document.querySelectorAll(".option-group").forEach(group => {
         msg.textContent = "A análise foi gerada, mas não foi salva no banco. Veja o console.";
       }
     }
+function limparTextoIA(texto) {
+  const value = String(texto || "").trim();
 
+  if (!value) return "";
+
+  if (value.startsWith("{") || value.includes('"diagnostico_executivo_aprofundado"')) {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed.diagnostico_executivo_aprofundado || parsed.diagnostico_executivo || value;
+    } catch (e) {
+      return value
+        .replace(/^\{/, "")
+        .replace(/\}$/, "")
+        .replace(/"diagnostico_executivo_aprofundado"\s*:\s*/g, "")
+        .replace(/"hipotese_estrategica"\s*:\s*/g, "")
+        .replace(/"risco_de_nao_corrigir"\s*:\s*/g, "")
+        .replace(/^"/, "")
+        .trim();
+    }
+  }
+
+  return value;
+}
     function renderResult(result) {
       resultArea.style.display = "block";
 
@@ -1051,7 +1073,7 @@ Retorne exatamente este JSON:
       try {
         const aiText = await chamarIANexoraC3({
           task: "c3",
-          maxTokens: 2400,
+          maxTokens: 3400,
           responseMimeType: "application/json",
           messages: [
             {
@@ -1150,12 +1172,13 @@ Retorne exatamente este JSON:
         leitura_por_pilar_ia: aiResult.leitura_por_pilar || null,
         plano_de_acao_ia: Array.isArray(aiResult.plano_de_acao) ? aiResult.plano_de_acao : [],
 
-        diagnostico_executivo: [
-          fullResult.diagnostico_executivo || "",
-          aiResult.diagnostico_executivo_aprofundado
-            ? "\n\nLeitura complementar da IA Nexora:\n" + aiResult.diagnostico_executivo_aprofundado
-            : ""
-        ].join("").trim(),
+        diagnostico_executivo: fullResult.diagnostico_executivo || "",
+
+diagnostico_ia: limparTextoIA(
+  aiResult.diagnostico_executivo_aprofundado ||
+  aiResult.diagnostico_executivo ||
+  ""
+),
 
         impacto: aiResult.risco_de_nao_corrigir || fullResult.impacto,
         recomendacao: fullResult.recomendacao,
