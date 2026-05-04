@@ -104,12 +104,13 @@ export default async function handler(req) {
           ]
         }
       ],
-      generationConfig: {
-        temperature: Number.isFinite(Number(body.temperature))
-          ? Number(body.temperature)
-          : 0.4,
-        maxOutputTokens
-      }
+     generationConfig: {
+  temperature: Number.isFinite(Number(body.temperature))
+    ? Number(body.temperature)
+    : 0.25,
+  maxOutputTokens,
+  responseMimeType: body.responseMimeType || body.response_mime_type || "text/plain"
+}
     };
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
