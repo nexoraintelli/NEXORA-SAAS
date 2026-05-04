@@ -191,7 +191,11 @@
     Voltar ao Cérebro 3
   </button>
 
-  <button class="btn-primary" onclick="location.href='./relatorio.html'">
+  <button class="btn-primary" onclick="gerarSintese()">
+    Gerar Síntese Final
+  </button>
+
+  <button class="btn-secondary" onclick="abrirRelatorio()">
     Ir para Relatório
   </button>
 </div>
@@ -275,6 +279,14 @@
     }
 
     renderContext();
+    try {
+  const savedSynth = JSON.parse(localStorage.getItem("nx_synth") || "null");
+
+  if (savedSynth) {
+    renderResult(savedSynth);
+    msg.textContent = "Síntese Final já encontrada neste diagnóstico.";
+  }
+} catch (e) {}
 
     window.gerarSintese = async function () {
       if (!C1 || !C2 || !C3) {
@@ -327,7 +339,16 @@
         msg.textContent = "A síntese foi gerada, mas não foi salva no banco. Veja o console.";
       }
     };
+window.abrirRelatorio = function () {
+  const synth = localStorage.getItem("nx_synth");
 
+  if (!synth) {
+    msg.textContent = "Gere a Síntese Final antes de abrir o relatório.";
+    return;
+  }
+
+  location.href = "./relatorio.html";
+};
     function renderResult(result) {
       resultArea.style.display = "block";
 
