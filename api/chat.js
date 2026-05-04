@@ -1,16 +1,17 @@
 export const config = { runtime: "edge" };
 
-const DEFAULT_MODEL = "claude-sonnet-4-6";
+const DEFAULT_MODEL = "gemini-2.5-flash";
 
 const ALLOWED_MODELS = new Set([
-  "claude-sonnet-4-6",
-  "claude-sonnet-4-20250514"
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
+  "gemini-2.0-flash"
 ]);
 
 const TIMEOUT_BY_TASK = {
   c1: 30000,
-  c2: 55000,
-  c3: 45000,
+  c2: 50000,
+  c3: 40000,
   synth: 50000,
   default: 35000
 };
@@ -43,13 +44,13 @@ export default async function handler(req) {
     }, 405, corsHeaders);
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
     return json({
       ok: false,
       error_type: "config",
-      message: "ANTHROPIC_API_KEY não configurada no Vercel."
+      message: "GEMINI_API_KEY não configurada no Vercel."
     }, 500, corsHeaders);
   }
 
@@ -71,14 +72,14 @@ export default async function handler(req) {
       tokenLimit
     );
 
-    const max_tokens = Math.min(
+    const maxOutputTokens = Math.min(
       Number.isFinite(requestedTokens) ? requestedTokens : tokenLimit,
       tokenLimit
     );
 
-    const messages = normalizeMessages(body);
+    const prompt = normalizePrompt(body);
 
-    if (!messages.length) {
+    if (!prompt) {
       return json({
         ok: false,
         error_type: "payload",
@@ -92,20 +93,34 @@ export default async function handler(req) {
       controller.abort();
     }, TIMEOUT_BY_TASK[task] || TIMEOUT_BY_TASK.default);
 
-    const anthropicPayload = {
-      model,
-      max_tokens,
-      messages
+    const geminiPayload = {
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: prompt
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: Number.isFinite(Number(body.temperature))
+          ? Number(body.temperature)
+          : 0.4,
+        maxOutputTokens
+      }
     };
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01"
+        "x-goog-api-key": apiKey
       },
-      body: JSON.stringify(anthropicPayload),
+      body: JSON.stringify(geminiPayload),
       signal: controller.signal
     });
 
@@ -121,16 +136,16 @@ export default async function handler(req) {
     }
 
     if (!response.ok) {
-      console.error("Erro Anthropic:", {
+      console.error("Erro Gemini:", {
         status: response.status,
         raw
       });
 
       return json({
         ok: false,
-        error_type: "anthropic",
+        error_type: "gemini",
         status: response.status,
-        message: extractAnthropicError(raw) || "A camada de IA não respondeu corretamente.",
+        message: extractGeminiError(raw) || "A camada de IA Gemini não respondeu corretamente.",
         raw
       }, response.status, corsHeaders);
     }
@@ -148,7 +163,7 @@ export default async function handler(req) {
 
     return json({
       ok: true,
-      provider: "anthropic",
+      provider: "gemini",
       model,
       task,
       text,
@@ -170,63 +185,57 @@ export default async function handler(req) {
   }
 }
 
-function normalizeMessages(body) {
+function normalizePrompt(body) {
   if (Array.isArray(body.messages) && body.messages.length) {
     return body.messages
       .filter(msg => msg && msg.content)
-      .map(msg => ({
-        role: msg.role === "assistant" ? "assistant" : "user",
-        content: String(msg.content)
-      }));
+      .map(msg => {
+        const role = msg.role === "assistant" ? "Assistente" : "Usuário";
+        return `${role}: ${String(msg.content)}`;
+      })
+      .join("\n\n")
+      .trim();
   }
 
   if (body.prompt) {
-    return [
-      {
-        role: "user",
-        content: String(body.prompt)
-      }
-    ];
+    return String(body.prompt).trim();
   }
 
   if (body.text) {
-    return [
-      {
-        role: "user",
-        content: String(body.text)
-      }
-    ];
+    return String(body.text).trim();
   }
 
-  return [];
+  return "";
 }
 
 function extractText(raw) {
   if (!raw) return "";
 
-  if (typeof raw.text === "string") return raw.text;
+  if (typeof raw.text === "string") {
+    return raw.text.trim();
+  }
 
-  if (Array.isArray(raw.content)) {
-    return raw.content
-      .map(item => {
-        if (typeof item === "string") return item;
-        if (item?.type === "text" && item?.text) return item.text;
-        if (item?.text) return item.text;
-        return "";
+  if (Array.isArray(raw.candidates)) {
+    return raw.candidates
+      .map(candidate => {
+        const parts = candidate?.content?.parts || [];
+
+        return parts
+          .map(part => part?.text || "")
+          .join("");
       })
       .join("")
       .trim();
   }
 
-  if (typeof raw.content === "string") return raw.content;
-  if (typeof raw.message === "string") return raw.message;
-  if (typeof raw.response === "string") return raw.response;
-  if (typeof raw.output === "string") return raw.output;
+  if (typeof raw.output === "string") return raw.output.trim();
+  if (typeof raw.response === "string") return raw.response.trim();
+  if (typeof raw.message === "string") return raw.message.trim();
 
   return "";
 }
 
-function extractAnthropicError(raw) {
+function extractGeminiError(raw) {
   return (
     raw?.error?.message ||
     raw?.message ||
