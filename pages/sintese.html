@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -192,7 +193,7 @@
   </button>
 
   <button class="btn-primary" onclick="gerarSintese()">
-    Gerar Síntese Final
+    Gerar Síntese Final com IA
   </button>
 
   <button class="btn-secondary" onclick="abrirRelatorio()">
@@ -301,9 +302,11 @@
         return;
       }
 
-      msg.textContent = "Gerando Síntese Final Nexora...";
+      msg.textContent = "Gerando Síntese Final Nexora com IA...";
 
-      const result = gerarSinteseFinal(C1, C2, C3);
+      const baseResult = gerarSinteseFinal(C1, C2, C3);
+      const aiResult = await gerarSinteseComIA(C1, C2, C3, baseResult);
+      const result = aplicarIASobreSintese(baseResult, aiResult);
 
       const fullResult = {
         ...result,
@@ -320,7 +323,7 @@
 
       try {
         await updateDiagnostic(diagnosticId, {
-          status: "synthesis_completed"
+          status: result.ia_usada ? "synthesis_ai_completed" : "synthesis_completed"
         });
 
         await saveBrainResult({
@@ -332,13 +335,346 @@
         });
 
         renderResult(fullResult);
-        msg.textContent = "Síntese Final salva com sucesso.";
+        msg.textContent = result.ia_usada
+          ? "Síntese Final com IA salva com sucesso."
+          : "Síntese Final salva com a engine Nexora. A IA não respondeu neste momento.";
       } catch (error) {
         console.error("Erro ao salvar Síntese Final:", error);
         renderResult(fullResult);
         msg.textContent = "A síntese foi gerada, mas não foi salva no banco. Veja o console.";
       }
     };
+    async function gerarSinteseComIA(c1, c2, c3, baseResult) {
+      const prompt = `
+Você é a camada de IA estratégica da Nexora Intelligence, uma plataforma SaaS de diagnóstico sistêmico para produtos na Amazon.
+
+A Nexora já rodou três cérebros antes desta síntese:
+- Cérebro 1: performance, métricas, PPC, rentabilidade e operação;
+- Cérebro 2: página, imagem, SEO, comunicação, confiança e oferta;
+- Cérebro 3: mercado, concorrência, preço, barreira, diferenciação e quadrante competitivo.
+
+IMPORTANTE:
+A engine Nexora já gerou uma síntese base. Sua função NÃO é substituir a engine. Sua função é consolidar, aprofundar e transformar os sinais dos três cérebros em uma leitura executiva final, consultiva e acionável.
+
+REGRAS OBRIGATÓRIAS:
+- Não invente dados.
+- Não contradiga scores, causas raiz ou conclusões dos cérebros.
+- Não use markdown.
+- Não use quebras de linha dentro das strings.
+- Não use aspas duplas dentro dos textos.
+- Retorne SOMENTE JSON válido.
+- Todas as strings precisam estar em uma única linha.
+- Não seja genérico.
+- Use no mínimo 1200 caracteres em diagnostico_executivo_aprofundado.
+- Use no mínimo 600 caracteres em leitura_cruzada_aprofundada.
+- Use exatamente 5 prioridades em prioridades_finais.
+- Use exatamente 5 etapas em plano_acao.
+
+CÉREBRO 1 COMPLETO:
+${JSON.stringify(c1, null, 2)}
+
+CÉREBRO 2 COMPLETO:
+${JSON.stringify(c2, null, 2)}
+
+CÉREBRO 3 COMPLETO:
+${JSON.stringify(c3, null, 2)}
+
+SÍNTESE BASE DA ENGINE NEXORA:
+${JSON.stringify(baseResult, null, 2)}
+
+Retorne exatamente este JSON:
+
+{
+  "causa_raiz_consolidada": "causa raiz final em uma frase forte e estratégica",
+  "gravidade": "Baixa, Média, Alta ou Crítica",
+  "diagnostico_executivo_aprofundado": "texto executivo longo, consultivo e claro, conectando performance, página e mercado, explicando por que o produto está travado ou ainda não escala com segurança",
+  "leitura_cruzada_aprofundada": "leitura integrada dos três cérebros, explicando como C1, C2 e C3 se reforçam, se contradizem ou se complementam",
+  "risco_de_nao_corrigir": "risco comercial de seguir escalando ou operando sem corrigir a causa raiz consolidada",
+  "decisao_estrategica": "decisão final recomendada para o seller ou consultor: corrigir página, ajustar mídia, reposicionar oferta, proteger margem, diferenciar mercado ou escalar com controle",
+  "resumo_cliente": "resumo claro, elegante e vendável para cliente final, sem termos técnicos excessivos",
+  "prioridades_finais": [
+    {
+      "prioridade": "1",
+      "area": "área principal",
+      "titulo": "ação prioritária 1",
+      "detalhe": "explicação específica e prática",
+      "impacto": "impacto esperado"
+    },
+    {
+      "prioridade": "2",
+      "area": "área principal",
+      "titulo": "ação prioritária 2",
+      "detalhe": "explicação específica e prática",
+      "impacto": "impacto esperado"
+    },
+    {
+      "prioridade": "3",
+      "area": "área principal",
+      "titulo": "ação prioritária 3",
+      "detalhe": "explicação específica e prática",
+      "impacto": "impacto esperado"
+    },
+    {
+      "prioridade": "4",
+      "area": "área principal",
+      "titulo": "ação prioritária 4",
+      "detalhe": "explicação específica e prática",
+      "impacto": "impacto esperado"
+    },
+    {
+      "prioridade": "5",
+      "area": "área principal",
+      "titulo": "ação prioritária 5",
+      "detalhe": "explicação específica e prática",
+      "impacto": "impacto esperado"
+    }
+  ],
+  "plano_acao": [
+    {
+      "etapa": "Etapa 1",
+      "prazo": "0-7 dias",
+      "titulo": "ação do plano",
+      "descricao": "descrição prática da ação",
+      "objetivo": "objetivo da etapa"
+    },
+    {
+      "etapa": "Etapa 2",
+      "prazo": "7-14 dias",
+      "titulo": "ação do plano",
+      "descricao": "descrição prática da ação",
+      "objetivo": "objetivo da etapa"
+    },
+    {
+      "etapa": "Etapa 3",
+      "prazo": "14-21 dias",
+      "titulo": "ação do plano",
+      "descricao": "descrição prática da ação",
+      "objetivo": "objetivo da etapa"
+    },
+    {
+      "etapa": "Etapa 4",
+      "prazo": "21-30 dias",
+      "titulo": "ação do plano",
+      "descricao": "descrição prática da ação",
+      "objetivo": "objetivo da etapa"
+    },
+    {
+      "etapa": "Etapa 5",
+      "prazo": "30+ dias",
+      "titulo": "ação do plano",
+      "descricao": "descrição prática da ação",
+      "objetivo": "objetivo da etapa"
+    }
+  ]
+}
+`;
+
+      try {
+        const aiText = await chamarIANexora({
+          task: "synth",
+          maxTokens: 4200,
+          responseMimeType: "application/json",
+          messages: [
+            {
+              role: "user",
+              content: prompt
+            }
+          ]
+        });
+
+        if (!aiText) {
+          console.warn("IA não retornou texto na Síntese Final.");
+          return null;
+        }
+
+        return parseJsonSafe(aiText);
+      } catch (error) {
+        console.error("Erro ao gerar Síntese Final com IA:", error);
+        return null;
+      }
+    }
+
+    function aplicarIASobreSintese(baseResult, aiResult) {
+      if (!aiResult) {
+        return {
+          ...baseResult,
+          ia_usada: false,
+          ia_error: true
+        };
+      }
+
+      const diagnosticoIA = limparTextoIA(aiResult.diagnostico_executivo_aprofundado || aiResult.diagnostico_executivo || "");
+      const leituraIA = limparTextoIA(aiResult.leitura_cruzada_aprofundada || "");
+      const riscoIA = limparTextoIA(aiResult.risco_de_nao_corrigir || "");
+      const decisaoIA = limparTextoIA(aiResult.decisao_estrategica || aiResult.recomendacao_final || "");
+      const resumoIA = limparTextoIA(aiResult.resumo_cliente || "");
+
+      return {
+        ...baseResult,
+
+        causa_raiz_base: baseResult.causa_raiz_consolidada,
+        diagnostico_executivo_base: baseResult.diagnostico_executivo,
+        leitura_cruzada_base: baseResult.leitura_cruzada,
+        recomendacao_base: baseResult.recomendacao,
+        resumo_cliente_base: baseResult.resumo_cliente,
+        prioridades_base: baseResult.prioridades,
+        plano_acao_base: baseResult.plano_acao,
+
+        causa_raiz_consolidada: aiResult.causa_raiz_consolidada || baseResult.causa_raiz_consolidada,
+        gravidade: aiResult.gravidade || baseResult.gravidade,
+
+        diagnostico_ia: diagnosticoIA,
+        leitura_cruzada_ia: leituraIA,
+        risco_ia: riscoIA,
+        decisao_ia: decisaoIA,
+
+        diagnostico_executivo: [
+          baseResult.diagnostico_executivo || "",
+          diagnosticoIA ? "\n\nLeitura complementar da IA Nexora:\n" + diagnosticoIA : ""
+        ].join("").trim(),
+
+        leitura_cruzada: [
+          baseResult.leitura_cruzada || "",
+          leituraIA ? "\n\nLeitura cruzada aprofundada da IA Nexora:\n" + leituraIA : ""
+        ].join("").trim(),
+
+        recomendacao: decisaoIA || baseResult.recomendacao,
+        resumo_cliente: resumoIA || baseResult.resumo_cliente,
+
+        prioridades: Array.isArray(aiResult.prioridades_finais) && aiResult.prioridades_finais.length
+          ? aiResult.prioridades_finais
+          : baseResult.prioridades,
+
+        plano_acao: Array.isArray(aiResult.plano_acao) && aiResult.plano_acao.length
+          ? aiResult.plano_acao
+          : baseResult.plano_acao,
+
+        ia_usada: true,
+        ia_updated_at: new Date().toISOString()
+      };
+    }
+
+    async function chamarIANexora(payload) {
+      const endpoints = [
+        "/api/chat.js",
+        "/api/chat",
+        "../api/chat.js",
+        "../api/chat"
+      ];
+
+      let lastError = null;
+
+      for (const endpoint of endpoints) {
+        try {
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            lastError = `${endpoint} retornou ${response.status}`;
+            continue;
+          }
+
+          const data = await response.json().catch(() => null);
+
+          if (!data) {
+            lastError = `${endpoint} não retornou JSON válido`;
+            continue;
+          }
+
+          const text =
+            data.text ||
+            data.content ||
+            data.response ||
+            data.reply ||
+            data.message ||
+            data.result ||
+            data.output ||
+            data?.choices?.[0]?.message?.content ||
+            data?.content?.[0]?.text ||
+            "";
+
+          if (text) return text;
+
+          lastError = `${endpoint} respondeu, mas sem texto reconhecido`;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      console.warn("Nenhum endpoint de IA funcionou na Síntese:", lastError);
+      return null;
+    }
+
+    function parseJsonSafe(raw) {
+      if (!raw) return null;
+
+      if (typeof raw === "object") {
+        return raw;
+      }
+
+      let clean = String(raw)
+        .replace(/```json/gi, "")
+        .replace(/```/g, "")
+        .trim();
+
+      try {
+        return JSON.parse(clean);
+      } catch (e) {}
+
+      const firstBrace = clean.indexOf("{");
+      const lastBrace = clean.lastIndexOf("}");
+
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        const jsonLike = clean.slice(firstBrace, lastBrace + 1);
+
+        try {
+          return JSON.parse(jsonLike);
+        } catch (e) {
+          console.warn("JSON da IA inválido na Síntese, usando fallback textual:", jsonLike, e);
+        }
+      }
+
+      return {
+        diagnostico_executivo_aprofundado: clean,
+        leitura_cruzada_aprofundada: "A IA retornou uma leitura estratégica fora do formato estruturado esperado, mas o conteúdo foi preservado como complemento textual.",
+        risco_de_nao_corrigir: "A leitura complementar reforça a necessidade de corrigir a causa raiz consolidada antes de escalar mídia, preço ou expansão.",
+        decisao_estrategica: "Usar a análise base da Nexora como fonte principal e considerar a leitura da IA como complemento consultivo.",
+        resumo_cliente: "A Nexora identificou uma causa raiz consolidada e recomenda priorizar as ações com maior impacto antes de escalar o produto.",
+        prioridades_finais: [],
+        plano_acao: []
+      };
+    }
+
+    function limparTextoIA(texto) {
+      const value = String(texto || "").trim();
+
+      if (!value) return "";
+
+      if (value.startsWith("{") || value.includes('"diagnostico_executivo_aprofundado"')) {
+        try {
+          const parsed = JSON.parse(value);
+          return parsed.diagnostico_executivo_aprofundado || parsed.diagnostico_executivo || value;
+        } catch (e) {
+          return value
+            .replace(/^\{/, "")
+            .replace(/\}$/, "")
+            .replace(/"diagnostico_executivo_aprofundado"\s*:\s*/g, "")
+            .replace(/"leitura_cruzada_aprofundada"\s*:\s*/g, "")
+            .replace(/"risco_de_nao_corrigir"\s*:\s*/g, "")
+            .replace(/"decisao_estrategica"\s*:\s*/g, "")
+            .replace(/^"/, "")
+            .trim();
+        }
+      }
+
+      return value;
+    }
+
 window.abrirRelatorio = function () {
   const synth = localStorage.getItem("nx_synth");
 
@@ -355,6 +691,31 @@ window.abrirRelatorio = function () {
       resultArea.innerHTML = `
         <p class="step-label">Resultado · Síntese Final</p>
         <h2>Diagnóstico estratégico consolidado</h2>
+
+        ${result.ia_usada ? `
+          <div class="result-block" style="border-color:rgba(216,139,45,.35);background:rgba(216,139,45,.06);">
+            <strong style="color:#f0a33a;">IA Nexora aplicada na Síntese Final</strong>
+            <p style="color:var(--muted);margin-top:6px;font-size:13px;line-height:1.6;">
+              A síntese foi consolidada com a camada de IA Gemini da Nexora, cruzando os três cérebros sem descartar a análise da engine.
+            </p>
+          </div>
+        ` : ""}
+
+        ${result.ia_usada && result.diagnostico_ia ? `
+          <div class="result-block" style="border-color:rgba(216,139,45,.24);">
+            <h3>Leitura executiva da IA Nexora</h3>
+            <div class="analysis-text" style="margin-top:14px;">${escapeHtml(result.diagnostico_ia)}</div>
+          </div>
+        ` : ""}
+
+        ${result.ia_usada && result.risco_ia ? `
+          <div class="result-block" style="border-color:rgba(216,139,45,.24);">
+            <h3>Risco estratégico de não corrigir</h3>
+            <p style="color:var(--text-muted);line-height:1.85;margin-top:10px;">
+              ${escapeHtml(result.risco_ia)}
+            </p>
+          </div>
+        ` : ""}
 
         <div class="result-block">
           <div class="score-hero">
