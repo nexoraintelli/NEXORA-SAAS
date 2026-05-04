@@ -32,7 +32,7 @@ export async function createProduct(payload = {}) {
     niche: payload.niche || null,
     product_phase: payload.product_phase || null,
 
-    fulfilment_type: payload.fulfilment_type || payload.fulfillment_type || null,
+    fulfillment_type: payload.fulfillment_type || payload.fulfilment_type || payload.fullfilment_type || null,
 
     current_price: toNumberOrNull(payload.current_price),
     current_reviews: toIntegerOrNull(payload.current_reviews),
