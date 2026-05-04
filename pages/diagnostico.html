@@ -409,14 +409,21 @@
       </div>
     </section>
 
-    <section class="card">
-      <div class="nav-actions">
-        <button class="btn-secondary" onclick="prevStep()">Voltar</button>
-        <button class="btn-primary" id="nextBtn" onclick="nextStep()">Continuar</button>
-      </div>
+  <section class="card">
+  <div class="nav-actions">
+    <button class="btn-secondary" onclick="prevStep()">Voltar</button>
 
-      <p id="msg" style="color:var(--muted);font-size:13px;margin-top:16px;"></p>
-    </section>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <button class="btn-secondary" id="aiBtn" style="display:none;" onclick="aprofundarResultadoComIA()">
+        Aprofundar com IA
+      </button>
+
+      <button class="btn-primary" id="nextBtn" onclick="nextStep()">Continuar</button>
+    </div>
+  </div>
+
+  <p id="msg" style="color:var(--muted);font-size:13px;margin-top:16px;"></p>
+</section>
 
     <section id="resultArea" class="card" style="display:none;"></section>
 
@@ -437,6 +444,7 @@
     const msg = document.getElementById("msg");
     const resultArea = document.getElementById("resultArea");
     const nextBtn = document.getElementById("nextBtn");
+    const aiBtn = document.getElementById("aiBtn");
 
     document.querySelectorAll(".option-group").forEach(group => {
       group.querySelectorAll(".option-btn").forEach(btn => {
@@ -1141,6 +1149,13 @@ function parseJsonSafe(raw) {
 }
     function renderResult(result) {
       resultArea.style.display = "block";
+      if (aiBtn) {
+  aiBtn.style.display = "inline-flex";
+}
+
+if (nextBtn) {
+  nextBtn.textContent = "Regerar diagnóstico";
+}
 
       resultArea.innerHTML = `
         <p class="step-label">Resultado · Cérebro 1</p>
@@ -1250,7 +1265,12 @@ window.aprofundarResultadoComIA = async function () {
     return;
   }
 
-  msg.textContent = "Aprofundando análise com IA Nexora...";
+  msg.textContent = "Aprofundando análise com IA Nexora... isso pode levar alguns segundos.";
+
+if (aiBtn) {
+  aiBtn.disabled = true;
+  aiBtn.textContent = "IA analisando...";
+}
 
   const aiResult = await aprofundarComIA(
     fullResult,
@@ -1258,10 +1278,15 @@ window.aprofundarResultadoComIA = async function () {
     fullResult
   );
 
-  if (!aiResult) {
-    msg.textContent = "A IA não respondeu neste momento. A análise da engine Nexora continua válida.";
-    return;
+ if (!aiResult) {
+  if (aiBtn) {
+    aiBtn.disabled = false;
+    aiBtn.textContent = "Tentar IA novamente";
   }
+
+  msg.textContent = "A IA não respondeu neste momento. A análise da engine Nexora continua válida.";
+  return;
+}
 
   const updated = {
     ...fullResult,
@@ -1293,9 +1318,14 @@ window.aprofundarResultadoComIA = async function () {
     console.warn("IA aplicada, mas houve erro ao salvar no banco:", error);
   }
 
-  renderResult(updated);
-  msg.textContent = "Análise aprofundada com IA aplicada.";
-};
+ renderResult(updated);
+
+if (aiBtn) {
+  aiBtn.disabled = false;
+  aiBtn.textContent = "Aprofundar com IA";
+}
+
+msg.textContent = "Análise aprofundada com IA aplicada.";
     
     function metricCard(title, value, status) {
       return `
