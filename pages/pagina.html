@@ -1112,16 +1112,6 @@ input[type="file"],
       resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    function smallTextCard(title, text) {
-      return `
-        <div class="metric-card">
-          <p>${escapeHtml(title)}</p>
-          <div style="color:var(--text-muted);font-size:12.5px;line-height:1.65;margin-top:8px;">
-            ${escapeHtml(text || "-")}
-          </div>
-        </div>
-      `;
-    }
 async function aprofundarPaginaComIA(data, c1, baseResult) {
   const prompt = `
 Você é a camada de IA estratégica da Nexora Intelligence, especializada em análise de páginas de produto na Amazon.
