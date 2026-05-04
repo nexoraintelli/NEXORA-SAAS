@@ -426,7 +426,7 @@
     import { requireAuth } from "../js/auth.js";
     import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
     import { gerarDiagnosticoBaseC1 } from "../js/cerebro1Engine.js";
-    import { callAI } from "../js/ai.js";
+    
     
     await requireAuth();
 
@@ -976,32 +976,30 @@ result = {
     }
 async function aprofundarComIA(data, benchmark, baseResult) {
   const prompt = `
-Você é a Nexora Intelligence, especialista em diagnóstico estratégico de performance na Amazon.
+Você é a Nexora Intelligence, uma inteligência estratégica especializada em diagnóstico de performance na Amazon.
 
-Sua função NÃO é recalcular os dados.
-A engine da Nexora já identificou score, causa raiz, gaps e prioridades.
+A engine base da Nexora já calculou os scores, causa raiz, gaps e prioridades.
+Sua função é aprofundar a leitura de forma consultiva, estratégica e comercial.
 
-Sua função é transformar o diagnóstico base em uma análise mais profunda, consultiva e vendável, mantendo coerência com os dados.
-
-IMPORTANTE:
+REGRAS:
 - Não invente dados.
 - Não contradiga a causa raiz da engine.
-- Não escreva texto genérico.
-- Seja estratégico, direto e profundo.
-- Explique impacto comercial.
-- Explique por que esse problema trava crescimento.
-- Use linguagem profissional para seller, agência ou consultor.
-- Retorne SOMENTE JSON válido.
-- Não use markdown.
+- Não recalcular métricas.
+- Não escrever texto genérico.
+- Explicar o impacto comercial.
+- Explicar por que esse problema trava crescimento.
+- Usar linguagem profissional para seller, consultor ou agência.
+- Retornar SOMENTE JSON válido.
+- Não usar markdown.
 
 DADOS DO PRODUTO:
-${JSON.stringify(data)}
+${JSON.stringify(data, null, 2)}
 
 BENCHMARK:
-${JSON.stringify(benchmark)}
+${JSON.stringify(benchmark, null, 2)}
 
 RESULTADO DA ENGINE NEXORA:
-${JSON.stringify(baseResult)}
+${JSON.stringify(baseResult, null, 2)}
 
 Retorne exatamente neste formato:
 
@@ -1032,30 +1030,87 @@ Retorne exatamente neste formato:
 }
 `;
 
-  const response = await callAI({
-    task: "c1",
-    maxTokens: 700,
-    messages: [
-      {
-        role: "user",
-        content: prompt
-      }
-    ]
-  });
-
-  if (!response.ok || !response.text) {
-    console.warn("IA não usada no Cérebro 1:", response.error);
-    return null;
-  }
-
   try {
-    return parseJsonSafe(response.text);
+    const aiText = await chamarIANexora({
+      task: "c1",
+      maxTokens: 1200,
+      messages: [
+        {
+          role: "user",
+          content: prompt
+        }
+      ]
+    });
+
+    if (!aiText) {
+      console.warn("IA não retornou texto no Cérebro 1.");
+      return null;
+    }
+
+    return parseJsonSafe(aiText);
   } catch (error) {
-    console.warn("Resposta da IA inválida:", error);
+    console.error("Erro ao aprofundar Cérebro 1 com IA:", error);
     return null;
   }
 }
+async function chamarIANexora(payload) {
+  const endpoints = [
+    "/api/chat",
+    "/api/chat.js",
+    "../api/chat",
+    "../api/chat.js"
+  ];
 
+  let lastError = null;
+
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        lastError = `${endpoint} retornou ${response.status}`;
+        continue;
+      }
+
+      const data = await response.json().catch(() => null);
+
+      if (!data) {
+        lastError = `${endpoint} não retornou JSON válido`;
+        continue;
+      }
+
+      const text =
+        data.text ||
+        data.content ||
+        data.response ||
+        data.reply ||
+        data.message ||
+        data.result ||
+        data.output ||
+        data?.choices?.[0]?.message?.content ||
+        data?.content?.[0]?.text ||
+        "";
+
+      if (text) {
+        return text;
+      }
+
+      lastError = `${endpoint} respondeu, mas sem texto reconhecido`;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  console.warn("Nenhum endpoint de IA funcionou:", lastError);
+  return null;
+}
+    
 function parseJsonSafe(raw) {
   const clean = String(raw || "")
     .replace(/```json/g, "")
@@ -1090,6 +1145,15 @@ function parseJsonSafe(raw) {
       resultArea.innerHTML = `
         <p class="step-label">Resultado · Cérebro 1</p>
         <h2>Diagnóstico de performance</h2>
+        
+        ${result.ia_usada ? `
+        <div class="result-block" style="border-color:rgba(216,139,45,.35);background:rgba(216,139,45,.06);">
+        <strong style="color:#f0a33a;">IA Nexora aplicada</strong>
+        <p style="color:var(--muted);margin-top:6px;font-size:13px;line-height:1.6;">
+      Esta análise foi aprofundada com a camada de IA da Nexora.
+        </p>
+      </div>
+` : ""}
 
         <div class="result-block">
           <div style="display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-start;">
@@ -1166,18 +1230,31 @@ window.aprofundarResultadoComIA = async function () {
   const raw = localStorage.getItem("nx_c1");
 
   if (!raw) {
-    alert("Gere o diagnóstico primeiro.");
+    msg.textContent = "Gere o diagnóstico primeiro.";
     return;
   }
 
-  const fullResult = JSON.parse(raw);
   const diagnosticId = getDiagnosticId();
 
-  msg.textContent = "Aprofundando análise com IA...";
+  if (!diagnosticId) {
+    msg.textContent = "Nenhum diagnóstico ativo encontrado.";
+    return;
+  }
+
+  let fullResult = null;
+
+  try {
+    fullResult = JSON.parse(raw);
+  } catch (error) {
+    msg.textContent = "Não foi possível ler o diagnóstico salvo.";
+    return;
+  }
+
+  msg.textContent = "Aprofundando análise com IA Nexora...";
 
   const aiResult = await aprofundarComIA(
     fullResult,
-    fullResult.benchmark || {},
+    fullResult.benchmark || fullResult.bm || {},
     fullResult
   );
 
@@ -1191,22 +1268,32 @@ window.aprofundarResultadoComIA = async function () {
     diagnostico_executivo: aiResult.diagnostico_executivo || fullResult.diagnostico_executivo,
     impacto: aiResult.impacto || fullResult.impacto,
     gap_principal: aiResult.gap_principal || fullResult.gap_principal,
-    prioridades: aiResult.prioridades || fullResult.prioridades,
-    ia_usada: true
+    prioridades: Array.isArray(aiResult.prioridades) ? aiResult.prioridades : fullResult.prioridades,
+    ia_usada: true,
+    ia_updated_at: new Date().toISOString()
   };
 
   localStorage.setItem("nx_c1", JSON.stringify(updated));
 
-  await saveBrainResult({
-    diagnosticId,
-    brainCode: "c1",
-    brainName: "Cérebro 1 - Diagnóstico de Performance",
-    score: updated.score_geral,
-    resultData: updated
-  });
+  try {
+    await saveBrainResult({
+      diagnosticId,
+      brainCode: "c1",
+      brainName: "Cérebro 1 - Diagnóstico de Performance",
+      score: updated.score_geral,
+      resultData: updated
+    });
+
+    await updateDiagnostic(diagnosticId, {
+      status: "c1_ai_completed",
+      root_cause: updated.root_cause,
+      final_score: updated.score_geral
+    });
+  } catch (error) {
+    console.warn("IA aplicada, mas houve erro ao salvar no banco:", error);
+  }
 
   renderResult(updated);
-
   msg.textContent = "Análise aprofundada com IA aplicada.";
 };
     
