@@ -1359,10 +1359,17 @@ window.salvarProdutoEIniciarDiagnostico = async function () {
 
     window.location.href =
       `./diagnostico.html?product_id=${encodeURIComponent(product.id)}&diagnostic_id=${encodeURIComponent(diagnostic.id)}`;
-  } catch (error) {
-    console.error("Erro ao salvar produto:", error);
-    msg.textContent = "Não foi possível salvar o produto. Verifique o Supabase e tente novamente.";
-  }
+ } catch (error) {
+  console.error("Erro ao salvar produto completo:", error);
+
+  const detalhe =
+    error?.message ||
+    error?.details ||
+    error?.hint ||
+    JSON.stringify(error);
+
+  msg.textContent = `Não foi possível salvar o produto: ${detalhe}`;
+}
 };
 
 window.abrirProdutoAtual = function () {
