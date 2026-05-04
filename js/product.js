@@ -32,7 +32,7 @@ export async function createProduct(payload = {}) {
     niche: payload.niche || null,
     product_phase: payload.product_phase || null,
 
-    fullfilment_type: payload.fullfilment_type || payload.fulfillment_type || null,
+    fulfilment_type: payload.fulfilment_type || payload.fulfillment_type || null,
 
     current_price: toNumberOrNull(payload.current_price),
     current_reviews: toIntegerOrNull(payload.current_reviews),
@@ -122,7 +122,7 @@ export async function updateProduct(productId, payload = {}) {
   if (payload.subcategory !== undefined) cleanPayload.subcategory = payload.subcategory || null;
   if (payload.niche !== undefined) cleanPayload.niche = payload.niche || null;
   if (payload.product_phase !== undefined) cleanPayload.product_phase = payload.product_phase || null;
-  if (payload.fullfilment_type !== undefined) cleanPayload.fullfilment_type = payload.fullfilment_type || null;
+  if (payload.fulfilment_type !== undefined) cleanPayload.fulfilment_type = payload.fulfilment_type || null;
   if (payload.current_price !== undefined) cleanPayload.current_price = toNumberOrNull(payload.current_price);
   if (payload.current_reviews !== undefined) cleanPayload.current_reviews = toIntegerOrNull(payload.current_reviews);
   if (payload.current_rating !== undefined) cleanPayload.current_rating = toNumberOrNull(payload.current_rating);
