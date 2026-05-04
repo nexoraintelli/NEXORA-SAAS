@@ -17,11 +17,11 @@ const TIMEOUT_BY_TASK = {
 };
 
 const TOKEN_BY_TASK = {
-  c1: 1400,
-  c2: 1800,
-  c3: 1800,
-  synth: 2600,
-  default: 1500
+  c1: 2200,
+  c2: 3000,
+  c3: 3400,
+  synth: 4200,
+  default: 2200
 };
 
 export default async function handler(req) {
