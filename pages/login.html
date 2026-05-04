@@ -10,48 +10,535 @@
   <link rel="stylesheet" href="../styles/global.css">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --nx-bg: #07080d;
+      --nx-panel: rgba(14, 16, 24, 0.86);
+      --nx-panel-2: rgba(255,255,255,0.035);
+      --nx-border: rgba(255,255,255,0.10);
+      --nx-red: #8b1e1e;
+      --nx-red-2: #b32626;
+      --nx-red-3: #d03a32;
+      --nx-orange: #d88b2d;
+      --nx-text: #f7f7fb;
+      --nx-muted: #a5a9b8;
+      --nx-muted-2: #73798b;
+      --nx-green: #38d39f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      font-family: "DM Sans", sans-serif;
+      color: var(--nx-text);
+      background:
+        radial-gradient(circle at 12% 18%, rgba(139,30,30,.42), transparent 28%),
+        radial-gradient(circle at 88% 18%, rgba(179,38,38,.18), transparent 26%),
+        radial-gradient(circle at 18% 84%, rgba(128,0,0,.24), transparent 28%),
+        linear-gradient(135deg, #07080d 0%, #0d0f16 48%, #15070a 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(255,255,255,.016) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.016) 1px, transparent 1px);
+      background-size: 54px 54px;
+      mask-image: radial-gradient(circle at center, black 34%, transparent 82%);
+      opacity: .45;
+      z-index: 0;
+    }
+
+    .login-shell {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(420px, 520px);
+      align-items: stretch;
+    }
+
+    .login-left {
+      padding: 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 100vh;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-image {
+      display: block;
+      width: 170px;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .hero-content {
+      max-width: 680px;
+      padding: 80px 0;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(216,139,45,.32);
+      background: rgba(216,139,45,.08);
+      color: #f0a33a;
+      font-family: "Syne", sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      font-size: 10.5px;
+      font-weight: 800;
+      margin-bottom: 22px;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #f0a33a;
+      box-shadow: 0 0 16px rgba(216,139,45,.62);
+    }
+
+    h1 {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(42px, 5vw, 68px);
+      line-height: .98;
+      letter-spacing: -.045em;
+      margin: 0;
+      max-width: 680px;
+    }
+
+    h1 span {
+      color: var(--nx-orange);
+    }
+
+    .hero-content p {
+      color: rgba(240,240,248,.76);
+      font-size: 15.5px;
+      line-height: 1.75;
+      margin-top: 20px;
+      max-width: 560px;
+    }
+
+    .scanner-area {
+      margin-top: 34px;
+      display: grid;
+      grid-template-columns: 180px minmax(0, 1fr);
+      gap: 18px;
+      align-items: center;
+      max-width: 620px;
+    }
+
+    .scanner-orbit {
+      width: 170px;
+      height: 170px;
+      border-radius: 999px;
+      position: relative;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at center, rgba(240,163,58,.16), transparent 9%),
+        radial-gradient(circle at center, rgba(179,38,38,.18), transparent 46%),
+        repeating-radial-gradient(circle, transparent 0 28px, rgba(255,255,255,.10) 29px, transparent 30px);
+      box-shadow: 0 0 70px rgba(179,38,38,.14);
+      overflow: hidden;
+    }
+
+    .scanner-orbit::before,
+    .scanner-orbit::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      background: rgba(255,255,255,.16);
+      transform: translate(-50%, -50%);
+    }
+
+    .scanner-orbit::before {
+      width: 1px;
+      height: 100%;
+    }
+
+    .scanner-orbit::after {
+      width: 100%;
+      height: 1px;
+    }
+
+    .scanner-sweep {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: conic-gradient(from 40deg, transparent 0deg, rgba(255,72,60,.55) 34deg, transparent 48deg);
+      animation: scan 6s linear infinite;
+    }
+
+    @keyframes scan {
+      to { transform: rotate(360deg); }
+    }
+
+    .scanner-core {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle, #fff2c0 0 9%, #f0a33a 10% 28%, #b32626 29% 64%, #36080c 65%);
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow:
+        0 0 24px rgba(240,163,58,.48),
+        0 0 52px rgba(179,38,38,.28);
+      position: relative;
+      z-index: 2;
+    }
+
+    .scanner-text {
+      border: 1px solid rgba(255,255,255,.09);
+      background: rgba(255,255,255,.035);
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    .scanner-text strong {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: "Syne", sans-serif;
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .scanner-text strong::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--nx-green);
+      box-shadow: 0 0 14px rgba(56,211,159,.68);
+    }
+
+    .scanner-text span {
+      display: block;
+      color: var(--nx-muted);
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+
+    .login-footer {
+      color: rgba(255,255,255,.48);
+      font-size: 12.5px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .login-right {
+      min-height: 100vh;
+      padding: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-left: 1px solid rgba(255,255,255,.07);
+      background:
+        radial-gradient(circle at 50% 20%, rgba(179,38,38,.14), transparent 34%),
+        rgba(5, 6, 10, .28);
+      backdrop-filter: blur(16px);
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 430px;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 26px;
+      padding: 30px;
+      background:
+        radial-gradient(circle at 100% 0%, rgba(179,38,38,.18), transparent 34%),
+        linear-gradient(135deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
+      box-shadow: 0 26px 80px rgba(0,0,0,.34);
+    }
+
+    .card-kicker {
+      font-family: "Syne", sans-serif;
+      color: var(--nx-red-3);
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      font-size: 10.5px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .login-card h2 {
+      font-family: "Syne", sans-serif;
+      font-size: 32px;
+      line-height: 1.05;
+      letter-spacing: -.035em;
+      margin: 0;
+    }
+
+    .login-card .subtitle {
+      color: var(--nx-muted);
+      font-size: 14px;
+      line-height: 1.65;
+      margin-top: 12px;
+      margin-bottom: 24px;
+    }
+
+    .field {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      color: rgba(255,255,255,.88);
+      font-size: 12.5px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      height: 48px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.045);
+      color: #fff;
+      padding: 0 14px;
+      outline: none;
+      font-family: "DM Sans", sans-serif;
+      font-size: 14px;
+      transition: .18s ease;
+    }
+
+    input::placeholder {
+      color: rgba(255,255,255,.32);
+    }
+
+    input:focus {
+      border-color: rgba(179,38,38,.68);
+      box-shadow: 0 0 0 3px rgba(179,38,38,.18);
+      background: rgba(255,255,255,.06);
+    }
+
+    .button-stack {
+      display: grid;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .login-btn-primary,
+    .login-btn-secondary {
+      width: 100%;
+      height: 48px;
+      border-radius: 14px;
+      border: 0;
+      cursor: pointer;
+      font-family: "DM Sans", sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      transition: .18s ease;
+    }
+
+    .login-btn-primary {
+      color: #fff;
+      background: linear-gradient(135deg, #8b1e1e, #b32626 64%, #d03a32);
+      border: 1px solid rgba(255,100,100,.30);
+      box-shadow: 0 18px 38px rgba(139,30,30,.30);
+    }
+
+    .login-btn-secondary {
+      color: #fff;
+      background: rgba(255,255,255,.035);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .login-btn-primary:hover,
+    .login-btn-secondary:hover {
+      transform: translateY(-1px);
+    }
+
+    #msg {
+      color: var(--nx-muted);
+      font-size: 13px;
+      margin-top: 15px;
+      line-height: 1.5;
+      min-height: 20px;
+    }
+
+    .back-area {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    .login-note {
+      margin-top: 18px;
+      border: 1px solid rgba(216,139,45,.18);
+      background: rgba(216,139,45,.055);
+      border-radius: 16px;
+      padding: 13px;
+      color: rgba(255,255,255,.68);
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 980px) {
+      .login-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .login-left {
+        min-height: auto;
+        padding: 28px 24px 12px;
+      }
+
+      .hero-content {
+        padding: 44px 0 24px;
+      }
+
+      .login-right {
+        min-height: auto;
+        border-left: 0;
+        padding: 24px;
+      }
+
+      .login-footer {
+        display: none;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .login-left,
+      .login-right {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .brand-image {
+        width: 145px;
+      }
+
+      h1 {
+        font-size: 38px;
+      }
+
+      .scanner-area {
+        grid-template-columns: 1fr;
+      }
+
+      .scanner-orbit {
+        width: 140px;
+        height: 140px;
+      }
+
+      .login-card {
+        padding: 22px;
+        border-radius: 22px;
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <main class="wrap" style="max-width:480px;min-height:100vh;display:flex;align-items:center;justify-content:center;">
+  <main class="login-shell">
 
-    <section class="card" style="width:100%;padding:34px 28px;">
-      <p style="font-family:Syne,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);font-size:11px;margin-bottom:12px;">
-        Nexora Intelligence
-      </p>
+    <section class="login-left">
+      <div>
+        <a href="./index.html" class="brand">
+          <img src="../logo-horizontal.png%20(2).png" alt="Nexora Intelligence" class="brand-image">
+        </a>
 
-      <h1 style="font-size:34px;line-height:1.1;margin-bottom:10px;">
-        Acesse sua plataforma
-      </h1>
+        <div class="hero-content">
+          <div class="eyebrow">Acesso estratégico</div>
 
-      <p style="color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:26px;">
-        Entre para criar diagnósticos, consultar análises e acompanhar a evolução dos produtos.
-      </p>
+          <h1>
+            Entre no centro de inteligência da <span>Nexora.</span>
+          </h1>
 
-      <div style="margin-bottom:16px;">
-        <label for="email">E-mail</label>
-        <input id="email" type="email" placeholder="seu@email.com" autocomplete="email">
+          <p>
+            Acesse seus diagnósticos, cruze performance, página e mercado, e acompanhe a evolução estratégica dos produtos analisados.
+          </p>
+
+          <div class="scanner-area">
+            <div class="scanner-orbit" aria-hidden="true">
+              <div class="scanner-sweep"></div>
+              <div class="scanner-core"></div>
+            </div>
+
+            <div class="scanner-text">
+              <strong>Scanner Nexora ativo</strong>
+              <span>
+                Cada diagnóstico conecta métricas, página e mercado para encontrar a causa raiz da performance.
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div style="margin-bottom:20px;">
-        <label for="password">Senha</label>
-        <input id="password" type="password" placeholder="Sua senha" autocomplete="current-password">
+      <div class="login-footer">
+        <span>© 2026 Nexora Intelligence</span>
+        <span>Diagnóstico sistêmico Amazon</span>
       </div>
+    </section>
 
-      <button class="btn-primary" style="width:100%;margin-bottom:10px;" onclick="login()">
-        Entrar
-      </button>
+    <section class="login-right">
+      <div class="login-card">
+        <p class="card-kicker">Nexora Intelligence</p>
 
-      <button class="btn-secondary" style="width:100%;" onclick="signup()">
-        Criar conta
-      </button>
+        <h2>Acesse sua plataforma</h2>
 
-      <p id="msg" style="color:var(--muted);font-size:13px;margin-top:16px;line-height:1.5;"></p>
+        <p class="subtitle">
+          Entre para criar diagnósticos, consultar análises e acompanhar a evolução dos produtos.
+        </p>
 
-      <div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);">
-        <button class="btn-secondary" style="width:100%;" onclick="location.href='./index.html'">
-          Voltar para início
-        </button>
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input id="email" type="email" placeholder="seu@email.com" autocomplete="email">
+        </div>
+
+        <div class="field">
+          <label for="password">Senha</label>
+          <input id="password" type="password" placeholder="Sua senha" autocomplete="current-password">
+        </div>
+
+        <div class="button-stack">
+          <button class="login-btn-primary" onclick="login()">
+            Entrar no sistema →
+          </button>
+
+          <button class="login-btn-secondary" onclick="signup()">
+            Criar conta
+          </button>
+        </div>
+
+        <p id="msg"></p>
+
+        <div class="login-note">
+          Use este acesso para testar o fluxo completo da Nexora: Cérebro 1, Cérebro 2, Cérebro 3, Síntese e Relatório.
+        </div>
+
+        <div class="back-area">
+          <button class="login-btn-secondary" onclick="location.href='./index.html'">
+            Voltar para início
+          </button>
+        </div>
       </div>
     </section>
 
