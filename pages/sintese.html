@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -685,6 +684,55 @@ window.abrirRelatorio = function () {
 
   location.href = "./relatorio.html";
 };
+    function limparLeituraExecutivaIA(value) {
+  if (!value) return "";
+
+  if (typeof value === "object") {
+    return (
+      value.leitura_executiva ||
+      value.diagnostico_executivo ||
+      value.resumo_executivo ||
+      value.resumo_cliente ||
+      ""
+    );
+  }
+
+  let text = String(value).trim();
+
+  text = text
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
+
+  if (text.startsWith("{") && text.endsWith("}")) {
+    try {
+      const parsed = JSON.parse(text);
+
+      return (
+        parsed.leitura_executiva ||
+        parsed.diagnostico_executivo ||
+        parsed.resumo_executivo ||
+        parsed.resumo_cliente ||
+        parsed.recomendacao ||
+        text
+      );
+    } catch (error) {}
+  }
+
+  return text
+    .replace(/^\{/, "")
+    .replace(/\}$/, "")
+    .replace(/"causa_raiz_consolidada"\s*:\s*"[^"]*",?/gi, "")
+    .replace(/"gravidade"\s*:\s*"[^"]*",?/gi, "")
+    .replace(/"leitura_executiva"\s*:\s*/gi, "")
+    .replace(/"diagnostico_executivo"\s*:\s*/gi, "")
+    .replace(/"resumo_executivo"\s*:\s*/gi, "")
+    .replace(/"resumo_cliente"\s*:\s*/gi, "")
+    .replace(/",\s*"/g, "\n\n")
+    .replace(/^"/, "")
+    .replace(/"$/, "")
+    .trim();
+}
     function renderResult(result) {
       resultArea.style.display = "block";
 
@@ -696,7 +744,7 @@ window.abrirRelatorio = function () {
           <div class="result-block" style="border-color:rgba(216,139,45,.35);background:rgba(216,139,45,.06);">
             <strong style="color:#f0a33a;">IA Nexora aplicada na Síntese Final</strong>
             <p style="color:var(--muted);margin-top:6px;font-size:13px;line-height:1.6;">
-              A síntese foi consolidada com a camada de IA Gemini da Nexora, cruzando os três cérebros sem descartar a análise da engine.
+              A síntese foi consolidada com a camada de IA da Nexora, cruzando os três cérebros sem descartar a análise da engine.
             </p>
           </div>
         ` : ""}
@@ -704,7 +752,7 @@ window.abrirRelatorio = function () {
         ${result.ia_usada && result.diagnostico_ia ? `
           <div class="result-block" style="border-color:rgba(216,139,45,.24);">
             <h3>Leitura executiva da IA Nexora</h3>
-            <div class="analysis-text" style="margin-top:14px;">${escapeHtml(result.diagnostico_ia)}</div>
+            <div class="analysis-text" style="margin-top:14px;">${escapeHtml(limparLeituraExecutivaIA(result.leitura_executiva_ia || result.diagnostico_ia))}</div>
           </div>
         ` : ""}
 
