@@ -1045,26 +1045,30 @@ Retorne exatamente neste formato:
 
   try {
     const aiText = await chamarIANexora({
-      task: "c1",
-      maxTokens: 1200,
-      messages: [
-        {
-          role: "user",
-          content: prompt
-        }
-      ]
-    });
-
-    if (!aiText) {
-      console.warn("IA não retornou texto no Cérebro 1.");
-      return null;
+  task: "c1",
+  maxTokens: 1400,
+  responseMimeType: "application/json",
+  messages: [
+    {
+      role: "user",
+      content: prompt
     }
+  ]
+});
 
-    return parseJsonSafe(aiText);
-  } catch (error) {
-    console.error("Erro ao aprofundar Cérebro 1 com IA:", error);
-    return null;
-  }
+   if (!aiText) {
+  console.warn("IA não retornou texto no Cérebro 1.");
+  return null;
+}
+
+const parsed = parseJsonSafe(aiText);
+
+if (!parsed) {
+  console.warn("IA retornou texto, mas não retornou JSON válido:", aiText);
+  return null;
+}
+
+return parsed;
 }
 async function chamarIANexora(payload) {
   const endpoints = [
@@ -1125,8 +1129,14 @@ async function chamarIANexora(payload) {
 }
     
 function parseJsonSafe(raw) {
-  const clean = String(raw || "")
-    .replace(/```json/g, "")
+  if (!raw) return null;
+
+  if (typeof raw === "object") {
+    return raw;
+  }
+
+  let clean = String(raw)
+    .replace(/```json/gi, "")
     .replace(/```/g, "")
     .trim();
 
@@ -1134,21 +1144,20 @@ function parseJsonSafe(raw) {
     return JSON.parse(clean);
   } catch (e) {}
 
-  const start = clean.indexOf("{");
-  const end = clean.lastIndexOf("}");
+  const firstBrace = clean.indexOf("{");
+  const lastBrace = clean.lastIndexOf("}");
 
-  if (start === -1 || end === -1) {
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+    console.warn("IA respondeu, mas não veio JSON:", clean);
     return null;
   }
 
+  clean = clean.slice(firstBrace, lastBrace + 1);
+
   try {
-    return JSON.parse(
-      clean
-        .slice(start, end + 1)
-        .replace(/,\s*}/g, "}")
-        .replace(/,\s*]/g, "]")
-    );
+    return JSON.parse(clean);
   } catch (e) {
+    console.warn("JSON da IA inválido:", clean, e);
     return null;
   }
 }
