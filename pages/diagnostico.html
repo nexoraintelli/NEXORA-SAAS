@@ -1323,7 +1323,7 @@ if (aiBtn) {
     console.warn("IA aplicada, mas houve erro ao salvar no banco:", error);
   }
 
- renderResult(updated);
+renderResult(updated);
 
 if (aiBtn) {
   aiBtn.disabled = false;
@@ -1331,8 +1331,9 @@ if (aiBtn) {
 }
 
 msg.textContent = "Análise aprofundada com IA aplicada.";
-    
-    function metricCard(title, value, status) {
+};
+
+function metricCard(title, value, status) {
       return `
         <div class="metric-card">
           <p>${escapeHtml(title)}</p>
