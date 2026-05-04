@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -624,6 +625,75 @@
   border-color: rgba(255, 120, 120, 0.48) !important;
   transform: translateY(-1px);
 }
+  
+
+/* Ajustes de histórico e visão geral */
+.diag-row {
+  grid-template-columns: minmax(0, 1fr) 118px 58px 96px;
+}
+
+.diag-title,
+.diag-meta {
+  min-width: 0;
+}
+
+.status-pill {
+  max-width: 112px;
+  width: fit-content;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1;
+  text-align: center;
+}
+
+.score-badge {
+  justify-self: center;
+  flex-shrink: 0;
+}
+
+.overview-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.overview-card {
+  min-height: 92px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.10);
+  background:
+    linear-gradient(135deg, rgba(139,30,30,.18), rgba(255,255,255,.035));
+}
+
+.overview-card p {
+  color: var(--nx-muted);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.overview-card strong {
+  font-family: Syne, sans-serif;
+  font-size: 25px;
+  color: #fff;
+  line-height: 1;
+}
+
+.overview-note {
+  color: var(--nx-muted);
+  font-size: 12px;
+  line-height: 1.55;
+  margin-top: 14px;
+}
+
+@media (max-width: 640px) {
+  .overview-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
   </style>
 </head>
 
@@ -653,7 +723,7 @@
             <span class="nav-icon">◌</span> Clientes
           </button>
 
-          <button class="nav-item" onclick="abrirRelatorio()"
+          <button class="nav-item" onclick="abrirRelatorio()">
             <span class="nav-icon">▤</span> Relatórios
           </button>
 
@@ -783,7 +853,7 @@
             <p>Cruzamento dos três cérebros para definir causa raiz consolidada.</p>
           </div>
 
-          <div class="flow-card" onclick="abrirRelatorio()"
+          <div class="flow-card" onclick="abrirRelatorio()">
             <span class="flow-step">05</span>
             <h3>Relatório</h3>
             <p>Entrega final com score, gaps, prioridades e plano de ação.</p>
@@ -809,12 +879,34 @@
           <div class="panel">
             <div class="section-head">
               <h2>Visão geral</h2>
-              <span class="status-pill">Últimos diagnósticos</span>
+              <span class="status-pill" id="overviewStatusText">Últimos 10</span>
             </div>
 
-            <div class="chart-box">
-              <div class="chart-line"></div>
+            <div class="overview-panel">
+              <div class="overview-card">
+                <p>Total carregado</p>
+                <strong id="overviewTotal">0</strong>
+              </div>
+
+              <div class="overview-card">
+                <p>Média de score</p>
+                <strong id="overviewAvgScore">-</strong>
+              </div>
+
+              <div class="overview-card">
+                <p>Com IA aplicada</p>
+                <strong id="overviewAI">0</strong>
+              </div>
+
+              <div class="overview-card">
+                <p>Concluídos</p>
+                <strong id="overviewCompleted">0</strong>
+              </div>
             </div>
+
+            <p class="overview-note" id="overviewNote">
+              Os indicadores serão atualizados com base nos diagnósticos recentes salvos no histórico.
+            </p>
           </div>
 
           <div class="panel">
@@ -831,7 +923,7 @@
                 <p>Acesse diagnósticos anteriores e acompanhe resultados.</p>
               </div>
 
-              <div class="quick-card" onclick="abrirRelatorio()"
+              <div class="quick-card" onclick="abrirRelatorio()">
                 <strong>Ver relatório</strong>
                 <p>Consulte a última entrega final gerada pela Nexora.</p>
               </div>
@@ -913,19 +1005,19 @@ window.abrirRelatorio = function () {
       const el = document.getElementById("diagnosticsList");
 
       if (error) {
+        renderOverview([]);
         el.innerHTML = `<p style="color:var(--nx-muted);">Não foi possível carregar o histórico.</p>`;
         return;
       }
 
       const rows = data || [];
 
+      renderOverview(rows);
+
       document.getElementById("kpiTotal").textContent = rows.length;
       document.getElementById("kpiRecent").textContent = rows.length;
 
-      const done = rows.filter(d =>
-        String(d.status || "").toLowerCase().includes("completed") ||
-        String(d.status || "").toLowerCase().includes("concl")
-      ).length;
+      const done = rows.filter(isDiagnosticComplete).length;
 
       document.getElementById("kpiDone").textContent = done;
       document.getElementById("kpiProgress").textContent = Math.max(0, rows.length - done);
@@ -947,8 +1039,8 @@ window.abrirRelatorio = function () {
 
       el.innerHTML = rows.map(d => {
         const status = d.status || "draft";
-        const isDone = String(status).toLowerCase().includes("completed") || String(status).toLowerCase().includes("concl");
-        const score = d.score || d.final_score || "-";
+        const isDone = isDiagnosticComplete(d);
+        const score = getDiagnosticScore(d);
 
         return `
           <div class="diag-row">
@@ -973,18 +1065,83 @@ window.abrirRelatorio = function () {
     }
 
     function formatStatus(status) {
-      const s = String(status || "draft");
+      const s = String(status || "draft").toLowerCase();
 
       const map = {
         draft: "Rascunho",
         c1_completed: "C1 concluído",
         c2_completed: "C2 concluído",
         c3_completed: "C3 concluído",
+        c1_ai_completed: "C1 + IA",
+        c2_ai_completed: "C2 + IA",
+        c3_ai_completed: "C3 + IA",
         synthesis_completed: "Síntese",
+        synthesis_ai_completed: "Síntese IA",
+        report_completed: "Relatório",
         completed: "Concluído"
       };
 
-      return map[s] || s;
+      return map[s] || "Em andamento";
+    }
+
+    function isDiagnosticComplete(diagnostic) {
+      const status = String(diagnostic?.status || "").toLowerCase();
+
+      return [
+        "synthesis_completed",
+        "synthesis_ai_completed",
+        "report_completed",
+        "completed"
+      ].includes(status) || status.includes("completed") || status.includes("concl");
+    }
+
+    function hasAIStatus(diagnostic) {
+      const status = String(diagnostic?.status || "").toLowerCase();
+      return status.includes("_ai_") || status.includes("ai_completed") || status === "synthesis_ai_completed";
+    }
+
+    function getDiagnosticScore(diagnostic) {
+      const score = diagnostic?.score ?? diagnostic?.final_score ?? diagnostic?.score_final ?? null;
+      const number = Number(score);
+
+      if (!Number.isFinite(number) || number <= 0) {
+        return "-";
+      }
+
+      return Math.round(number);
+    }
+
+    function renderOverview(rows = []) {
+      const total = rows.length;
+      const completed = rows.filter(isDiagnosticComplete).length;
+      const withAI = rows.filter(hasAIStatus).length;
+      const scores = rows
+        .map(getDiagnosticScore)
+        .map(value => Number(value))
+        .filter(value => Number.isFinite(value) && value > 0);
+
+      const avgScore = scores.length
+        ? Math.round(scores.reduce((sum, value) => sum + value, 0) / scores.length)
+        : null;
+
+      const totalEl = document.getElementById("overviewTotal");
+      const avgEl = document.getElementById("overviewAvgScore");
+      const aiEl = document.getElementById("overviewAI");
+      const completedEl = document.getElementById("overviewCompleted");
+      const statusEl = document.getElementById("overviewStatusText");
+      const noteEl = document.getElementById("overviewNote");
+
+      if (totalEl) totalEl.textContent = total;
+      if (avgEl) avgEl.textContent = avgScore ? `${avgScore}/100` : "-";
+      if (aiEl) aiEl.textContent = withAI;
+      if (completedEl) completedEl.textContent = completed;
+      if (statusEl) statusEl.textContent = total ? "Atualizado" : "Sem dados";
+
+      if (noteEl) {
+        noteEl.textContent = total
+          ? `${completed} de ${total} diagnósticos recentes estão concluídos. ${withAI} possuem camada de IA aplicada.`
+          : "Os indicadores serão atualizados quando houver diagnósticos salvos no histórico.";
+      }
     }
 
     function escapeHtml(value) {
