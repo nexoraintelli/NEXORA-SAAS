@@ -13,281 +13,370 @@
 
   <style>
     :root {
-      --nexora-red: #8b1e1e;
-      --nexora-red-2: #b32626;
-      --nexora-red-soft: rgba(139, 30, 30, 0.18);
-      --bg-dark: #0b0b0c;
-      --surface-local: rgba(255,255,255,.045);
-      --surface-strong-local: rgba(255,255,255,.075);
-      --border-local: rgba(255,255,255,.12);
-      --text-main: #f5f1ea;
-      --text-soft: rgba(245,241,234,.72);
-      --text-muted-local: rgba(245,241,234,.55);
-      --orange: #bc741e;
-      --green: #22c55e;
-      --yellow: #f59e0b;
-      --red: #ef4444;
+      --nx-red: #8b1e1e;
+      --nx-red-2: #b32626;
+      --nx-red-soft: rgba(139, 30, 30, 0.20);
+      --nx-border: rgba(255,255,255,.11);
+      --nx-muted: #9ca3c7;
+      --nx-text: #f7f7fb;
+      --nx-green: #3ddc97;
+      --nx-yellow: #f0a33a;
+      --nx-danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
     }
 
     body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--nx-text);
       background:
-        radial-gradient(circle at 15% 20%, rgba(128,0,0,.45) 0%, transparent 30%),
-        radial-gradient(circle at 75% 25%, rgba(111,29,29,.40) 0%, transparent 28%),
-        radial-gradient(circle at 60% 80%, rgba(214,31,31,.22) 0%, transparent 22%),
-        linear-gradient(135deg, #0b0b0c 0%, #121212 35%, #1a0000 100%);
-      color: var(--text-main);
+        radial-gradient(circle at 16% 15%, rgba(139,30,30,.35), transparent 26%),
+        radial-gradient(circle at 78% 8%, rgba(179,38,38,.22), transparent 26%),
+        radial-gradient(circle at 60% 78%, rgba(80,0,0,.30), transparent 30%),
+        linear-gradient(135deg, #07090e 0%, #101115 45%, #1a0000 100%);
+      overflow-x: hidden;
     }
 
-    .page-header {
+    .product-shell {
+      width: min(1220px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 28px 0 42px;
+    }
+
+    .topbar {
       display: flex;
       justify-content: space-between;
-      gap: 20px;
       align-items: flex-start;
-      flex-wrap: wrap;
-      margin-bottom: 22px;
-    }
-
-    .step-label {
-      font-family: Syne, sans-serif;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: var(--text-muted-local);
-      font-size: 11px;
-      margin-bottom: 10px;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .product-hero {
-      display: grid;
-      grid-template-columns: 1.25fr .75fr;
       gap: 18px;
-      align-items: stretch;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
     }
 
-    .product-title {
+    .topbar h1 {
       font-family: Syne, sans-serif;
-      font-size: clamp(28px, 4vw, 48px);
-      line-height: 1.04;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.05;
       letter-spacing: -.05em;
       margin: 0;
     }
 
-    .product-subtitle {
-      color: var(--text-soft);
-      line-height: 1.75;
-      margin-top: 12px;
+    .topbar p {
+      color: var(--nx-muted);
+      margin-top: 8px;
+      line-height: 1.65;
       max-width: 760px;
     }
 
-    .product-meta {
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .section-label {
+      font-family: Syne, sans-serif;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.58);
+      font-size: 11px;
+      margin-bottom: 10px;
+    }
+
+    .panel,
+    .product-card,
+    .metric-card,
+    .history-row,
+    .brain-card,
+    .mini-card {
+      border: 1px solid var(--nx-border);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+      border-radius: 22px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.22);
+    }
+
+    .panel {
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    .product-card {
+      padding: 22px;
+      display: grid;
+      grid-template-columns: 140px minmax(0, 1fr) 220px;
+      gap: 20px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .product-image {
+      width: 140px;
+      height: 140px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.035);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      color: var(--nx-muted);
+      font-size: 12px;
+      text-align: center;
+      padding: 12px;
+    }
+
+    .product-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .product-card h2 {
+      font-family: Syne, sans-serif;
+      font-size: clamp(24px, 3vw, 38px);
+      line-height: 1.08;
+      margin: 0;
+      letter-spacing: -.04em;
+    }
+
+    .product-description {
+      color: var(--nx-muted);
+      line-height: 1.7;
+      margin-top: 10px;
+    }
+
+    .pill-row {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
-      margin-top: 18px;
+      margin-top: 14px;
     }
 
     .pill {
-      border: 1px solid var(--border-local);
+      border: 1px solid rgba(255,255,255,.12);
       background: rgba(255,255,255,.035);
-      color: var(--text-soft);
+      color: rgba(255,255,255,.76);
       border-radius: 999px;
-      padding: 8px 12px;
+      padding: 8px 11px;
       font-size: 12px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
     }
 
-    .status-pill {
-      border-radius: 999px;
-      padding: 9px 13px;
+    .score-panel {
+      border: 1px solid rgba(61,220,151,.28);
+      background: rgba(61,220,151,.08);
+      border-radius: 20px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .score-panel p {
+      color: var(--nx-muted);
       font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      display: inline-flex;
-      width: fit-content;
-    }
-
-    .status-critical {
-      color: #fecaca;
-      background: rgba(239,68,68,.12);
-      border: 1px solid rgba(239,68,68,.30);
-    }
-
-    .status-warning {
-      color: #fde68a;
-      background: rgba(245,158,11,.12);
-      border: 1px solid rgba(245,158,11,.30);
-    }
-
-    .status-good {
-      color: #bbf7d0;
-      background: rgba(34,197,94,.12);
-      border: 1px solid rgba(34,197,94,.30);
-    }
-
-    .product-side {
-      display: grid;
-      gap: 12px;
-    }
-
-    .score-box {
-      border: 1px solid var(--border-local);
-      background: rgba(255,255,255,.04);
-      border-radius: 22px;
-      padding: 20px;
+      margin: 0;
     }
 
     .score-number {
       font-family: Syne, sans-serif;
-      font-size: 58px;
+      font-size: 56px;
       font-weight: 800;
       line-height: 1;
-      letter-spacing: -.05em;
       margin-top: 8px;
     }
 
-    .grid-metrics {
+    .status-pill {
+      display: inline-flex;
+      margin-top: 12px;
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+    }
+
+    .status-good {
+      color: #78f0bd;
+      background: rgba(61,220,151,.12);
+      border-color: rgba(61,220,151,.30);
+    }
+
+    .status-warning {
+      color: #ffd28d;
+      background: rgba(240,163,58,.12);
+      border-color: rgba(240,163,58,.30);
+    }
+
+    .status-danger {
+      color: #fecaca;
+      background: rgba(239,68,68,.12);
+      border-color: rgba(239,68,68,.30);
+    }
+
+    .metric-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 14px;
-      margin-top: 18px;
+      margin-bottom: 18px;
     }
 
     .metric-card {
-      border: 1px solid var(--border-local);
-      background: rgba(255,255,255,.035);
-      border-radius: 18px;
-      padding: 16px;
-      min-height: 116px;
+      padding: 18px;
+      min-height: 124px;
     }
 
     .metric-card p {
-      color: var(--text-muted-local);
+      color: var(--nx-muted);
       font-size: 12px;
       margin: 0;
     }
 
     .metric-card h3 {
       font-family: Syne, sans-serif;
+      font-size: 30px;
       margin: 8px 0 0;
-      font-size: 26px;
-      letter-spacing: -.03em;
+      letter-spacing: -.04em;
     }
 
     .metric-card span {
-      color: var(--text-muted-local);
-      display: block;
+      color: rgba(255,255,255,.52);
       font-size: 12px;
-      line-height: 1.45;
       margin-top: 8px;
+      display: block;
+      line-height: 1.45;
     }
 
-    .section-grid {
+    .two-col {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: minmax(0, 1.2fr) minmax(320px, .8fr);
       gap: 18px;
-      margin-top: 18px;
+      margin-bottom: 18px;
     }
 
-    .analysis-card {
-      border: 1px solid var(--border-local);
-      background: rgba(255,255,255,.04);
-      border-radius: 22px;
-      padding: 20px;
+    .chart-box {
+      height: 250px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.08);
+      background:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(179,38,38,.18), transparent);
+      background-size: 34px 34px, 34px 34px, 100% 100%;
+      position: relative;
+      overflow: hidden;
+      margin-top: 14px;
+      padding: 18px;
     }
 
-    .analysis-card h2,
-    .analysis-card h3 {
-      margin-top: 0;
+    .chart-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
     }
 
-    .analysis-text {
-      color: var(--text-soft);
-      line-height: 1.82;
-      font-size: 14px;
+    .chart-empty {
+      color: var(--nx-muted);
+      display: grid;
+      place-items: center;
+      height: 100%;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .insight-text {
+      color: rgba(255,255,255,.72);
+      line-height: 1.8;
       white-space: pre-wrap;
+      font-size: 14px;
     }
 
-    .quick-grid {
+    .brain-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 14px;
-      margin-top: 18px;
+      margin-top: 14px;
     }
 
-    .quick-card {
-      border: 1px solid var(--border-local);
-      background: rgba(255,255,255,.035);
-      border-radius: 18px;
+    .brain-card {
       padding: 16px;
+      min-height: 145px;
       display: grid;
-      gap: 12px;
       align-content: space-between;
-      min-height: 178px;
+      gap: 12px;
     }
 
-    .quick-card p {
-      color: var(--text-muted-local);
-      line-height: 1.6;
-      font-size: 13px;
-      margin: 0;
+    .brain-card strong {
+      font-family: Syne, sans-serif;
+      display: block;
+    }
+
+    .brain-card p {
+      color: var(--nx-muted);
+      font-size: 12px;
+      line-height: 1.55;
+      margin-top: 6px;
     }
 
     .history-list {
       display: grid;
       gap: 12px;
-      margin-top: 16px;
+      margin-top: 14px;
     }
 
-    .history-item {
-      border: 1px solid var(--border-local);
-      background: rgba(255,255,255,.035);
-      border-radius: 18px;
+    .history-row {
       padding: 16px;
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: minmax(0, 1fr) 90px 130px 140px;
       gap: 14px;
       align-items: center;
     }
 
-    .history-item strong {
-      display: block;
-      margin-bottom: 5px;
+    .history-row h3 {
+      font-family: Syne, sans-serif;
+      margin: 0;
+      font-size: 16px;
     }
 
-    .history-item p {
-      color: var(--text-muted-local);
-      line-height: 1.6;
-      font-size: 13px;
-      margin: 0;
+    .history-row p {
+      color: var(--nx-muted);
+      font-size: 12px;
+      line-height: 1.55;
+      margin-top: 6px;
+    }
+
+    .score-badge {
+      width: 58px;
+      height: 58px;
+      border-radius: 999px;
+      border: 2px solid rgba(61,220,151,.55);
+      display: grid;
+      place-items: center;
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      justify-self: center;
     }
 
     .empty-box {
-      border: 1px dashed var(--border-local);
+      border: 1px dashed rgba(255,255,255,.14);
       background: rgba(255,255,255,.025);
-      color: var(--text-muted-local);
+      color: var(--nx-muted);
       border-radius: 18px;
-      padding: 22px;
+      padding: 24px;
       text-align: center;
-      line-height: 1.6;
+      line-height: 1.65;
     }
 
     .notice {
-      border: 1px solid rgba(245,158,11,.25);
-      background: rgba(245,158,11,.09);
-      color: #fde68a;
+      border: 1px solid rgba(240,163,58,.28);
+      background: rgba(240,163,58,.09);
+      color: #ffd28d;
       border-radius: 16px;
       padding: 14px 16px;
       font-size: 13px;
       line-height: 1.6;
-      margin-top: 16px;
+      margin-bottom: 18px;
       display: none;
     }
 
@@ -296,190 +385,194 @@
     }
 
     .loading {
-      color: var(--text-muted-local);
+      color: var(--nx-muted);
       font-size: 13px;
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
     @media (max-width: 980px) {
-      .product-hero,
-      .section-grid {
+      .product-card,
+      .two-col {
         grid-template-columns: 1fr;
       }
 
-      .grid-metrics,
-      .quick-grid {
+      .metric-grid,
+      .brain-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .history-row {
+        grid-template-columns: 1fr;
+      }
+
+      .score-badge {
+        justify-self: start;
       }
     }
 
     @media (max-width: 620px) {
-      .grid-metrics,
-      .quick-grid {
+      .metric-grid,
+      .brain-grid {
         grid-template-columns: 1fr;
       }
 
-      .history-item {
-        grid-template-columns: 1fr;
+      .actions {
+        justify-content: flex-start;
       }
     }
   </style>
 </head>
 
 <body>
-  <main class="wrap">
+  <main class="product-shell">
+    <div id="notice" class="notice"></div>
 
-    <section class="card">
-      <div class="page-header">
+    <section class="panel">
+      <div class="topbar">
         <div>
-          <p class="step-label">Nexora Intelligence · Produto</p>
-          <h1 class="product-title" id="pageTitle">Carregando produto...</h1>
-          <p class="product-subtitle">
-            Visão consolidada do produto analisado, com histórico dos cérebros, métricas principais e leitura estratégica do diagnóstico atual.
+          <p class="section-label">Nexora Intelligence · Produto</p>
+          <h1 id="pageTitle">Carregando produto...</h1>
+          <p>
+            Dashboard histórico do produto, com evolução de diagnósticos, score, causa raiz e principais métricas ao longo do tempo.
           </p>
-          <p class="loading" id="loadingText">Buscando diagnóstico atual no banco da Nexora...</p>
+          <div class="loading" id="loadingText">Buscando dados do produto...</div>
         </div>
 
-        <div class="header-actions">
+        <div class="actions">
           <button class="btn-secondary" onclick="location.href='./dashboard.html'">
             Voltar ao Dashboard
           </button>
 
-          <button class="btn-primary" onclick="location.href='./diagnostico.html'">
-            Novo diagnóstico
+          <button class="btn-primary" onclick="novoDiagnosticoProduto()">
+            + Novo diagnóstico deste produto
           </button>
         </div>
       </div>
-
-      <div id="notice" class="notice"></div>
     </section>
 
-    <section class="card">
-      <div class="product-hero">
-        <div>
-          <p class="step-label">Produto analisado</p>
-          <h2 id="productName">Produto em análise</h2>
+    <section class="product-card">
+      <div class="product-image" id="productImage">
+        Sem imagem
+      </div>
 
-          <p class="product-subtitle" id="productDescription">
-            Os dados do produto serão exibidos assim que o diagnóstico for carregado.
-          </p>
+      <div>
+        <p class="section-label">Produto monitorado</p>
+        <h2 id="productName">Produto em análise</h2>
+        <p class="product-description" id="productDescription">
+          Produto carregado pela Nexora Intelligence.
+        </p>
 
-          <div class="product-meta">
-            <span class="pill" id="productCategory">Categoria: —</span>
-            <span class="pill" id="productSubcategory">Subcategoria: —</span>
-            <span class="pill" id="productAsin">Produto/ASIN: —</span>
-            <span class="pill" id="productDate">Atualizado: —</span>
-          </div>
-        </div>
-
-        <div class="product-side">
-          <div class="score-box">
-            <p class="step-label">Score geral</p>
-            <div class="score-number" id="mainScore">—</div>
-            <p style="color:var(--text-muted-local);font-size:13px;margin-top:8px;">
-              Resultado consolidado do Cérebro 1.
-            </p>
-          </div>
-
-          <div class="score-box">
-            <p class="step-label">Status atual</p>
-            <span class="status-pill status-warning" id="statusPill">Em análise</span>
-            <p style="color:var(--text-muted-local);font-size:13px;line-height:1.6;margin-top:12px;" id="rootCauseMini">
-              Causa raiz ainda não identificada.
-            </p>
-          </div>
+        <div class="pill-row">
+          <span class="pill" id="productAsin">ASIN: —</span>
+          <span class="pill" id="productSku">SKU: —</span>
+          <span class="pill" id="productBrand">Marca: —</span>
+          <span class="pill" id="productMarketplace">Marketplace: —</span>
+          <span class="pill" id="productCategory">Categoria: —</span>
+          <span class="pill" id="productSubcategory">Subcategoria: —</span>
         </div>
       </div>
 
-      <div class="grid-metrics">
-        <div class="metric-card">
-          <p>CTR</p>
-          <h3 id="metricCtr">—</h3>
-          <span>Sinal de atração e clique.</span>
-        </div>
-
-        <div class="metric-card">
-          <p>CVR</p>
-          <h3 id="metricCvr">—</h3>
-          <span>Sinal de conversão da página.</span>
-        </div>
-
-        <div class="metric-card">
-          <p>ACOS</p>
-          <h3 id="metricAcos">—</h3>
-          <span>Eficiência direta da mídia paga.</span>
-        </div>
-
-        <div class="metric-card">
-          <p>TACOS</p>
-          <h3 id="metricTacos">—</h3>
-          <span>Dependência da receita em relação aos anúncios.</span>
-        </div>
+      <div class="score-panel">
+        <p>Último score</p>
+        <div class="score-number" id="latestScore">—</div>
+        <span class="status-pill status-warning" id="latestStatus">Sem diagnóstico</span>
       </div>
     </section>
 
-    <section class="section-grid">
-      <div class="analysis-card">
-        <p class="step-label">Leitura executiva</p>
-        <h2>Visão geral do diagnóstico</h2>
-        <div class="analysis-text" id="executiveAnalysis">
-          Nenhuma análise executiva encontrada ainda.
+    <section class="metric-grid">
+      <div class="metric-card">
+        <p>Diagnósticos</p>
+        <h3 id="metricTotalDiagnostics">0</h3>
+        <span>Total de análises vinculadas ao produto.</span>
+      </div>
+
+      <div class="metric-card">
+        <p>Evolução do score</p>
+        <h3 id="metricScoreEvolution">—</h3>
+        <span>Diferença entre o primeiro e o último diagnóstico.</span>
+      </div>
+
+      <div class="metric-card">
+        <p>CTR atual</p>
+        <h3 id="metricCtr">—</h3>
+        <span>Última leitura de atração.</span>
+      </div>
+
+      <div class="metric-card">
+        <p>CVR atual</p>
+        <h3 id="metricCvr">—</h3>
+        <span>Última leitura de conversão.</span>
+      </div>
+
+      <div class="metric-card">
+        <p>ACOS atual</p>
+        <h3 id="metricAcos">—</h3>
+        <span>Última leitura de eficiência de mídia.</span>
+      </div>
+    </section>
+
+    <section class="two-col">
+      <div class="panel">
+        <p class="section-label">Evolução</p>
+        <h2>Score ao longo do tempo</h2>
+        <div class="chart-box" id="scoreChart">
+          <div class="chart-empty">Carregando evolução...</div>
         </div>
       </div>
 
-      <div class="analysis-card">
-        <p class="step-label">Prioridade</p>
-        <h2>Próxima ação recomendada</h2>
-        <div class="analysis-text" id="nextAction">
-          Rode ou conclua o Cérebro 1 para gerar uma primeira recomendação.
+      <div class="panel">
+        <p class="section-label">Causa raiz</p>
+        <h2>Leitura atual</h2>
+        <div class="insight-text" id="currentInsight">
+          Nenhuma leitura encontrada ainda.
         </div>
       </div>
     </section>
 
-    <section class="card" style="margin-top:18px;">
-      <p class="step-label">Continuidade da análise</p>
-      <h2>Acessos rápidos</h2>
+    <section class="panel">
+      <p class="section-label">Cérebros Nexora</p>
+      <h2>Últimos resultados por etapa</h2>
 
-      <div class="quick-grid">
-        <div class="quick-card">
+      <div class="brain-grid">
+        <div class="brain-card">
           <div>
             <strong>Cérebro 1</strong>
-            <p>Performance, tráfego, conversão, PPC, rentabilidade e operação.</p>
+            <p id="brainC1">Performance ainda não analisada.</p>
           </div>
-          <button class="btn-primary" onclick="goTo('./diagnostico.html')">Abrir</button>
+          <button class="btn-secondary" onclick="abrirEtapa('./diagnostico.html')">Abrir</button>
         </div>
 
-        <div class="quick-card">
+        <div class="brain-card">
           <div>
             <strong>Cérebro 2</strong>
-            <p>Página, imagem, conteúdo, promessa, confiança e clareza de conversão.</p>
+            <p id="brainC2">Página ainda não analisada.</p>
           </div>
-          <button class="btn-primary" onclick="goTo('./pagina.html')">Abrir</button>
+          <button class="btn-secondary" onclick="abrirEtapa('./pagina.html')">Abrir</button>
         </div>
 
-        <div class="quick-card">
+        <div class="brain-card">
           <div>
             <strong>Cérebro 3</strong>
-            <p>Mercado, concorrência, preço, diferenciação e posicionamento.</p>
+            <p id="brainC3">Mercado ainda não analisado.</p>
           </div>
-          <button class="btn-primary" onclick="goTo('./mercado.html')">Abrir</button>
+          <button class="btn-secondary" onclick="abrirEtapa('./mercado.html')">Abrir</button>
         </div>
 
-        <div class="quick-card">
+        <div class="brain-card">
           <div>
             <strong>Síntese</strong>
-            <p>Consolidação dos cérebros e recomendação estratégica final.</p>
+            <p id="brainSynth">Síntese ainda não gerada.</p>
           </div>
-          <button class="btn-primary" onclick="goTo('./sintese.html')">Abrir</button>
+          <button class="btn-secondary" onclick="abrirEtapa('./sintese.html')">Abrir</button>
         </div>
       </div>
     </section>
 
-    <section class="card" style="margin-top:18px;">
-      <div class="page-header" style="margin-bottom:0;">
+    <section class="panel">
+      <div class="topbar" style="margin-bottom:0;">
         <div>
-          <p class="step-label">Histórico</p>
-          <h2>Resultados salvos para este diagnóstico</h2>
+          <p class="section-label">Histórico</p>
+          <h2>Diagnósticos deste produto</h2>
         </div>
 
         <span class="pill" id="historyCount">0 registros</span>
@@ -487,356 +580,524 @@
 
       <div class="history-list" id="historyList">
         <div class="empty-box">
-          Nenhum resultado encontrado ainda.
+          Nenhum diagnóstico encontrado para este produto.
         </div>
       </div>
     </section>
-
   </main>
 
   <script type="module">
     import { requireAuth } from "../js/auth.js";
     import { sb } from "../js/supabaseClient.js";
+    import { createDiagnostic } from "../js/diagnostics.js";
 
-    const loadingText = document.getElementById("loadingText");
     const notice = document.getElementById("notice");
+    const loadingText = document.getElementById("loadingText");
 
     let currentUser = null;
-    let diagnosticId = null;
-    let diagnostic = null;
+    let currentProductId = null;
+    let currentDiagnosticId = null;
+    let product = null;
+    let diagnostics = [];
     let brainResults = [];
 
-    await initProdutoPage();
+    await initProdutoDashboard();
 
-    async function initProdutoPage() {
+    async function initProdutoDashboard() {
       try {
         currentUser = await requireAuth();
 
         if (!currentUser) return;
 
-        diagnosticId = getDiagnosticIdFromUrl() || localStorage.getItem("nx_diagnostic_id");
+        currentProductId = getParam("product_id") || localStorage.getItem("nx_product_id");
+        currentDiagnosticId = getParam("diagnostic_id") || localStorage.getItem("nx_diagnostic_id");
 
-        if (!diagnosticId) {
-          showNotice("Nenhum diagnóstico ativo foi encontrado. Volte ao dashboard e clique em Novo diagnóstico.");
-          loadLocalFallback();
+        if (!currentProductId && currentDiagnosticId) {
+          await resolveProductIdFromDiagnostic(currentDiagnosticId);
+        }
+
+        if (!currentProductId) {
+          showNotice("Nenhum produto ativo foi encontrado. Volte ao dashboard e cadastre ou abra um produto.");
           finishLoading();
           return;
         }
 
-        localStorage.setItem("nx_diagnostic_id", diagnosticId);
+        localStorage.setItem("nx_product_id", currentProductId);
 
-        await loadDiagnostic();
-        await loadBrainResults();
+        await loadProduct();
+        await loadProductDiagnostics();
+        await loadBrainResultsForDiagnostics();
 
-        renderPage();
+        renderProduct();
+        renderMetrics();
+        renderChart();
+        renderCurrentInsight();
+        renderBrainCards();
+        renderHistory();
 
         finishLoading();
       } catch (error) {
-        console.error("Erro ao carregar produto:", error);
-        showNotice("Não foi possível carregar os dados do banco. A página tentará usar os dados locais salvos no navegador.");
-        loadLocalFallback();
+        console.error("Erro ao carregar dashboard do produto:", error);
+        showNotice("Não foi possível carregar o dashboard histórico deste produto. Verifique o Supabase e tente novamente.");
         finishLoading();
       }
     }
 
-    function getDiagnosticIdFromUrl() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get("diagnostic_id") || params.get("id");
+    function getParam(key) {
+      return new URLSearchParams(window.location.search).get(key);
     }
 
-    async function loadDiagnostic() {
+    async function resolveProductIdFromDiagnostic(diagnosticId) {
       const { data, error } = await sb
         .from("diagnostics")
-        .select("*")
+        .select("id, product_id")
         .eq("id", diagnosticId)
         .eq("user_id", currentUser.id)
         .single();
 
-      if (error) {
-        console.warn("Erro ao buscar diagnostics:", error);
-        diagnostic = null;
+      if (error || !data?.product_id) {
+        console.warn("Não foi possível resolver product_id pelo diagnóstico:", error);
         return;
       }
 
-      diagnostic = data;
+      currentProductId = data.product_id;
+      localStorage.setItem("nx_product_id", currentProductId);
     }
 
-    async function loadBrainResults() {
+    async function loadProduct() {
       const { data, error } = await sb
-        .from("brain_results")
+        .from("products")
         .select("*")
-        .eq("diagnostic_id", diagnosticId)
+        .eq("id", currentProductId)
+        .eq("user_id", currentUser.id)
+        .single();
+
+      if (error) throw error;
+
+      product = data;
+    }
+
+    async function loadProductDiagnostics() {
+      const { data, error } = await sb
+        .from("diagnostics")
+        .select("*")
+        .eq("product_id", currentProductId)
+        .eq("user_id", currentUser.id)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.warn("Erro ao buscar brain_results:", error);
+      if (error) throw error;
+
+      diagnostics = data || [];
+
+      if (!currentDiagnosticId && diagnostics.length) {
+        currentDiagnosticId = diagnostics[0].id;
+        localStorage.setItem("nx_diagnostic_id", currentDiagnosticId);
+      }
+    }
+
+    async function loadBrainResultsForDiagnostics() {
+      const ids = diagnostics.map(d => d.id).filter(Boolean);
+
+      if (!ids.length) {
         brainResults = [];
         return;
       }
 
+      const { data, error } = await sb
+        .from("brain_results")
+        .select("*")
+        .in("diagnostic_id", ids)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
       brainResults = data || [];
     }
 
-    function renderPage() {
-      const c1Row = findBrain("c1");
-      const c1 = c1Row?.result_data || readLocalStorageJson("nx_c1") || {};
-      const c2Row = findBrain("c2");
-      const c3Row = findBrain("c3");
-      const synthesisRow = findBrain("sintese") || findBrain("synthesis") || findBrain("final");
+    function renderProduct() {
+      const name = product.product_name || product.name || product.asin || "Produto sem nome";
 
-      const productData = buildProductData(c1);
-
-      renderProduct(productData, c1, c1Row);
-      renderMetrics(c1, c1Row);
-      renderExecutiveBlocks(c1, synthesisRow);
-      renderHistory([c1Row, c2Row, c3Row, synthesisRow].filter(Boolean));
-    }
-
-    function findBrain(code) {
-      return brainResults.find(item => String(item.brain_code || "").toLowerCase() === code);
-    }
-
-    function buildProductData(c1) {
-      const product =
-        c1.product ||
-        c1.nomeProduto ||
-        c1.nome_produto ||
-        c1.productName ||
-        c1.asin ||
-        diagnostic?.product_name ||
-        diagnostic?.asin ||
-        "Produto em análise";
-
-      const category =
-        c1.category ||
-        c1.cat ||
-        diagnostic?.category ||
-        "Categoria não informada";
-
-      const subcategory =
-        c1.subcategory ||
-        c1.sub ||
-        diagnostic?.subcategory ||
-        "Subcategoria não informada";
-
-      return {
-        product,
-        category,
-        subcategory,
-        updatedAt:
-          c1.ia_updated_at ||
-          c1.ts ||
-          diagnostic?.updated_at ||
-          diagnostic?.created_at ||
-          new Date().toISOString()
-      };
-    }
-
-    function renderProduct(productData, c1, c1Row) {
-      document.getElementById("pageTitle").textContent = productData.product;
-      document.getElementById("productName").textContent = productData.product;
+      document.getElementById("pageTitle").textContent = name;
+      document.getElementById("productName").textContent = name;
 
       document.getElementById("productDescription").textContent =
-        c1.root_cause
-          ? `Causa raiz provável identificada: ${c1.root_cause}`
-          : "Produto carregado a partir do diagnóstico atual da Nexora.";
+        buildProductDescription(product);
 
-      document.getElementById("productCategory").textContent = `Categoria: ${productData.category}`;
-      document.getElementById("productSubcategory").textContent = `Subcategoria: ${productData.subcategory}`;
-      document.getElementById("productAsin").textContent = `Produto/ASIN: ${productData.product}`;
-      document.getElementById("productDate").textContent = `Atualizado: ${formatDate(productData.updatedAt)}`;
+      document.getElementById("productAsin").textContent = `ASIN: ${product.asin || "—"}`;
+      document.getElementById("productSku").textContent = `SKU: ${product.sku || "—"}`;
+      document.getElementById("productBrand").textContent = `Marca: ${product.brand || "—"}`;
+      document.getElementById("productMarketplace").textContent = `Marketplace: ${product.marketplace || "—"}`;
+      document.getElementById("productCategory").textContent = `Categoria: ${product.category || "—"}`;
+      document.getElementById("productSubcategory").textContent = `Subcategoria: ${product.subcategory || "—"}`;
 
-      document.getElementById("rootCauseMini").textContent =
-        c1.root_cause || "Causa raiz ainda não identificada.";
+      const imageBox = document.getElementById("productImage");
 
-      const score = c1.score_geral ?? c1Row?.score ?? diagnostic?.final_score ?? "—";
-      const status = c1.status || diagnostic?.status || "Em análise";
-
-      document.getElementById("mainScore").textContent = score;
-      updateStatusPill(status, score);
+      if (product.image_url) {
+        imageBox.innerHTML = `<img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(name)}">`;
+      } else {
+        imageBox.textContent = "Sem imagem";
+      }
     }
 
-    function renderMetrics(c1, c1Row) {
-      document.getElementById("metricCtr").textContent = formatPercent(c1.ctr ?? diagnostic?.ctr);
-      document.getElementById("metricCvr").textContent = formatPercent(c1.cvr ?? diagnostic?.cvr);
-      document.getElementById("metricAcos").textContent = formatPercent(c1.acos ?? diagnostic?.acos);
-      document.getElementById("metricTacos").textContent = formatPercent(c1.tacos ?? diagnostic?.tacos);
+    function buildProductDescription(p) {
+      const parts = [];
+
+      if (p.niche) parts.push(`Nicho: ${p.niche}`);
+      if (p.product_phase) parts.push(`Fase: ${p.product_phase}`);
+      if (p.fullfilment_type) parts.push(`Fulfillment: ${p.fullfilment_type}`);
+      if (p.current_price) parts.push(`Preço atual: R$ ${formatNumber(p.current_price)}`);
+      if (p.current_reviews) parts.push(`${p.current_reviews} reviews`);
+      if (p.current_rating) parts.push(`Rating ${formatNumber(p.current_rating)}`);
+
+      return parts.length
+        ? parts.join(" · ")
+        : "Produto cadastrado para acompanhamento histórico na Nexora.";
     }
 
-    function renderExecutiveBlocks(c1, synthesisRow) {
-      const synthesis = synthesisRow?.result_data || {};
+    function getLatestC1Result() {
+      const c1Rows = brainResults
+        .filter(row => String(row.brain_code || "").toLowerCase() === "c1")
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-      const executive =
-        synthesis.resumo_executivo ||
-        synthesis.sintese_executiva ||
-        synthesis.diagnostico_executivo ||
-        c1.diagnostico_executivo ||
-        c1.gap_principal ||
-        "Nenhuma análise executiva encontrada ainda.";
-
-      const action = getFirstPriority(c1, synthesis);
-
-      document.getElementById("executiveAnalysis").textContent = executive;
-      document.getElementById("nextAction").textContent = action;
+      return c1Rows[0] || null;
     }
 
-    function getFirstPriority(c1, synthesis) {
-      const priorities =
-        synthesis.prioridades ||
-        synthesis.plano_de_acao ||
-        c1.prioridades ||
-        c1.plano_de_acao_ia ||
-        [];
+    function getLatestDiagnostic() {
+      return diagnostics[0] || null;
+    }
 
-      if (Array.isArray(priorities) && priorities.length) {
-        const first = priorities[0];
+    function getScoreFromDiagnostic(diagnostic) {
+      if (!diagnostic) return null;
 
-        if (typeof first === "string") {
-          return first;
-        }
+      const brain = brainResults.find(row =>
+        row.diagnostic_id === diagnostic.id &&
+        String(row.brain_code || "").toLowerCase() === "c1"
+      );
 
-        return [
-          first.prioridade ? `${first.prioridade}:` : "",
-          first.titulo || "",
-          first.detalhe || "",
-          first.impacto ? `Impacto esperado: ${first.impacto}` : ""
-        ].filter(Boolean).join(" ");
+      const result = brain?.result_data || {};
+
+      const score =
+        result.score_geral ??
+        brain?.score ??
+        diagnostic.final_score ??
+        diagnostic.score ??
+        diagnostic.score_final ??
+        null;
+
+      const number = Number(score);
+
+      return Number.isFinite(number) ? Math.round(number) : null;
+    }
+
+    function renderMetrics() {
+      const latestDiagnostic = getLatestDiagnostic();
+      const latestC1Row = getLatestC1Result();
+      const latestC1 = latestC1Row?.result_data || {};
+
+      const latestScore =
+        getScoreFromDiagnostic(latestDiagnostic) ??
+        Number(latestC1.score_geral) ??
+        null;
+
+      document.getElementById("latestScore").textContent =
+        Number.isFinite(latestScore) ? Math.round(latestScore) : "—";
+
+      updateStatusPill(latestScore, latestDiagnostic?.status);
+
+      document.getElementById("metricTotalDiagnostics").textContent = diagnostics.length;
+
+      const scoreEvolution = calculateScoreEvolution();
+
+      document.getElementById("metricScoreEvolution").textContent = scoreEvolution;
+
+      document.getElementById("metricCtr").textContent =
+        formatPercent(latestC1.ctr ?? latestDiagnostic?.ctr);
+
+      document.getElementById("metricCvr").textContent =
+        formatPercent(latestC1.cvr ?? latestDiagnostic?.cvr);
+
+      document.getElementById("metricAcos").textContent =
+        formatPercent(latestC1.acos ?? latestDiagnostic?.acos);
+    }
+
+    function calculateScoreEvolution() {
+      const chronological = [...diagnostics].reverse();
+      const scores = chronological
+        .map(getScoreFromDiagnostic)
+        .filter(value => Number.isFinite(value));
+
+      if (scores.length < 2) return "—";
+
+      const first = scores[0];
+      const last = scores[scores.length - 1];
+      const diff = last - first;
+
+      if (diff > 0) return `+${diff}`;
+      return String(diff);
+    }
+
+    function updateStatusPill(score, status) {
+      const pill = document.getElementById("latestStatus");
+      const normalized = String(status || "").toLowerCase();
+
+      if (!Number.isFinite(score)) {
+        pill.textContent = "Sem diagnóstico";
+        pill.className = "status-pill status-warning";
+        return;
       }
 
-      return c1.root_cause
-        ? `Priorize a correção da causa raiz identificada: ${c1.root_cause}.`
-        : "Conclua os cérebros da Nexora para gerar uma recomendação estratégica priorizada.";
+      if (score >= 75) {
+        pill.textContent = "Saudável";
+        pill.className = "status-pill status-good";
+        return;
+      }
+
+      if (score >= 50) {
+        pill.textContent = "Atenção";
+        pill.className = "status-pill status-warning";
+        return;
+      }
+
+      pill.textContent = "Crítico";
+      pill.className = "status-pill status-danger";
     }
 
-    function renderHistory(rows) {
+    function renderCurrentInsight() {
+      const latestC1Row = getLatestC1Result();
+      const latestC1 = latestC1Row?.result_data || {};
+      const latestDiagnostic = getLatestDiagnostic();
+
+      const text =
+        latestC1.diagnostico_executivo ||
+        latestC1.gap_principal ||
+        latestC1.root_cause ||
+        latestDiagnostic?.root_cause ||
+        "Ainda não existe uma leitura consolidada para este produto. Gere um diagnóstico para iniciar o acompanhamento histórico.";
+
+      document.getElementById("currentInsight").textContent = text;
+    }
+
+    function renderBrainCards() {
+      const latestDiagnostic = getLatestDiagnostic();
+
+      if (!latestDiagnostic) return;
+
+      setBrainCard("c1", "brainC1");
+      setBrainCard("c2", "brainC2");
+      setBrainCard("c3", "brainC3");
+      setBrainCard("sintese", "brainSynth", ["sintese", "synthesis", "final"]);
+    }
+
+    function setBrainCard(code, elementId, acceptedCodes = [code]) {
+      const normalizedCodes = acceptedCodes.map(c => String(c).toLowerCase());
+
+      const row = brainResults.find(item =>
+        item.diagnostic_id === currentDiagnosticId &&
+        normalizedCodes.includes(String(item.brain_code || "").toLowerCase())
+      ) || brainResults.find(item =>
+        normalizedCodes.includes(String(item.brain_code || "").toLowerCase())
+      );
+
+      if (!row) return;
+
+      const result = row.result_data || {};
+
+      const summary =
+        result.root_cause ||
+        result.gap_principal ||
+        result.diagnostico_executivo ||
+        result.resumo_executivo ||
+        "Resultado salvo para este produto.";
+
+      document.getElementById(elementId).textContent =
+        String(summary).slice(0, 170) + (String(summary).length > 170 ? "..." : "");
+    }
+
+    function renderHistory() {
       const historyList = document.getElementById("historyList");
       const historyCount = document.getElementById("historyCount");
 
-      historyCount.textContent = `${rows.length} ${rows.length === 1 ? "registro" : "registros"}`;
+      historyCount.textContent = `${diagnostics.length} ${diagnostics.length === 1 ? "registro" : "registros"}`;
 
-      if (!rows.length) {
+      if (!diagnostics.length) {
         historyList.innerHTML = `
           <div class="empty-box">
-            Nenhum resultado salvo no banco para este diagnóstico.
+            Nenhum diagnóstico encontrado para este produto.
           </div>
         `;
         return;
       }
 
-      historyList.innerHTML = rows.map(row => {
-        const result = row.result_data || {};
-        const title = row.brain_name || getBrainName(row.brain_code);
-        const score = row.score ?? result.score_geral ?? "—";
+      historyList.innerHTML = diagnostics.map(d => {
+        const score = getScoreFromDiagnostic(d);
+        const c1Row = brainResults.find(row =>
+          row.diagnostic_id === d.id &&
+          String(row.brain_code || "").toLowerCase() === "c1"
+        );
+
+        const result = c1Row?.result_data || {};
+
+        const title = result.root_cause || d.root_cause || d.category || "Diagnóstico do produto";
         const summary =
-          result.root_cause ||
           result.gap_principal ||
           result.diagnostico_executivo ||
-          result.resumo_executivo ||
-          "Resultado salvo para este diagnóstico.";
-
-        const page = getPageByBrain(row.brain_code);
+          "Diagnóstico salvo para este produto.";
 
         return `
-          <div class="history-item">
+          <div class="history-row">
             <div>
-              <strong>${escapeHtml(title)} · Score ${escapeHtml(score)}</strong>
-              <p>${escapeHtml(String(summary)).slice(0, 280)}${String(summary).length > 280 ? "..." : ""}</p>
+              <h3>${escapeHtml(title)}</h3>
+              <p>${escapeHtml(String(summary)).slice(0, 250)}${String(summary).length > 250 ? "..." : ""}</p>
             </div>
 
-            <button class="btn-secondary" onclick="location.href='${page}'">
-              Abrir
-            </button>
+            <div class="score-badge">${score ?? "-"}</div>
+
+            <div>
+              <span class="status-pill ${getStatusClass(score)}">${escapeHtml(formatStatus(d.status))}</span>
+            </div>
+
+            <div>
+              <p>${formatDate(d.created_at)}<br>${formatTime(d.created_at)}</p>
+              <button class="btn-secondary" onclick="abrirDiagnosticoHistorico('${escapeHtml(d.id)}')">
+                Abrir
+              </button>
+            </div>
           </div>
         `;
       }).join("");
     }
 
-    function getBrainName(code) {
-      const normalized = String(code || "").toLowerCase();
+    function renderChart() {
+      const chart = document.getElementById("scoreChart");
 
-      if (normalized === "c1") return "Cérebro 1 - Diagnóstico de Performance";
-      if (normalized === "c2") return "Cérebro 2 - Análise de Página";
-      if (normalized === "c3") return "Cérebro 3 - Mercado";
-      if (normalized === "sintese" || normalized === "synthesis" || normalized === "final") return "Síntese Estratégica";
+      const chronological = [...diagnostics].reverse();
+      const scores = chronological
+        .map(d => ({
+          id: d.id,
+          date: d.created_at,
+          score: getScoreFromDiagnostic(d)
+        }))
+        .filter(item => Number.isFinite(item.score));
 
-      return "Resultado Nexora";
-    }
-
-    function getPageByBrain(code) {
-      const normalized = String(code || "").toLowerCase();
-
-      if (normalized === "c1") return "./diagnostico.html";
-      if (normalized === "c2") return "./pagina.html";
-      if (normalized === "c3") return "./mercado.html";
-      if (normalized === "sintese" || normalized === "synthesis" || normalized === "final") return "./sintese.html";
-
-      return "./produto.html";
-    }
-
-    function loadLocalFallback() {
-      const c1 = readLocalStorageJson("nx_c1") || {};
-      const fakeRow = c1 && Object.keys(c1).length
-        ? {
-            brain_code: "c1",
-            brain_name: "Cérebro 1 - Diagnóstico de Performance",
-            score: c1.score_geral,
-            result_data: c1
-          }
-        : null;
-
-      brainResults = fakeRow ? [fakeRow] : [];
-      diagnostic = null;
-
-      renderPage();
-    }
-
-    function updateStatusPill(status, score) {
-      const pill = document.getElementById("statusPill");
-      const scoreNumber = Number(score);
-
-      let label = status || "Em análise";
-      let className = "status-pill status-warning";
-
-      const normalized = String(status || "").toLowerCase();
-
-      if (
-        normalized.includes("crítico") ||
-        normalized.includes("critico") ||
-        normalized.includes("alto") ||
-        scoreNumber < 45
-      ) {
-        label = status === "c1_completed" || status === "c1_ai_completed" ? "Crítico / atenção" : label;
-        className = "status-pill status-critical";
-      } else if (
-        normalized.includes("bom") ||
-        normalized.includes("saud") ||
-        scoreNumber >= 75
-      ) {
-        label = status === "c1_completed" || status === "c1_ai_completed" ? "Saudável" : label;
-        className = "status-pill status-good";
-      } else if (
-        status === "c1_completed" ||
-        status === "c1_ai_completed"
-      ) {
-        label = "Em acompanhamento";
-        className = "status-pill status-warning";
+      if (!scores.length) {
+        chart.innerHTML = `
+          <div class="chart-empty">
+            Nenhum score encontrado ainda. Gere o primeiro diagnóstico para iniciar a evolução.
+          </div>
+        `;
+        return;
       }
 
-      pill.textContent = label;
-      pill.className = className;
+      if (scores.length === 1) {
+        chart.innerHTML = `
+          <div class="chart-empty">
+            Score atual: ${scores[0].score}/100. Gere novos diagnósticos para visualizar evolução.
+          </div>
+        `;
+        return;
+      }
+
+      const width = 720;
+      const height = 210;
+      const padding = 26;
+
+      const points = scores.map((item, index) => {
+        const x = padding + (index * ((width - padding * 2) / Math.max(scores.length - 1, 1)));
+        const y = height - padding - ((item.score / 100) * (height - padding * 2));
+        return { ...item, x, y };
+      });
+
+      const path = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+
+      chart.innerHTML = `
+        <svg class="chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+          <path d="${path}" fill="none" stroke="rgba(179,38,38,.95)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+
+          ${points.map(p => `
+            <circle cx="${p.x}" cy="${p.y}" r="7" fill="#3ddc97" stroke="rgba(255,255,255,.85)" stroke-width="2"></circle>
+            <text x="${p.x}" y="${Math.max(16, p.y - 13)}" text-anchor="middle" fill="rgba(255,255,255,.82)" font-size="13" font-family="DM Sans">${p.score}</text>
+          `).join("")}
+        </svg>
+      `;
     }
 
-    window.goTo = function(page) {
-      window.location.href = page;
+    window.novoDiagnosticoProduto = async function () {
+      if (!currentProductId) {
+        alert("Nenhum produto ativo encontrado.");
+        return;
+      }
+
+      try {
+        const diagnostic = await createDiagnostic({
+          productId: currentProductId
+        });
+
+        localStorage.setItem("nx_diagnostic_id", diagnostic.id);
+        localStorage.setItem("nx_product_id", currentProductId);
+
+        [
+          "nx_c1",
+          "nx_c2",
+          "nx_c3",
+          "nx_synth",
+          "nexora_sintese_result",
+          "nexora_relatorio_mapeado"
+        ].forEach(k => localStorage.removeItem(k));
+
+        window.location.href =
+          `./diagnostico.html?product_id=${encodeURIComponent(currentProductId)}&diagnostic_id=${encodeURIComponent(diagnostic.id)}`;
+      } catch (error) {
+        console.error("Erro ao criar novo diagnóstico do produto:", error);
+        alert("Não foi possível criar um novo diagnóstico para este produto.");
+      }
     };
 
-    function readLocalStorageJson(key) {
-      try {
-        const raw = localStorage.getItem(key);
-        return raw ? JSON.parse(raw) : null;
-      } catch {
-        return null;
+    window.abrirDiagnosticoHistorico = function (diagnosticId) {
+      localStorage.setItem("nx_diagnostic_id", diagnosticId);
+      localStorage.setItem("nx_product_id", currentProductId);
+
+      window.location.href =
+        `./produto.html?product_id=${encodeURIComponent(currentProductId)}&diagnostic_id=${encodeURIComponent(diagnosticId)}`;
+    };
+
+    window.abrirEtapa = function (page) {
+      if (currentDiagnosticId) {
+        localStorage.setItem("nx_diagnostic_id", currentDiagnosticId);
       }
+
+      if (currentProductId) {
+        localStorage.setItem("nx_product_id", currentProductId);
+      }
+
+      window.location.href =
+        `${page}?product_id=${encodeURIComponent(currentProductId || "")}&diagnostic_id=${encodeURIComponent(currentDiagnosticId || "")}`;
+    };
+
+    function getStatusClass(score) {
+      if (!Number.isFinite(score)) return "status-warning";
+      if (score >= 75) return "status-good";
+      if (score >= 50) return "status-warning";
+      return "status-danger";
+    }
+
+    function formatStatus(status) {
+      const s = String(status || "draft").toLowerCase();
+
+      const map = {
+        draft: "Rascunho",
+        c1_completed: "C1 concluído",
+        c1_ai_completed: "C1 + IA",
+        c2_completed: "C2 concluído",
+        c2_ai_completed: "C2 + IA",
+        c3_completed: "C3 concluído",
+        c3_ai_completed: "C3 + IA",
+        synthesis_completed: "Síntese",
+        synthesis_ai_completed: "Síntese IA",
+        report_completed: "Relatório",
+        completed: "Concluído"
+      };
+
+      return map[s] || "Em andamento";
     }
 
     function formatPercent(value) {
@@ -849,17 +1110,37 @@
       return `${number.toFixed(2)}%`;
     }
 
+    function formatNumber(value) {
+      const number = Number(String(value).replace(",", "."));
+
+      if (!Number.isFinite(number)) return value || "—";
+
+      return number.toLocaleString("pt-BR", {
+        minimumFractionDigits: number % 1 === 0 ? 0 : 2,
+        maximumFractionDigits: 2
+      });
+    }
+
     function formatDate(date) {
       if (!date) return "—";
 
       try {
-        return new Date(date).toLocaleDateString("pt-BR", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric"
-        });
+        return new Date(date).toLocaleDateString("pt-BR");
       } catch {
         return "—";
+      }
+    }
+
+    function formatTime(date) {
+      if (!date) return "";
+
+      try {
+        return new Date(date).toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      } catch {
+        return "";
       }
     }
 
