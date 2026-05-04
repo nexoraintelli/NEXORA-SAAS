@@ -576,7 +576,14 @@
     <section class="card">
       <div class="nav-actions">
         <button class="btn-secondary" onclick="prevStep()">Voltar</button>
-        <button class="btn-primary" id="nextBtn" onclick="nextStep()">Continuar</button>
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn-secondary" id="aiBtn" style="display:none;" onclick="aprofundarResultadoC3ComIA()">
+            Aprofundar com IA
+          </button>
+
+          <button class="btn-primary" id="nextBtn" onclick="nextStep()">Continuar</button>
+        </div>
       </div>
 
       <p id="msg" style="color:var(--muted);font-size:13px;margin-top:16px;"></p>
@@ -601,6 +608,7 @@
     const resultArea = document.getElementById("resultArea");
     const contextArea = document.getElementById("contextArea");
     const nextBtn = document.getElementById("nextBtn");
+    const aiBtn = document.getElementById("aiBtn");
 
     let C1 = null;
     let C2 = null;
@@ -774,6 +782,7 @@ document.querySelectorAll(".option-group").forEach(group => {
       const fullResult = {
         ...data,
         ...result,
+        ia_usada: false,
         diagnostic_id: diagnosticId,
         ts: new Date().toISOString()
       };
@@ -805,9 +814,51 @@ document.querySelectorAll(".option-group").forEach(group => {
     function renderResult(result) {
       resultArea.style.display = "block";
 
+      if (aiBtn) {
+        aiBtn.style.display = "inline-flex";
+        aiBtn.disabled = false;
+        aiBtn.textContent = result.ia_usada ? "Aprofundar novamente com IA" : "Aprofundar com IA";
+      }
+
+      if (nextBtn) {
+        nextBtn.textContent = "Regerar análise de mercado";
+      }
+
       resultArea.innerHTML = `
         <p class="step-label">Resultado · Cérebro 3</p>
         <h2>Análise de mercado</h2>
+
+        ${result.ia_usada ? `
+          <div class="result-block" style="border-color:rgba(216,139,45,.35);background:rgba(216,139,45,.06);">
+            <strong style="color:#f0a33a;">IA Nexora aplicada</strong>
+            <p style="color:var(--muted);margin-top:6px;font-size:13px;line-height:1.6;">
+              Esta análise de mercado foi aprofundada com a camada de IA da Nexora.
+            </p>
+          </div>
+        ` : ""}
+
+        ${result.ia_usada && result.hipotese_ia ? `
+          <div class="result-block" style="border-color:rgba(216,139,45,.24);">
+            <h3>Hipótese estratégica da IA Nexora</h3>
+            <p style="color:var(--text-muted);line-height:1.85;margin-top:10px;">
+              ${escapeHtml(result.hipotese_ia)}
+            </p>
+          </div>
+        ` : ""}
+
+        ${result.ia_usada && result.leitura_por_pilar_ia ? `
+          <div class="result-block">
+            <h3>Leitura complementar por pilar</h3>
+            <div class="context-grid" style="margin-top:14px;">
+              ${smallTextCard("Preço", result.leitura_por_pilar_ia.preco)}
+              ${smallTextCard("Concorrência", result.leitura_por_pilar_ia.concorrencia)}
+              ${smallTextCard("Barreira", result.leitura_por_pilar_ia.barreira)}
+              ${smallTextCard("Diferenciação", result.leitura_por_pilar_ia.diferenciacao)}
+              ${smallTextCard("Quadrante", result.leitura_por_pilar_ia.quadrante)}
+              ${smallTextCard("Prioridade sistêmica", result.leitura_por_pilar_ia.prioridade_sistemica)}
+            </div>
+          </div>
+        ` : ""}
 
         <div class="result-block">
           <div style="display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-start;">
@@ -890,7 +941,11 @@ ${renderCompetitiveQuadrant(result)}
     Voltar ao Cérebro 2
   </button>
 
-    <button class="btn-primary" onclick="location.href='./sintese.html'">
+  <button class="btn-secondary" onclick="aprofundarResultadoC3ComIA()">
+    ${result.ia_usada ? "Aprofundar novamente com IA" : "Aprofundar com IA"}
+  </button>
+
+  <button class="btn-primary" onclick="location.href='./sintese.html'">
     Ir para Síntese
   </button>
 </div>
@@ -898,6 +953,360 @@ ${renderCompetitiveQuadrant(result)}
 
       resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+    async function aprofundarMercadoComIA(data, c1Context, c2Context, baseResult) {
+      const prompt = `
+Você é a camada de IA estratégica da Nexora Intelligence, especializada em análise competitiva de produtos na Amazon.
+
+A engine da Nexora já avaliou o mercado com base em preço, concorrência, saturação, dominância, barreira de entrada, diferenciação, oportunidade e quadrante competitivo.
+
+Sua função NÃO é substituir a análise base.
+Sua função é COMPLEMENTAR, aprofundar e tornar a leitura mais consultiva, estratégica e acionável.
+
+Você deve escrever como uma consultoria sênior de Amazon, conectando:
+- causa raiz e performance do Cérebro 1;
+- página, comunicação e confiança do Cérebro 2;
+- preço médio, preço do produto, concorrentes, reviews, rating e posição;
+- dinâmica competitiva, pressão de preço, dominância de marca e reviews;
+- barreira de entrada, espaço para diferenciação e quadrante competitivo;
+- risco de competir por preço sem autoridade;
+- oportunidade real de escala.
+
+REGRAS OBRIGATÓRIAS:
+- Não invente dados.
+- Não contradiga score, dinâmica, problema principal ou recomendação da engine.
+- Não diga que a análise da engine está errada.
+- Não seja genérico.
+- Não seja curto.
+- Não use markdown.
+- Não use quebras de linha dentro das strings.
+- Retorne SOMENTE JSON válido.
+- Todas as strings precisam estar em uma única linha.
+- Não use aspas duplas dentro dos textos.
+- Não use listas dentro de strings.
+- Use no mínimo 900 caracteres em "diagnostico_executivo_aprofundado".
+- Use no mínimo 350 caracteres em "hipotese_estrategica".
+- Use exatamente 5 prioridades no plano_de_acao.
+
+CONTEXTO DO CÉREBRO 1:
+${JSON.stringify(c1Context, null, 2)}
+
+CONTEXTO DO CÉREBRO 2:
+${JSON.stringify(c2Context, null, 2)}
+
+DADOS DE MERCADO:
+${JSON.stringify(data, null, 2)}
+
+ANÁLISE BASE DA ENGINE NEXORA:
+${JSON.stringify(baseResult, null, 2)}
+
+Retorne exatamente este JSON:
+
+{
+  "diagnostico_executivo_aprofundado": "texto consultivo longo, claro e profundo, conectando preço, concorrência, reviews, dominância, diferenciação, quadrante competitivo e os achados dos Cérebros 1 e 2",
+  "hipotese_estrategica": "explicação da hipótese central sobre como o mercado reforça, agrava ou contradiz a causa raiz identificada anteriormente",
+  "risco_de_nao_corrigir": "explicação do risco comercial de manter a estratégia atual diante da dinâmica competitiva",
+  "leitura_por_pilar": {
+    "preco": "leitura do preço do produto frente ao preço médio e risco de desalinhamento de valor",
+    "concorrencia": "leitura da força dos concorrentes, quantidade, reviews, rating e pressão competitiva",
+    "barreira": "leitura da barreira de entrada, dominância de marca e dominância de reviews",
+    "diferenciacao": "leitura do espaço para diferenciação e risco de commodity",
+    "quadrante": "leitura do quadrante competitivo e o que ele indica para posicionamento",
+    "prioridade_sistemica": "qual pilar de mercado deve ser priorizado primeiro e por quê"
+  },
+  "plano_de_acao": [
+    {
+      "prioridade": "URGENTE",
+      "titulo": "ação 1",
+      "detalhe": "explicação prática e específica",
+      "impacto": "impacto esperado"
+    },
+    {
+      "prioridade": "ALTA",
+      "titulo": "ação 2",
+      "detalhe": "explicação prática e específica",
+      "impacto": "impacto esperado"
+    },
+    {
+      "prioridade": "MÉDIA",
+      "titulo": "ação 3",
+      "detalhe": "explicação prática e específica",
+      "impacto": "impacto esperado"
+    },
+    {
+      "prioridade": "ESTRATÉGICA",
+      "titulo": "ação 4",
+      "detalhe": "explicação prática e específica",
+      "impacto": "impacto esperado"
+    },
+    {
+      "prioridade": "MONITORAMENTO",
+      "titulo": "ação 5",
+      "detalhe": "explicação prática e específica",
+      "impacto": "impacto esperado"
+    }
+  ]
+}
+`;
+
+      try {
+        const aiText = await chamarIANexoraC3({
+          task: "c3",
+          maxTokens: 2400,
+          responseMimeType: "application/json",
+          messages: [
+            {
+              role: "user",
+              content: prompt
+            }
+          ]
+        });
+
+        if (!aiText) {
+          console.warn("IA não retornou texto no Cérebro 3.");
+          return null;
+        }
+
+        const parsed = parseJsonSafeC3(aiText);
+
+        if (!parsed) {
+          console.warn("IA retornou texto, mas não retornou JSON válido no Cérebro 3:", aiText);
+          return {
+            diagnostico_executivo_aprofundado: aiText,
+            hipotese_estrategica: "A IA retornou uma leitura estratégica fora do formato estruturado esperado, mas o conteúdo foi preservado como complemento textual.",
+            risco_de_nao_corrigir: "Sem uma resposta estruturada completa, a recomendação é usar a análise base da Nexora como fonte principal e considerar a leitura da IA como apoio consultivo.",
+            leitura_por_pilar: {
+              preco: "Usar a leitura base da Nexora para avaliar preço e valor percebido.",
+              concorrencia: "Usar a leitura base da Nexora para avaliar força competitiva.",
+              barreira: "Usar a leitura base da Nexora para avaliar barreira de entrada.",
+              diferenciacao: "Usar a leitura base da Nexora para avaliar diferenciação.",
+              quadrante: "Usar o quadrante competitivo da Nexora para orientar posicionamento.",
+              prioridade_sistemica: "Priorizar o problema principal indicado pela engine Nexora."
+            },
+            plano_de_acao: []
+          };
+        }
+
+        return parsed;
+      } catch (error) {
+        console.error("Erro ao aprofundar Cérebro 3 com IA:", error);
+        return null;
+      }
+    }
+
+    window.aprofundarResultadoC3ComIA = async function () {
+      const raw = localStorage.getItem("nx_c3");
+
+      if (!raw) {
+        msg.textContent = "Gere a análise de mercado primeiro.";
+        return;
+      }
+
+      const diagnosticId = getDiagnosticId();
+
+      if (!diagnosticId) {
+        msg.textContent = "Nenhum diagnóstico ativo encontrado.";
+        return;
+      }
+
+      let fullResult = null;
+
+      try {
+        fullResult = JSON.parse(raw);
+      } catch (error) {
+        msg.textContent = "Não foi possível ler a análise de mercado salva.";
+        return;
+      }
+
+      msg.textContent = "Aprofundando análise de mercado com IA Nexora... isso pode levar alguns segundos.";
+
+      if (aiBtn) {
+        aiBtn.disabled = true;
+        aiBtn.textContent = "IA analisando...";
+      }
+
+      const aiResult = await aprofundarMercadoComIA(fullResult, C1 || {}, C2 || {}, fullResult);
+
+      if (!aiResult) {
+        if (aiBtn) {
+          aiBtn.disabled = false;
+          aiBtn.textContent = "Tentar IA novamente";
+        }
+
+        msg.textContent = "A IA não respondeu neste momento. A análise da engine Nexora continua válida.";
+        return;
+      }
+
+      const updated = {
+        ...fullResult,
+
+        diagnostico_executivo_base: fullResult.diagnostico_executivo,
+        impacto_base: fullResult.impacto,
+        recomendacao_base: fullResult.recomendacao,
+        prioridades_base: fullResult.prioridades,
+
+        diagnostico_ia: aiResult.diagnostico_executivo_aprofundado || "",
+        hipotese_ia: aiResult.hipotese_estrategica || "",
+        risco_ia: aiResult.risco_de_nao_corrigir || "",
+        leitura_por_pilar_ia: aiResult.leitura_por_pilar || null,
+        plano_de_acao_ia: Array.isArray(aiResult.plano_de_acao) ? aiResult.plano_de_acao : [],
+
+        diagnostico_executivo: [
+          fullResult.diagnostico_executivo || "",
+          aiResult.diagnostico_executivo_aprofundado
+            ? "\n\nLeitura complementar da IA Nexora:\n" + aiResult.diagnostico_executivo_aprofundado
+            : ""
+        ].join("").trim(),
+
+        impacto: aiResult.risco_de_nao_corrigir || fullResult.impacto,
+        recomendacao: fullResult.recomendacao,
+        prioridades: Array.isArray(aiResult.plano_de_acao) && aiResult.plano_de_acao.length
+          ? aiResult.plano_de_acao
+          : fullResult.prioridades,
+
+        ia_usada: true,
+        ia_updated_at: new Date().toISOString()
+      };
+
+      localStorage.setItem("nx_c3", JSON.stringify(updated));
+
+      try {
+        await saveBrainResult({
+          diagnosticId,
+          brainCode: "c3",
+          brainName: "Cérebro 3 - Análise de Mercado",
+          score: updated.score_mercado,
+          resultData: updated
+        });
+
+        await updateDiagnostic(diagnosticId, {
+          status: "c3_ai_completed"
+        });
+      } catch (error) {
+        console.warn("IA aplicada no Cérebro 3, mas houve erro ao salvar no banco:", error);
+      }
+
+      renderResult(updated);
+
+      if (aiBtn) {
+        aiBtn.disabled = false;
+        aiBtn.textContent = "Aprofundar novamente com IA";
+      }
+
+      msg.textContent = "Análise de mercado aprofundada com IA aplicada.";
+    };
+
+    async function chamarIANexoraC3(payload) {
+      const endpoints = [
+        "/api/chat.js",
+        "/api/chat",
+        "../api/chat.js",
+        "../api/chat"
+      ];
+
+      let lastError = null;
+
+      for (const endpoint of endpoints) {
+        try {
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            lastError = `${endpoint} retornou ${response.status}`;
+            continue;
+          }
+
+          const data = await response.json().catch(() => null);
+
+          if (!data) {
+            lastError = `${endpoint} não retornou JSON válido`;
+            continue;
+          }
+
+          const text =
+            data.text ||
+            data.content ||
+            data.response ||
+            data.reply ||
+            data.message ||
+            data.result ||
+            data.output ||
+            data?.choices?.[0]?.message?.content ||
+            data?.content?.[0]?.text ||
+            "";
+
+          if (text) return text;
+
+          lastError = `${endpoint} respondeu, mas sem texto reconhecido`;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      console.warn("Nenhum endpoint de IA funcionou no Cérebro 3:", lastError);
+      return null;
+    }
+
+    function parseJsonSafeC3(raw) {
+      if (!raw) return null;
+
+      if (typeof raw === "object") {
+        return raw;
+      }
+
+      let clean = String(raw)
+        .replace(/```json/gi, "")
+        .replace(/```/g, "")
+        .trim();
+
+      try {
+        return JSON.parse(clean);
+      } catch (e) {}
+
+      const firstBrace = clean.indexOf("{");
+      const lastBrace = clean.lastIndexOf("}");
+
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        const jsonLike = clean.slice(firstBrace, lastBrace + 1);
+
+        try {
+          return JSON.parse(jsonLike);
+        } catch (e) {
+          console.warn("JSON da IA inválido no Cérebro 3, usando fallback textual:", jsonLike, e);
+        }
+      }
+
+      return {
+        diagnostico_executivo_aprofundado: clean,
+        hipotese_estrategica: "A IA retornou uma leitura estratégica, mas fora do formato JSON esperado. A análise foi aplicada como aprofundamento textual.",
+        risco_de_nao_corrigir: "A leitura complementar reforça a necessidade de interpretar o mercado por causa raiz, priorizando os bloqueios que impedem diferenciação, escala ou rentabilidade.",
+        leitura_por_pilar: {
+          preco: "Usar a leitura base da Nexora para avaliar preço e valor percebido.",
+          concorrencia: "Usar a leitura base da Nexora para avaliar concorrência e autoridade.",
+          barreira: "Usar a leitura base da Nexora para avaliar barreira de entrada.",
+          diferenciacao: "Usar a leitura base da Nexora para avaliar diferenciação.",
+          quadrante: "Usar o quadrante competitivo para orientar posicionamento.",
+          prioridade_sistemica: "Priorizar o problema principal indicado pela engine Nexora."
+        },
+        plano_de_acao: []
+      };
+    }
+
+    function smallTextCard(title, text) {
+      return `
+        <div class="metric-card">
+          <p>${escapeHtml(title)}</p>
+          <div style="color:var(--text-muted);font-size:12.5px;line-height:1.65;margin-top:8px;">
+            ${escapeHtml(text || "-")}
+          </div>
+        </div>
+      `;
+    }
+
     function metricCard(title, value) {
       return `
         <div class="metric-card">
