@@ -1007,22 +1007,35 @@ const subcategoriasPorCategoria = {
     }
 
     async function aprofundarComIA(data, benchmark, baseResult) {
-      const prompt = `
-Você é a Nexora Intelligence, uma inteligência estratégica especializada em diagnóstico de performance na Amazon.
+  const prompt = `
+Você é a camada de IA estratégica da Nexora Intelligence, uma plataforma de diagnóstico sistêmico para produtos na Amazon.
 
-A engine base da Nexora já calculou os scores, causa raiz, gaps e prioridades.
-Sua função é aprofundar a leitura de forma consultiva, estratégica e comercial.
+IMPORTANTE:
+A engine da Nexora já gerou uma análise base. Sua função NÃO é substituir essa análise.
+Sua função é COMPLEMENTAR, aprofundar e tornar a leitura mais consultiva, estratégica e acionável.
 
-REGRAS:
+Você deve escrever como uma consultoria sênior de Amazon, explicando:
+- por que o produto está nesse estágio;
+- qual bloqueio impede escala;
+- como os dados de atração, conversão, mídia, rentabilidade e operação se conectam;
+- qual risco existe se o seller agir no sintoma errado;
+- qual ordem de ação faz mais sentido.
+
+REGRAS OBRIGATÓRIAS:
 - Não invente dados.
-- Não contradiga a causa raiz da engine.
-- Não recalcular métricas.
-- Não escrever texto genérico.
-- Explicar o impacto comercial.
-- Explicar por que esse problema trava crescimento.
-- Usar linguagem profissional para seller, consultor ou agência.
-- Retornar SOMENTE JSON válido.
-- Não usar markdown.
+- Não contradiga o score, causa raiz ou status da engine.
+- Não diga que a análise da engine está errada.
+- Não seja genérico.
+- Não seja curto.
+- Não use markdown.
+- Não use quebras de linha dentro das strings.
+- Retorne SOMENTE JSON válido.
+- Todas as strings precisam estar em uma única linha.
+- Não use aspas duplas dentro dos textos.
+- Não use listas dentro de strings.
+- Use no mínimo 900 caracteres em "diagnostico_executivo_aprofundado".
+- Use no mínimo 350 caracteres em "hipotese_estrategica".
+- Use exatamente 5 prioridades no plano_de_acao.
 
 DADOS DO PRODUTO:
 ${JSON.stringify(data, null, 2)}
@@ -1030,69 +1043,100 @@ ${JSON.stringify(data, null, 2)}
 BENCHMARK:
 ${JSON.stringify(benchmark, null, 2)}
 
-RESULTADO DA ENGINE NEXORA:
+ANÁLISE BASE DA ENGINE NEXORA:
 ${JSON.stringify(baseResult, null, 2)}
 
-Retorne exatamente neste formato:
+Retorne exatamente este JSON:
 
 {
-  "diagnostico_executivo": "texto longo, profundo e consultivo com leitura de atração, conversão, PPC, rentabilidade e operação",
-  "gap_principal": "explicação clara do principal gap encontrado",
-  "impacto": "explicação do impacto comercial e estratégico",
-  "prioridades": [
+  "diagnostico_executivo_aprofundado": "texto consultivo longo, claro e profundo, conectando atração, conversão, PPC, rentabilidade, operação e contexto do produto",
+  "hipotese_estrategica": "explicação da hipótese central sobre por que o produto ainda não escala ou por que ainda existe espaço de otimização",
+  "risco_de_nao_corrigir": "explicação do risco comercial de manter o produto como está",
+  "leitura_por_pilar": {
+    "atracao": "leitura da atração e CTR conectada ao contexto do produto",
+    "conversao": "leitura da conversão, prova social, preço e confiança",
+    "midia": "leitura de ACOS, TACOS, ROAS e eficiência de mídia",
+    "operacao": "leitura de BuyBox, estoque, fulfillment e sustentação de escala",
+    "prioridade_sistemica": "qual pilar deve ser priorizado primeiro e por quê"
+  },
+  "plano_de_acao": [
     {
       "prioridade": "URGENTE",
-      "titulo": "ação principal",
-      "detalhe": "explicação prática",
+      "titulo": "ação 1",
+      "detalhe": "explicação prática e específica",
       "impacto": "impacto esperado"
     },
     {
-      "prioridade": "IMPORTANTE",
-      "titulo": "segunda ação",
-      "detalhe": "explicação prática",
+      "prioridade": "ALTA",
+      "titulo": "ação 2",
+      "detalhe": "explicação prática e específica",
       "impacto": "impacto esperado"
     },
     {
-      "prioridade": "ESTRATÉGICO",
-      "titulo": "terceira ação",
-      "detalhe": "explicação prática",
+      "prioridade": "MÉDIA",
+      "titulo": "ação 3",
+      "detalhe": "explicação prática e específica",
+      "impacto": "impacto esperado"
+    },
+    {
+      "prioridade": "ESTRATÉGICA",
+      "titulo": "ação 4",
+      "detalhe": "explicação prática e específica",
+      "impacto": "impacto esperado"
+    },
+    {
+      "prioridade": "MONITORAMENTO",
+      "titulo": "ação 5",
+      "detalhe": "explicação prática e específica",
       "impacto": "impacto esperado"
     }
   ]
 }
 `;
 
-      try {
-        const aiText = await chamarIANexora({
-          task: "c1",
-          maxTokens: 1400,
-          responseMimeType: "application/json",
-          messages: [
-            {
-              role: "user",
-              content: prompt
-            }
-          ]
-        });
-
-        if (!aiText) {
-          console.warn("IA não retornou texto no Cérebro 1.");
-          return null;
+  try {
+    const aiText = await chamarIANexora({
+      task: "c1",
+      maxTokens: 2200,
+      responseMimeType: "application/json",
+      messages: [
+        {
+          role: "user",
+          content: prompt
         }
+      ]
+    });
 
-        const parsed = parseJsonSafe(aiText);
-
-        if (!parsed) {
-          console.warn("IA retornou texto, mas não retornou JSON válido:", aiText);
-          return null;
-        }
-
-        return parsed;
-      } catch (error) {
-        console.error("Erro ao aprofundar Cérebro 1 com IA:", error);
-        return null;
-      }
+    if (!aiText) {
+      console.warn("IA não retornou texto no Cérebro 1.");
+      return null;
     }
+
+    const parsed = parseJsonSafe(aiText);
+
+    if (!parsed) {
+      console.warn("IA retornou texto, mas não retornou JSON válido:", aiText);
+      return {
+        diagnostico_executivo_aprofundado: aiText,
+        hipotese_estrategica: "A IA retornou uma leitura estratégica fora do formato estruturado esperado, mas o conteúdo foi preservado como complemento textual.",
+        risco_de_nao_corrigir: "Sem uma resposta estruturada completa, a recomendação é usar a análise base da Nexora como fonte principal e considerar a leitura da IA como apoio consultivo.",
+        leitura_por_pilar: {
+          atracao: "Usar a leitura base da Nexora para avaliar atração.",
+          conversao: "Usar a leitura base da Nexora para avaliar conversão.",
+          midia: "Usar a leitura base da Nexora para avaliar mídia.",
+          operacao: "Usar a leitura base da Nexora para avaliar operação.",
+          prioridade_sistemica: "Priorizar a causa raiz indicada pela engine Nexora."
+        },
+        plano_de_acao: []
+      };
+    }
+
+    return parsed;
+  } catch (error) {
+    console.error("Erro ao aprofundar Cérebro 1 com IA:", error);
+    return null;
+  }
+}
 
     async function chamarIANexora(payload) {
       const endpoints = ["/api/chat.js", "/api/chat", "../api/chat.js", "../api/chat"];
@@ -1230,6 +1274,27 @@ Retorne exatamente neste formato:
             </p>
           </div>
         ` : ""}
+        ${result.ia_usada && result.hipotese_ia ? `
+  <div class="result-block" style="border-color:rgba(216,139,45,.24);">
+    <h3>Hipótese estratégica da IA Nexora</h3>
+    <p style="color:var(--text-muted);line-height:1.85;margin-top:10px;">
+      ${escapeHtml(result.hipotese_ia)}
+    </p>
+  </div>
+` : ""}
+
+${result.ia_usada && result.leitura_por_pilar_ia ? `
+  <div class="result-block">
+    <h3>Leitura complementar por pilar</h3>
+    <div class="grid-3" style="margin-top:14px;">
+      ${smallTextCard("Atração", result.leitura_por_pilar_ia.atracao)}
+      ${smallTextCard("Conversão", result.leitura_por_pilar_ia.conversao)}
+      ${smallTextCard("Mídia", result.leitura_por_pilar_ia.midia)}
+      ${smallTextCard("Operação", result.leitura_por_pilar_ia.operacao)}
+      ${smallTextCard("Prioridade sistêmica", result.leitura_por_pilar_ia.prioridade_sistemica)}
+    </div>
+  </div>
+` : ""}
 
         <div class="result-block">
           <div style="display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-start;">
@@ -1351,14 +1416,35 @@ Retorne exatamente neste formato:
       }
 
       const updated = {
-        ...fullResult,
-        diagnostico_executivo: aiResult.diagnostico_executivo || fullResult.diagnostico_executivo,
-        impacto: aiResult.impacto || fullResult.impacto,
-        gap_principal: aiResult.gap_principal || fullResult.gap_principal,
-        prioridades: Array.isArray(aiResult.prioridades) ? aiResult.prioridades : fullResult.prioridades,
-        ia_usada: true,
-        ia_updated_at: new Date().toISOString()
-      };
+  ...fullResult,
+
+  diagnostico_executivo_base: fullResult.diagnostico_executivo,
+  impacto_base: fullResult.impacto,
+  gap_principal_base: fullResult.gap_principal,
+  prioridades_base: fullResult.prioridades,
+
+  diagnostico_ia: aiResult.diagnostico_executivo_aprofundado || aiResult.diagnostico_executivo || "",
+  hipotese_ia: aiResult.hipotese_estrategica || "",
+  risco_ia: aiResult.risco_de_nao_corrigir || "",
+  leitura_por_pilar_ia: aiResult.leitura_por_pilar || null,
+  plano_de_acao_ia: Array.isArray(aiResult.plano_de_acao) ? aiResult.plano_de_acao : [],
+
+  diagnostico_executivo: [
+    fullResult.diagnostico_executivo || "",
+    aiResult.diagnostico_executivo_aprofundado
+      ? "\\n\\nLeitura complementar da IA Nexora:\\n" + aiResult.diagnostico_executivo_aprofundado
+      : ""
+  ].join("").trim(),
+
+  impacto: aiResult.risco_de_nao_corrigir || fullResult.impacto,
+  gap_principal: fullResult.gap_principal,
+  prioridades: Array.isArray(aiResult.plano_de_acao) && aiResult.plano_de_acao.length
+    ? aiResult.plano_de_acao
+    : fullResult.prioridades,
+
+  ia_usada: true,
+  ia_updated_at: new Date().toISOString()
+};
 
       localStorage.setItem("nx_c1", JSON.stringify(updated));
 
@@ -1389,7 +1475,17 @@ Retorne exatamente neste formato:
 
       msg.textContent = "Análise aprofundada com IA aplicada.";
     };
-
+function smallTextCard(title, text) {
+  return `
+    <div class="metric-card">
+      <p>${escapeHtml(title)}</p>
+      <div style="color:var(--text-muted);font-size:12.5px;line-height:1.65;margin-top:8px;">
+        ${escapeHtml(text || "-")}
+      </div>
+    </div>
+  `;
+}
+    
     function metricCard(title, value, status) {
       return `
         <div class="metric-card">
