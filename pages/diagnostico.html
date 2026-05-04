@@ -791,29 +791,34 @@ const subcategoriasPorCategoria = {
     "Organizadores de bolsa"
   ]
 };
-   window.atualizarSubcategorias = function () {
-  const category = document.getElementById("category").value;
-  const subcategory = document.getElementById("subcategory");
-
-  const lista = subcategoriasPorCategoria[category] || [];
-
-  subcategory.innerHTML = `
-    <option value="">Selecione</option>
-    ${lista.map(item => `<option>${item}</option>`).join("")}
-  `;
-};
 
 window.atualizarSubcategorias = function () {
-  const category = document.getElementById("category").value;
-  const subcategory = document.getElementById("subcategory");
+  const categoryEl = document.getElementById("category");
+  const subcategoryEl = document.getElementById("subcategory");
 
+  if (!categoryEl || !subcategoryEl) return;
+
+  const category = categoryEl.value.trim();
   const lista = subcategoriasPorCategoria[category] || [];
 
-  subcategory.innerHTML = `
-    <option value="">Selecione</option>
-    ${lista.map(item => `<option>${item}</option>`).join("")}
+  if (!category || !lista.length) {
+    subcategoryEl.innerHTML = `
+      <option value="">Selecione uma categoria primeiro</option>
+    `;
+    return;
+  }
+
+  subcategoryEl.innerHTML = `
+    <option value="">Selecione a subcategoria</option>
+    ${lista.map(item => `<option value="${item}">${item}</option>`).join("")}
   `;
 };
+    const categorySelect = document.getElementById("category");
+
+if (categorySelect) {
+  categorySelect.addEventListener("change", window.atualizarSubcategorias);
+  window.atualizarSubcategorias();
+}
     function renderStep() {
       steps.forEach((s, i) => s.classList.toggle("active", i === currentStep));
       nextBtn.textContent = currentStep === steps.length - 1 ? "Gerar diagnóstico" : "Continuar";
