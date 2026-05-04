@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1145,39 +1144,64 @@ Retorne exatamente neste formato:
       return null;
     }
 
-    function parseJsonSafe(raw) {
-      if (!raw) return null;
+   function parseJsonSafe(raw) {
+  if (!raw) return null;
 
-      if (typeof raw === "object") {
-        return raw;
-      }
+  if (typeof raw === "object") {
+    return raw;
+  }
 
-      let clean = String(raw)
-        .replace(/```json/gi, "")
-        .replace(/```/g, "")
-        .trim();
+  let clean = String(raw)
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
 
-      try {
-        return JSON.parse(clean);
-      } catch (e) {}
+  // 1. Tentativa direta
+  try {
+    return JSON.parse(clean);
+  } catch (e) {}
 
-      const firstBrace = clean.indexOf("{");
-      const lastBrace = clean.lastIndexOf("}");
+  // 2. Tenta pegar apenas o bloco entre { e }
+  const firstBrace = clean.indexOf("{");
+  const lastBrace = clean.lastIndexOf("}");
 
-      if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
-        console.warn("IA respondeu, mas não veio JSON:", clean);
-        return null;
-      }
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    const jsonLike = clean.slice(firstBrace, lastBrace + 1);
 
-      clean = clean.slice(firstBrace, lastBrace + 1);
-
-      try {
-        return JSON.parse(clean);
-      } catch (e) {
-        console.warn("JSON da IA inválido:", clean, e);
-        return null;
-      }
+    try {
+      return JSON.parse(jsonLike);
+    } catch (e) {
+      console.warn("JSON da IA inválido, usando fallback textual:", jsonLike);
     }
+  }
+
+  // 3. Fallback seguro: usa a resposta como diagnóstico executivo
+  return {
+    diagnostico_executivo: clean,
+    gap_principal: "A IA retornou uma leitura estratégica, mas fora do formato JSON esperado. A análise foi aplicada como aprofundamento textual.",
+    impacto: "A leitura complementar reforça a necessidade de interpretar o diagnóstico por causa raiz, priorizando os bloqueios que impedem escala, conversão ou eficiência.",
+    prioridades: [
+      {
+        prioridade: "URGENTE",
+        titulo: "Validar a causa raiz principal",
+        detalhe: "Revisar o diagnóstico base e confirmar se o principal bloqueio está em atração, conversão, mídia, rentabilidade ou operação.",
+        impacto: "Evita agir em sintomas e direciona os ajustes para o ponto que realmente trava crescimento."
+      },
+      {
+        prioridade: "IMPORTANTE",
+        titulo: "Corrigir o maior gargalo antes de escalar",
+        detalhe: "Ajustar o fator mais crítico identificado pela Nexora antes de aumentar investimento em tráfego ou mídia.",
+        impacto: "Reduz desperdício e melhora a eficiência do diagnóstico."
+      },
+      {
+        prioridade: "ESTRATÉGICO",
+        titulo: "Reavaliar o produto após os ajustes",
+        detalhe: "Após corrigir o bloqueio principal, rodar nova leitura para validar evolução dos indicadores.",
+        impacto: "Permite acompanhar se a ação gerou melhora real de performance."
+      }
+    ]
+  };
+}
 
     function renderResult(result) {
       resultArea.style.display = "block";
