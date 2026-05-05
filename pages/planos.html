@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Nexora · Planos</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/global.css">
+  <link rel="icon" href="../assets/logo.png">
+
+  <style>
+    :root {
+      --nx-red: #8b1e1e;
+      --nx-red-2: #b32626;
+      --nx-red-soft: rgba(139, 30, 30, 0.20);
+      --nx-border: rgba(255,255,255,.11);
+      --nx-muted: #9ca3c7;
+      --nx-text: #f7f7fb;
+      --nx-green: #3ddc97;
+      --nx-yellow: #f0a33a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--nx-text);
+      background:
+        radial-gradient(circle at 16% 15%, rgba(139,30,30,.35), transparent 26%),
+        radial-gradient(circle at 78% 8%, rgba(179,38,38,.22), transparent 26%),
+        radial-gradient(circle at 60% 78%, rgba(80,0,0,.30), transparent 30%),
+        linear-gradient(135deg, #07090e 0%, #101115 45%, #1a0000 100%);
+      overflow-x: hidden;
+    }
+
+    .plans-shell {
+      width: min(1180px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 30px 0 46px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .topbar h1 {
+      font-family: Syne, sans-serif;
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 1.02;
+      letter-spacing: -.06em;
+      margin: 0;
+    }
+
+    .topbar p {
+      color: var(--nx-muted);
+      margin-top: 10px;
+      line-height: 1.7;
+      max-width: 760px;
+    }
+
+    .section-label {
+      font-family: Syne, sans-serif;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.58);
+      font-size: 11px;
+      margin-bottom: 10px;
+    }
+
+    .panel,
+    .plan-card,
+    .credit-card {
+      border: 1px solid var(--nx-border);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+      border-radius: 22px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.22);
+    }
+
+    .panel {
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .current-plan-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .metric {
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.035);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .metric p {
+      color: var(--nx-muted);
+      font-size: 12px;
+      margin: 0;
+    }
+
+    .metric strong {
+      display: block;
+      font-family: Syne, sans-serif;
+      font-size: 26px;
+      margin-top: 8px;
+      line-height: 1.05;
+    }
+
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .plan-card {
+      padding: 20px;
+      min-height: 330px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .plan-card.featured {
+      border-color: rgba(179,38,38,.55);
+      background:
+        radial-gradient(circle at top right, rgba(179,38,38,.22), transparent 34%),
+        linear-gradient(135deg, rgba(139,30,30,.22), rgba(255,255,255,.025));
+    }
+
+    .plan-tag {
+      display: inline-flex;
+      width: fit-content;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: rgba(255,255,255,.72);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 12px;
+    }
+
+    .plan-card.featured .plan-tag {
+      background: var(--nx-red-soft);
+      border-color: rgba(179,38,38,.45);
+      color: #fff;
+    }
+
+    .plan-card h3 {
+      font-family: Syne, sans-serif;
+      font-size: 24px;
+      margin: 0;
+    }
+
+    .price {
+      font-family: Syne, sans-serif;
+      font-size: 38px;
+      font-weight: 800;
+      margin-top: 12px;
+      letter-spacing: -.04em;
+    }
+
+    .price span {
+      color: var(--nx-muted);
+      font-size: 13px;
+      font-family: DM Sans, sans-serif;
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+
+    .plan-list {
+      display: grid;
+      gap: 8px;
+      margin: 18px 0;
+      color: var(--nx-muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .plan-list div::before {
+      content: "✓";
+      color: var(--nx-green);
+      margin-right: 8px;
+      font-weight: 800;
+    }
+
+    .credits-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .credit-card {
+      padding: 18px;
+    }
+
+    .credit-card h3 {
+      font-family: Syne, sans-serif;
+      margin: 0;
+    }
+
+    .credit-card p {
+      color: var(--nx-muted);
+      margin-top: 8px;
+      line-height: 1.6;
+      font-size: 13px;
+    }
+
+    .note {
+      color: var(--nx-muted);
+      font-size: 13px;
+      line-height: 1.7;
+      margin-top: 14px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+    }
+
+    .status-done {
+      color: #78f0bd;
+      background: rgba(61,220,151,.12);
+      border-color: rgba(61,220,151,.30);
+    }
+
+    .status-warning {
+      color: #ffd28d;
+      background: rgba(240,163,58,.12);
+      border-color: rgba(240,163,58,.30);
+    }
+
+    @media (max-width: 980px) {
+      .current-plan-grid,
+      .plans-grid,
+      .credits-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="plans-shell">
+
+    <section class="panel">
+      <div class="topbar">
+        <div>
+          <p class="section-label">Nexora Intelligence · Planos</p>
+          <h1>Planos e créditos</h1>
+          <p>
+            Escolha o volume ideal de diagnósticos para sua operação. Na Nexora, 1 crédito libera 1 diagnóstico completo de produto, incluindo Cérebro 1, Cérebro 2, Cérebro 3, Síntese e Relatório.
+          </p>
+        </div>
+
+        <div class="actions">
+          <button class="btn-secondary" onclick="location.href='./dashboard.html'">
+            Voltar ao Dashboard
+          </button>
+
+          <button class="btn-primary" onclick="solicitarUpgrade('conversa')">
+            Falar com a Nexora
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="topbar" style="margin-bottom:0;">
+        <div>
+          <p class="section-label">Seu acesso</p>
+          <h2>Plano atual</h2>
+        </div>
+
+        <span class="status-pill status-done" id="planStatus">Carregando</span>
+      </div>
+
+      <div class="current-plan-grid">
+        <div class="metric">
+          <p>Plano</p>
+          <strong id="planName">-</strong>
+        </div>
+
+        <div class="metric">
+          <p>Diagnósticos disponíveis</p>
+          <strong id="remainingDiagnostics">-</strong>
+        </div>
+
+        <div class="metric">
+          <p>Uso no período</p>
+          <strong id="usageDiagnostics">-</strong>
+        </div>
+
+        <div class="metric">
+          <p>Produtos permitidos</p>
+          <strong id="productLimit">-</strong>
+        </div>
+      </div>
+
+      <p class="note" id="planNote">
+        Carregando informações do plano...
+      </p>
+    </section>
+
+    <section class="panel">
+      <p class="section-label">Assinaturas</p>
+      <h2>Planos mensais</h2>
+
+      <div class="plans-grid">
+        <article class="plan-card">
+          <div>
+            <span class="plan-tag">Entrada</span>
+            <h3>Teste</h3>
+            <div class="price">R$ 0 <span>/ primeiro acesso</span></div>
+
+            <div class="plan-list">
+              <div>1 diagnóstico completo</div>
+              <div>1 produto monitorado</div>
+              <div>Relatório final incluso</div>
+              <div>Ideal para conhecer a Nexora</div>
+            </div>
+          </div>
+
+          <button class="btn-secondary" onclick="solicitarUpgrade('Teste')">
+            Solicitar acesso
+          </button>
+        </article>
+
+        <article class="plan-card">
+          <div>
+            <span class="plan-tag">Individual</span>
+            <h3>Solo</h3>
+            <div class="price">R$ 49 <span>/ mês</span></div>
+
+            <div class="plan-list">
+              <div>5 diagnósticos/mês</div>
+              <div>3 produtos monitorados</div>
+              <div>IA Nexora inclusa</div>
+              <div>Relatórios finais</div>
+            </div>
+          </div>
+
+          <button class="btn-secondary" onclick="solicitarUpgrade('Solo')">
+            Solicitar plano
+          </button>
+        </article>
+
+        <article class="plan-card featured">
+          <div>
+            <span class="plan-tag">Mais indicado</span>
+            <h3>Consultor</h3>
+            <div class="price">R$ 97 <span>/ mês</span></div>
+
+            <div class="plan-list">
+              <div>15 diagnósticos/mês</div>
+              <div>10 produtos monitorados</div>
+              <div>Histórico por produto</div>
+              <div>Relatórios para clientes</div>
+            </div>
+          </div>
+
+          <button class="btn-primary" onclick="solicitarUpgrade('Consultor')">
+            Solicitar plano
+          </button>
+        </article>
+
+        <article class="plan-card">
+          <div>
+            <span class="plan-tag">Profissional</span>
+            <h3>Pro</h3>
+            <div class="price">R$ 197 <span>/ mês</span></div>
+
+            <div class="plan-list">
+              <div>40 diagnósticos/mês</div>
+              <div>25 produtos monitorados</div>
+              <div>IA Nexora inclusa</div>
+              <div>Uso recorrente para consultoria</div>
+            </div>
+          </div>
+
+          <button class="btn-secondary" onclick="solicitarUpgrade('Pro')">
+            Solicitar plano
+          </button>
+        </article>
+
+        <article class="plan-card">
+          <div>
+            <span class="plan-tag">Agência</span>
+            <h3>Agência</h3>
+            <div class="price">R$ 397 <span>/ mês</span></div>
+
+            <div class="plan-list">
+              <div>100 diagnósticos/mês</div>
+              <div>60 produtos monitorados</div>
+              <div>Relatórios para carteira de clientes</div>
+              <div>Ideal para equipes pequenas/médias</div>
+            </div>
+          </div>
+
+          <button class="btn-secondary" onclick="solicitarUpgrade('Agência')">
+            Solicitar plano
+          </button>
+        </article>
+
+        <article class="plan-card">
+          <div>
+            <span class="plan-tag">Volume</span>
+            <h3>Agência Plus</h3>
+            <div class="price">R$ 697 <span>/ mês</span></div>
+
+            <div class="plan-list">
+              <div>250 diagnósticos/mês</div>
+              <div>150 produtos monitorados</div>
+              <div>Uso em alto volume</div>
+              <div>Suporte prioritário</div>
+            </div>
+          </div>
+
+          <button class="btn-secondary" onclick="solicitarUpgrade('Agência Plus')">
+            Solicitar plano
+          </button>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel">
+      <p class="section-label">Créditos extras</p>
+      <h2>Pacotes adicionais</h2>
+
+      <div class="credits-grid">
+        <div class="credit-card">
+          <h3>Extra 10</h3>
+          <div class="price">R$ 47</div>
+          <p>Adiciona 10 diagnósticos completos ao plano atual.</p>
+          <button class="btn-secondary" onclick="solicitarUpgrade('Extra 10')">
+            Solicitar
+          </button>
+        </div>
+
+        <div class="credit-card">
+          <h3>Extra 25</h3>
+          <div class="price">R$ 97</div>
+          <p>Adiciona 25 diagnósticos completos ao plano atual.</p>
+          <button class="btn-secondary" onclick="solicitarUpgrade('Extra 25')">
+            Solicitar
+          </button>
+        </div>
+
+        <div class="credit-card">
+          <h3>Extra 100</h3>
+          <div class="price">R$ 297</div>
+          <p>Adiciona 100 diagnósticos completos ao plano atual.</p>
+          <button class="btn-secondary" onclick="solicitarUpgrade('Extra 100')">
+            Solicitar
+          </button>
+        </div>
+      </div>
+
+      <p class="note">
+        Os créditos extras poderão ser ativados manualmente nesta fase beta. Depois, essa área poderá ser conectada a Pix, Mercado Pago, Pagar.me ou Stripe.
+      </p>
+    </section>
+
+    <section class="panel">
+      <p class="section-label">Regra de uso</p>
+      <h2>Como os créditos funcionam?</h2>
+
+      <p class="note">
+        Um crédito Nexora equivale a um diagnóstico completo de produto. O crédito é consumido quando o Cérebro 1 é gerado com sucesso. As demais etapas fazem parte do mesmo diagnóstico e não consomem créditos adicionais.
+      </p>
+
+      <div class="current-plan-grid">
+        <div class="metric">
+          <p>Cadastrar produto</p>
+          <strong>Não consome</strong>
+        </div>
+
+        <div class="metric">
+          <p>Gerar Cérebro 1</p>
+          <strong>Consome 1</strong>
+        </div>
+
+        <div class="metric">
+          <p>C2, C3 e Síntese</p>
+          <strong>Inclusos</strong>
+        </div>
+
+        <div class="metric">
+          <p>Relatório</p>
+          <strong>Incluso</strong>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module">
+    import { requireAuth } from "../js/auth.js";
+    import {
+      getCurrentUserPlan,
+      getRemainingDiagnostics,
+      formatPlanName
+    } from "../js/plans.js";
+
+    const user = await requireAuth();
+
+    await carregarPlano();
+
+    async function carregarPlano() {
+      try {
+        const plan = await getCurrentUserPlan();
+        const remaining = getRemainingDiagnostics(plan);
+        const isUnlimited = plan.is_admin || plan.unlimited_access;
+
+        document.getElementById("planName").textContent = formatPlanName(plan.plan_name);
+        document.getElementById("remainingDiagnostics").textContent = isUnlimited ? "Ilimitado" : remaining;
+        document.getElementById("usageDiagnostics").textContent = isUnlimited
+          ? "Livre"
+          : `${plan.diagnostics_used || 0}/${plan.diagnostic_limit || 0}`;
+        document.getElementById("productLimit").textContent = isUnlimited
+          ? "Ilimitado"
+          : plan.product_limit || 0;
+
+        const statusEl = document.getElementById("planStatus");
+        statusEl.textContent = plan.plan_status === "active" ? "Ativo" : plan.plan_status || "Indefinido";
+        statusEl.className = plan.plan_status === "active"
+          ? "status-pill status-done"
+          : "status-pill status-warning";
+
+        document.getElementById("planNote").textContent = isUnlimited
+          ? "Sua conta possui acesso ilimitado para desenvolvimento e administração da Nexora."
+          : "Cada diagnóstico completo consome 1 crédito quando o Cérebro 1 é gerado com sucesso.";
+      } catch (error) {
+        console.error("Erro ao carregar plano:", error);
+        document.getElementById("planNote").textContent = "Não foi possível carregar seu plano.";
+      }
+    }
+
+    window.solicitarUpgrade = function (planName) {
+      const message = encodeURIComponent(
+        `Olá! Quero solicitar o plano/pacote ${planName} da Nexora. Meu e-mail de acesso é ${user?.email || ""}.`
+      );
+
+      alert(
+        `Solicitação registrada para: ${planName}.\n\nNesta fase beta, a ativação será feita manualmente.`
+      );
+
+      // Quando você tiver um WhatsApp oficial da Nexora, pode trocar o alert por:
+      // window.open(`https://wa.me/55SEUNUMERO?text=${message}`, "_blank");
+    };
+  </script>
+</body>
+</html>
