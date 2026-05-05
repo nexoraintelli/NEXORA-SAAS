@@ -357,7 +357,7 @@
             </div>
           </div>
 
-          <button class="btn-secondary" onclick="solicitarUpgrade('Teste')">
+          <button class="btn-secondary" onclick="solicitarUpgrade('teste')">
             Solicitar acesso
           </button>
         </article>
@@ -376,7 +376,7 @@
             </div>
           </div>
 
-          <button class="btn-secondary" onclick="solicitarUpgrade('Solo')">
+          <button class="btn-secondary" onclick="solicitarUpgrade('solo')">
             Solicitar plano
           </button>
         </article>
@@ -395,7 +395,7 @@
             </div>
           </div>
 
-          <button class="btn-primary" onclick="solicitarUpgrade('Consultor')">
+          <button class="btn-primary" onclick="solicitarUpgrade('consultor')">
             Solicitar plano
           </button>
         </article>
@@ -414,7 +414,7 @@
             </div>
           </div>
 
-          <button class="btn-secondary" onclick="solicitarUpgrade('Pro')">
+          <button class="btn-secondary"onclick="solicitarUpgrade('pro')":>
             Solicitar plano
           </button>
         </article>
@@ -433,7 +433,7 @@
             </div>
           </div>
 
-          <button class="btn-secondary" onclick="solicitarUpgrade('Agência')">
+          <button class="btn-secondary" onclick="solicitarUpgrade('agencia')">
             Solicitar plano
           </button>
         </article>
@@ -452,7 +452,7 @@
             </div>
           </div>
 
-          <button class="btn-secondary" onclick="solicitarUpgrade('Agência Plus')">
+          <button class="btn-secondary" onclick="solicitarUpgrade('agencia_plus')">
             Solicitar plano
           </button>
         </article>
@@ -468,7 +468,7 @@
           <h3>Extra 10</h3>
           <div class="price">R$ 47</div>
           <p>Adiciona 10 diagnósticos completos ao plano atual.</p>
-          <button class="btn-secondary" onclick="solicitarUpgrade('Extra 10')">
+          <button class="btn-secondary" onclick="solicitarUpgrade('extra_10')">
             Solicitar
           </button>
         </div>
@@ -477,7 +477,7 @@
           <h3>Extra 25</h3>
           <div class="price">R$ 97</div>
           <p>Adiciona 25 diagnósticos completos ao plano atual.</p>
-          <button class="btn-secondary" onclick="solicitarUpgrade('Extra 25')">
+          <button class="btn-secondary" onclick="solicitarUpgrade('extra_25')">
             Solicitar
           </button>
         </div>
@@ -486,7 +486,7 @@
           <h3>Extra 100</h3>
           <div class="price">R$ 297</div>
           <p>Adiciona 100 diagnósticos completos ao plano atual.</p>
-          <button class="btn-secondary" onclick="solicitarUpgrade('Extra 100')">
+          <button class="btn-secondary" onclick="solicitarUpgrade('extra_100')">
             Solicitar
           </button>
         </div>
@@ -532,11 +532,16 @@
 
   <script type="module">
     import { requireAuth } from "../js/auth.js";
-    import {
-      getCurrentUserPlan,
-      getRemainingDiagnostics,
-      formatPlanName
-    } from "../js/plans.js";
+import {
+  getCurrentUserPlan,
+  getRemainingDiagnostics,
+  formatPlanName
+} from "../js/plans.js";
+
+import {
+  createPaymentOrder,
+  formatCurrencyBRL
+} from "../js/billing.js";
 
     const user = await requireAuth();
 
@@ -590,18 +595,24 @@ if (reason) {
       }
     }
 
-    window.solicitarUpgrade = function (planName) {
-      const message = encodeURIComponent(
-        `Olá! Quero solicitar o plano/pacote ${planName} da Nexora. Meu e-mail de acesso é ${user?.email || ""}.`
-      );
+   window.solicitarUpgrade = async function (planKey) {
+  try {
+    const order = await createPaymentOrder(planKey);
 
-      alert(
-        `Solicitação registrada para: ${planName}.\n\nNesta fase beta, a ativação será feita manualmente.`
-      );
+    alert(
+      `Pedido criado com sucesso!\n\n` +
+      `Plano/Pacote: ${order.plan_label}\n` +
+      `Valor: ${formatCurrencyBRL(order.amount)}\n` +
+      `Status: pendente\n\n` +
+      `Na próxima etapa, este pedido será conectado ao checkout automático.`
+    );
 
-      // Quando você tiver um WhatsApp oficial da Nexora, pode trocar o alert por:
-      // window.open(`https://wa.me/55SEUNUMERO?text=${message}`, "_blank");
-    };
+    window.location.href = `./planos.html?order=${encodeURIComponent(order.id)}`;
+  } catch (error) {
+    console.error("Erro ao criar pedido:", error);
+    alert("Não foi possível criar o pedido. Tente novamente.");
+  }
+};
   </script>
 </body>
 </html>
