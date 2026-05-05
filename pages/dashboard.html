@@ -1083,6 +1083,43 @@
     Em uma próxima etapa, será possível organizar produtos por cliente, marca, seller ou agência.
   </p>
 </section>
+      <section class="panel" id="settingsPanel">
+  <div class="section-head">
+    <div>
+      <h2>Configurações</h2>
+      <p style="color:var(--nx-muted);font-size:13px;margin-top:6px;">
+        Preferências da conta, estrutura de diagnóstico e dados do ambiente Nexora.
+      </p>
+    </div>
+  </div>
+
+  <div class="overview-panel">
+    <div class="overview-card">
+      <p>Conta</p>
+      <strong id="settingsUserEmail">-</strong>
+    </div>
+
+    <div class="overview-card">
+      <p>Banco de dados</p>
+      <strong>Supabase</strong>
+    </div>
+
+    <div class="overview-card">
+      <p>Diagnósticos</p>
+      <strong>Ativo</strong>
+    </div>
+
+    <div class="overview-card">
+      <p>IA Nexora</p>
+      <strong>Conectada</strong>
+    </div>
+  </div>
+
+  <p class="overview-note">
+    Esta área poderá receber preferências de relatório, permissões de equipe, dados da empresa,
+    plano contratado e configurações da IA.
+  </p>
+</section>
       <section class="lower-grid">
         <div class="panel" id="diagnosticsPanel">
           <div class="section-head">
@@ -1304,6 +1341,12 @@ import { createProduct, listProducts } from "../js/product.js";
     if (user) {
   currentUserId = user.id;
   document.getElementById("userEmail").textContent = user.email;
+
+  const settingsEmail = document.getElementById("settingsUserEmail");
+  if (settingsEmail) {
+    settingsEmail.textContent = user.email || "-";
+  }
+
   loadDiagnostics(user.id);
   loadProducts();
 }
@@ -1414,7 +1457,12 @@ window.scrollToProducts = function () {
     block: "start"
   });
 };
-
+window.scrollToSettings = function () {
+  document.getElementById("settingsPanel")?.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+};
 window.abrirModalClienteEmBreve = function () {
   alert("A área de clientes será ativada em uma próxima etapa. Por enquanto, os produtos ficam vinculados diretamente ao usuário logado.");
 };
