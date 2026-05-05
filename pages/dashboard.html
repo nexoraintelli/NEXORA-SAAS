@@ -1351,8 +1351,9 @@ async function loadProducts() {
       </p>
     `;
   }
+}
 
-    window.logoutUser = logout;
+window.logoutUser = logout;
 
     window.scrollToDiagnostics = function () {
       document.getElementById("diagnosticsPanel")?.scrollIntoView({
@@ -1439,7 +1440,7 @@ window.salvarProdutoEIniciarDiagnostico = async function () {
       subcategory,
       niche: getModalValue("modalNiche"),
       product_phase: getModalValue("modalProductPhase"),
-      fulfilment_type: getModalValue("modalFulfillmentType"),
+      fulfillment_type: getModalValue("modalFulfillmentType"),
       current_price: getModalValue("modalCurrentPrice"),
       current_reviews: getModalValue("modalCurrentReviews"),
       current_rating: getModalValue("modalCurrentRating"),
@@ -1483,16 +1484,25 @@ window.salvarProdutoEIniciarDiagnostico = async function () {
 };
 
 window.abrirProdutoAtual = function () {
+  const productId = localStorage.getItem("nx_product_id");
   const diagnosticId = localStorage.getItem("nx_diagnostic_id");
 
-  if (!diagnosticId) {
-    alert("Nenhum diagnóstico ativo encontrado. Abra um diagnóstico recente ou inicie uma nova análise.");
+  if (productId) {
+    window.location.href =
+      `./produto.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
     return;
   }
 
-  window.location.href = `./produto.html?diagnostic_id=${encodeURIComponent(diagnosticId)}`;
+  if (diagnosticId) {
+    window.location.href =
+      `./produto.html?diagnostic_id=${encodeURIComponent(diagnosticId)}`;
+    return;
+  }
+
+  alert("Nenhum produto ou diagnóstico ativo encontrado. Abra um produto recente ou cadastre um novo produto.");
 };
-   window.abrirProdutoPorId = function (productId) {
+
+window.abrirProdutoPorId = function (productId) {
   if (!productId) {
     alert("Produto sem ID.");
     return;
@@ -1502,7 +1512,24 @@ window.abrirProdutoAtual = function () {
 
   window.location.href =
     `./produto.html?product_id=${encodeURIComponent(productId)}`;
-}; 
+};
+
+window.abrirProduto = function (diagnosticId) {
+  if (!diagnosticId) {
+    alert("Não foi possível abrir este produto porque o diagnóstico não possui ID.");
+    return;
+  }
+
+  localStorage.setItem("nx_diagnostic_id", diagnosticId);
+
+  window.location.href =
+    `./produto.html?diagnostic_id=${encodeURIComponent(diagnosticId)}`;
+};
+
+function getModalValue(id) {
+  const el = document.getElementById(id);
+  return el ? String(el.value || "").trim() : "";
+}
 
 function getModalValue(id) {
   const el = document.getElementById(id);
