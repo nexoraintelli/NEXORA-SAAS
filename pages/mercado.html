@@ -737,19 +737,7 @@ document.querySelectorAll(".option-group").forEach(group => {
 
   irParaCerebro2();
 };
-
-  const productId = currentProductId || localStorage.getItem("nx_product_id");
-  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
-
-  if (productId) {
-    window.location.href =
-      `./produto.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
-    return;
-  }
-
-  window.location.href = "./dashboard.html";
-};
-
+    
     function validarEtapa(step) {
       if (!C1 || !C2) {
         msg.textContent = "Execute o Cérebro 1 e o Cérebro 2 antes.";
@@ -882,6 +870,42 @@ window.irParaSintese = function () {
 
   window.location.href =
     `./sintese.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
+};
+window.irParaCerebro1 = function () {
+  const productId = currentProductId || localStorage.getItem("nx_product_id");
+  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
+
+  window.location.href =
+    `./diagnostico.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
+};
+
+window.irParaCerebro2 = function () {
+  const productId = currentProductId || localStorage.getItem("nx_product_id");
+  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
+
+  window.location.href =
+    `./pagina.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
+};
+
+window.irParaSintese = function () {
+  const productId = currentProductId || localStorage.getItem("nx_product_id");
+  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
+
+  window.location.href =
+    `./sintese.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
+};
+
+window.voltarParaProdutoOuDashboard = function () {
+  const productId = currentProductId || localStorage.getItem("nx_product_id");
+  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
+
+  if (productId) {
+    window.location.href =
+      `./produto.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
+    return;
+  }
+
+  window.location.href = "./dashboard.html";
 };
     
 function limparTextoIA(texto) {
