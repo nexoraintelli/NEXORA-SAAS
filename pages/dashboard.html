@@ -869,7 +869,7 @@
   <span class="nav-icon">＋</span> Novo diagnóstico
 </button>
 
-<button class="nav-item" onclick="abrirModalProduto()">
+<button class="nav-item" onclick="scrollToProducts()">
   <span class="nav-icon">◇</span> Produtos
 </button>
 
@@ -1023,6 +1023,25 @@
         </div>
       </section>
 
+<section class="panel" id="productsPanel">
+  <div class="section-head">
+    <div>
+      <h2>Produtos monitorados</h2>
+      <p style="color:var(--nx-muted);font-size:13px;margin-top:6px;">
+        Produtos cadastrados por este usuário para acompanhamento histórico na Nexora.
+      </p>
+    </div>
+
+    <button class="btn-primary" onclick="abrirModalProduto()">
+      + Adicionar produto
+    </button>
+  </div>
+
+  <div id="productsList" class="diagnostics-list">
+    <p style="color:var(--nx-muted);">Carregando produtos...</p>
+  </div>
+</section>
+      
       <section class="lower-grid">
         <div class="panel" id="diagnosticsPanel">
           <div class="section-head">
@@ -1235,17 +1254,95 @@
     import { sb } from "../js/supabaseClient.js";
 import { requireAuth, logout } from "../js/auth.js";
 import { createDiagnostic } from "../js/diagnostics.js";
-import { createProduct } from "../js/product.js";
+import { createProduct, listProducts } from "../js/product.js";
 
     let currentUserId = null;
 
     const user = await requireAuth();
 
     if (user) {
-      currentUserId = user.id;
-      document.getElementById("userEmail").textContent = user.email;
-      loadDiagnostics(user.id);
+  currentUserId = user.id;
+  document.getElementById("userEmail").textContent = user.email;
+  async function loadProducts() {
+  const el = document.getElementById("productsList");
+
+  if (!el) return;
+
+  try {
+    const products = await listProducts();
+
+    if (!products.length) {
+      el.innerHTML = `
+        <div class="diag-row">
+          <div>
+            <div class="diag-title">Nenhum produto cadastrado ainda</div>
+            <div class="diag-meta">Clique em Adicionar produto para iniciar o acompanhamento.</div>
+          </div>
+
+          <span class="status-pill">Vazio</span>
+          <div class="score-badge">-</div>
+
+          <div class="diag-meta">
+            Agora
+          </div>
+
+          <div class="diag-action">
+            <button class="btn-mini" onclick="abrirModalProduto()">
+              Adicionar
+            </button>
+          </div>
+        </div>
+      `;
+      return;
     }
+
+    el.innerHTML = products.map(product => {
+      const name = product.product_name || product.name || product.asin || "Produto sem nome";
+      const category = product.category || "Categoria não definida";
+      const subcategory = product.subcategory || "Subcategoria não definida";
+      const marketplace = product.marketplace || "Marketplace não definido";
+
+      return `
+        <div class="diag-row">
+          <div>
+            <div class="diag-title">${escapeHtml(name)}</div>
+            <div class="diag-meta">
+              ${escapeHtml(category)} · ${escapeHtml(subcategory)} · ${escapeHtml(marketplace)}
+            </div>
+          </div>
+
+          <span class="status-pill status-progress">
+            Produto
+          </span>
+
+          <div class="score-badge">-</div>
+
+          <div class="diag-meta">
+            ${new Date(product.created_at).toLocaleDateString("pt-BR")}<br>
+            ${product.asin ? escapeHtml(product.asin) : "Sem ASIN"}
+          </div>
+
+          <div class="diag-action">
+            <button class="btn-mini" onclick="abrirProdutoPorId('${escapeHtml(product.id)}')">
+              Abrir produto
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  } catch (error) {
+    console.error("Erro ao carregar produtos:", error);
+
+    el.innerHTML = `
+      <p style="color:var(--nx-muted);">
+        Não foi possível carregar os produtos cadastrados.
+      </p>
+    `;
+  }
+}    
+  loadDiagnostics(user.id);
+  loadProducts();
+}
 
     window.logoutUser = logout;
 
@@ -1255,7 +1352,12 @@ import { createProduct } from "../js/product.js";
         block: "start"
       });
     };
-
+window.scrollToProducts = function () {
+  document.getElementById("productsPanel")?.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+};
     window.novoDiagnostico = async function () {
       [
         "nx_c1",
@@ -1382,6 +1484,17 @@ window.abrirProdutoAtual = function () {
 
   window.location.href = `./produto.html?diagnostic_id=${encodeURIComponent(diagnosticId)}`;
 };
+   window.abrirProdutoPorId = function (productId) {
+  if (!productId) {
+    alert("Produto sem ID.");
+    return;
+  }
+
+  localStorage.setItem("nx_product_id", productId);
+
+  window.location.href =
+    `./produto.html?product_id=${encodeURIComponent(productId)}`;
+}; 
 
 function getModalValue(id) {
   const el = document.getElementById(id);
