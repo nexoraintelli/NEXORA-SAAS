@@ -1010,11 +1010,23 @@ renderStep();
     };
 
     window.prevStep = function () {
-      if (currentStep > 0) {
-        currentStep--;
-        renderStep();
-      }
-    };
+  if (currentStep > 0) {
+    currentStep--;
+    renderStep();
+    return;
+  }
+
+  const productId = currentProductId || localStorage.getItem("nx_product_id");
+  const diagnosticId = getDiagnosticId() || localStorage.getItem("nx_diagnostic_id");
+
+  if (productId) {
+    window.location.href =
+      `./produto.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
+    return;
+  }
+
+  window.location.href = "./dashboard.html";
+};
 
     function validarEtapa(step) {
       if (step === 0) {
