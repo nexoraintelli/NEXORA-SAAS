@@ -877,17 +877,17 @@
   <span class="nav-icon">↺</span> Histórico
 </button>
 
-          <button class="nav-item" onclick="alert('Área de clientes será ativada em breve.')">
-            <span class="nav-icon">◌</span> Clientes
-          </button>
+          <button class="nav-item" onclick="scrollToClients()">
+  <span class="nav-icon">◌</span> Clientes
+</button>
 
           <button class="nav-item" onclick="abrirRelatorio()">
             <span class="nav-icon">▤</span> Relatórios
           </button>
 
-          <button class="nav-item" onclick="alert('Configurações serão ativadas em breve.')">
-            <span class="nav-icon">⚙</span> Configurações
-          </button>
+         <button class="nav-item" onclick="scrollToSettings()">
+  <span class="nav-icon">⚙</span> Configurações
+</button>
         </nav>
       </div>
 
@@ -1041,7 +1041,88 @@
     <p style="color:var(--nx-muted);">Carregando produtos...</p>
   </div>
 </section>
-      
+      <section class="panel" id="clientsPanel">
+  <div class="section-head">
+    <div>
+      <h2>Clientes</h2>
+      <p style="color:var(--nx-muted);font-size:13px;margin-top:6px;">
+        Área para organizar contas, marcas ou sellers vinculados aos produtos analisados.
+      </p>
+    </div>
+
+    <button class="btn-secondary" onclick="abrirModalClienteEmBreve()">
+      + Adicionar cliente
+    </button>
+  </div>
+
+  <div class="overview-panel">
+    <div class="overview-card">
+      <p>Clientes cadastrados</p>
+      <strong>0</strong>
+    </div>
+
+    <div class="overview-card">
+      <p>Produtos vinculados</p>
+      <strong id="clientsProductsCount">-</strong>
+    </div>
+
+    <div class="overview-card">
+      <p>Diagnósticos ativos</p>
+      <strong id="clientsDiagnosticsCount">-</strong>
+    </div>
+
+    <div class="overview-card">
+      <p>Status do módulo</p>
+      <strong>Estrutura</strong>
+    </div>
+  </div>
+
+  <p class="overview-note">
+    Nesta versão, os produtos ficam vinculados diretamente ao usuário logado.
+    Em uma próxima etapa, será possível organizar produtos por cliente, marca, seller ou agência.
+  </p>
+</section>
+      <section class="panel" id="clientsPanel">
+  <div class="section-head">
+    <div>
+      <h2>Clientes</h2>
+      <p style="color:var(--nx-muted);font-size:13px;margin-top:6px;">
+        Área para organizar contas, marcas ou sellers vinculados aos produtos analisados.
+      </p>
+    </div>
+
+    <button class="btn-secondary" onclick="abrirModalClienteEmBreve()">
+      + Adicionar cliente
+    </button>
+  </div>
+
+  <div class="overview-panel">
+    <div class="overview-card">
+      <p>Clientes cadastrados</p>
+      <strong>0</strong>
+    </div>
+
+    <div class="overview-card">
+      <p>Produtos vinculados</p>
+      <strong id="clientsProductsCount">-</strong>
+    </div>
+
+    <div class="overview-card">
+      <p>Diagnósticos ativos</p>
+      <strong id="clientsDiagnosticsCount">-</strong>
+    </div>
+
+    <div class="overview-card">
+      <p>Status do módulo</p>
+      <strong>Estrutura</strong>
+    </div>
+  </div>
+
+  <p class="overview-note">
+    Nesta versão, os produtos ficam vinculados diretamente ao usuário logado.
+    Em uma próxima etapa, será possível organizar produtos por cliente, marca, seller ou agência.
+  </p>
+</section>
       <section class="lower-grid">
         <div class="panel" id="diagnosticsPanel">
           <div class="section-head">
@@ -1366,6 +1447,16 @@ window.scrollToProducts = function () {
     behavior: "smooth",
     block: "start"
   });
+};
+    window.scrollToClients = function () {
+  document.getElementById("clientsPanel")?.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+};
+
+window.abrirModalClienteEmBreve = function () {
+  alert("A área de clientes será ativada em uma próxima etapa. Por enquanto, os produtos ficam vinculados diretamente ao usuário logado.");
 };
     window.novoDiagnostico = async function () {
       [
