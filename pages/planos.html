@@ -542,6 +542,24 @@
 
     await carregarPlano();
 
+    const params = new URLSearchParams(window.location.search);
+const reason = params.get("reason");
+
+if (reason) {
+  const panel = document.createElement("section");
+  panel.className = "panel";
+  panel.innerHTML = `
+    <p class="section-label">Limite do plano</p>
+    <h2>Ação necessária</h2>
+    <p class="note">${reason}</p>
+    <p class="note">
+      Escolha um plano maior ou solicite créditos extras para continuar gerando diagnósticos.
+    </p>
+  `;
+
+  document.querySelector(".plans-shell")?.prepend(panel);
+}
+
     async function carregarPlano() {
       try {
         const plan = await getCurrentUserPlan();
