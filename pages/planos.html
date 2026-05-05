@@ -461,6 +461,24 @@
       </div>
     </section>
 
+<section class="panel">
+  <div class="topbar" style="margin-bottom:0;">
+    <div>
+      <p class="section-label">Billing</p>
+      <h2>Pedidos recentes</h2>
+      <p style="color:var(--nx-muted);font-size:13px;margin-top:6px;">
+        Acompanhe solicitações de planos e pacotes criadas dentro da Nexora.
+      </p>
+    </div>
+  </div>
+
+  <div id="ordersList" style="display:grid;gap:12px;margin-top:16px;">
+    <div class="credit-card">
+      <p style="color:var(--nx-muted);margin:0;">Carregando pedidos...</p>
+    </div>
+  </div>
+</section>
+    
     <section class="panel">
       <p class="section-label">Créditos extras</p>
       <h2>Pacotes adicionais</h2>
@@ -542,12 +560,15 @@ import {
 
 import {
   createPaymentOrder,
+  listPaymentOrders,
   formatCurrencyBRL
 } from "../js/billing.js";
 
     const user = await requireAuth();
 
     await carregarPlano();
+    await carregarPedidosRecentes();
+    
 
     const params = new URLSearchParams(window.location.search);
 const reason = params.get("reason");
@@ -597,6 +618,71 @@ if (reason) {
       }
     }
 
+    async function carregarPedidosRecentes() {
+  const ordersList = document.getElementById("ordersList");
+
+  if (!ordersList) return;
+
+  try {
+    const orders = await listPaymentOrders(6);
+
+    if (!orders.length) {
+      ordersList.innerHTML = `
+        <div class="credit-card">
+          <h3>Nenhum pedido criado ainda</h3>
+          <p>
+            Quando você escolher um plano ou pacote extra, o pedido aparecerá aqui com o status correspondente.
+          </p>
+        </div>
+      `;
+      return;
+    }
+
+    ordersList.innerHTML = orders.map(order => {
+      return `
+        <div class="credit-card" style="display:grid;grid-template-columns:minmax(0,1fr) 140px 130px;gap:14px;align-items:center;">
+          <div>
+            <h3>${escapeHtml(order.plan_label || order.plan_name || "Pedido Nexora")}</h3>
+            <p>
+              ${escapeHtml(formatOrderType(order.order_type))} ·
+              ${Number(order.diagnostics_included || 0)} diagnósticos ·
+              ${Number(order.products_included || 0)} produtos
+            </p>
+            <p>
+              Criado em ${formatDate(order.created_at)}
+            </p>
+          </div>
+
+          <div>
+            <p style="margin:0;color:var(--nx-muted);font-size:12px;">Valor</p>
+            <strong style="font-family:Syne,sans-serif;font-size:20px;">
+              ${formatCurrencyBRL(order.amount)}
+            </strong>
+          </div>
+
+          <div>
+            <span class="status-pill ${getOrderStatusClass(order.status)}">
+              ${formatOrderStatus(order.status)}
+            </span>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+  } catch (error) {
+    console.error("Erro ao carregar pedidos recentes:", error);
+
+    ordersList.innerHTML = `
+      <div class="credit-card">
+        <h3>Não foi possível carregar pedidos</h3>
+        <p>
+          Tente atualizar a página. Se o problema continuar, verifique a conexão com o Supabase.
+        </p>
+      </div>
+    `;
+  }
+}
+
    window.solicitarUpgrade = async function (planKey) {
   try {
     const order = await createPaymentOrder(planKey);
@@ -609,12 +695,66 @@ if (reason) {
       `Na próxima etapa, este pedido será conectado ao checkout automático.`
     );
 
-    window.location.href = `./planos.html?order=${encodeURIComponent(order.id)}`;
+    await carregarPedidosRecentes();
+
+window.location.href = `./planos.html?order=${encodeURIComponent(order.id)}`;
   } catch (error) {
     console.error("Erro ao criar pedido:", error);
     alert("Não foi possível criar o pedido. Tente novamente.");
   }
 };
+function formatOrderType(type) {
+  const map = {
+    subscription: "Assinatura",
+    credits: "Créditos extras"
+  };
+
+  return map[String(type || "").toLowerCase()] || "Pedido";
+}
+
+function formatOrderStatus(status) {
+  const map = {
+    pending: "Pendente",
+    paid: "Pago",
+    cancelled: "Cancelado",
+    failed: "Falhou"
+  };
+
+  return map[String(status || "").toLowerCase()] || "Pendente";
+}
+
+function getOrderStatusClass(status) {
+  const normalized = String(status || "").toLowerCase();
+
+  if (normalized === "paid") return "status-done";
+  if (normalized === "pending") return "status-warning";
+
+  return "status-warning";
+}
+
+function formatDate(date) {
+  if (!date) return "—";
+
+  try {
+    return new Date(date).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    });
+  } catch {
+    return "—";
+  }
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+    
   </script>
 </body>
 </html>
