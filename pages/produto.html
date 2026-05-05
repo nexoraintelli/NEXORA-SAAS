@@ -715,7 +715,7 @@
     }
 
     function renderProduct() {
-      const name = product.product_name || product.name || product.asin || "Produto sem nome";
+      const name = getSafeProductName(product);
 
       document.getElementById("pageTitle").textContent = name;
       document.getElementById("productName").textContent = name;
@@ -732,19 +732,23 @@
 
       const imageBox = document.getElementById("productImage");
 
-      if (product.image_url) {
-        imageBox.innerHTML = `<img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(name)}">`;
-      } else {
-        imageBox.textContent = "Sem imagem";
-      }
+     if (isValidImageUrl(product.image_url)) {
+  imageBox.innerHTML = `<img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(name)}">`;
+} else {
+  imageBox.textContent = "Sem imagem";
+}
     }
 
     function buildProductDescription(p) {
       const parts = [];
 
-      if (p.niche) parts.push(`Nicho: ${p.niche}`);
-      if (p.product_phase) parts.push(`Fase: ${p.product_phase}`);
-      if (p.fullfilment_type) parts.push(`Fulfillment: ${p.fullfilment_type}`);
+     if (p.niche && !isInvalidTextValue(p.niche)) parts.push(`Nicho: ${p.niche}`);
+if (p.product_phase && !isInvalidTextValue(p.product_phase)) parts.push(`Fase: ${p.product_phase}`);
+      const fulfillment = p.fulfillment_type || p.fullfilment_type || p.fulfilment_type;
+
+if (fulfillment && !isInvalidTextValue(fulfillment)) {
+  parts.push(`Fulfillment: ${fulfillment}`);
+}
       if (p.current_price) parts.push(`Preço atual: R$ ${formatNumber(p.current_price)}`);
       if (p.current_reviews) parts.push(`${p.current_reviews} reviews`);
       if (p.current_rating) parts.push(`Rating ${formatNumber(p.current_rating)}`);
@@ -753,7 +757,86 @@
         ? parts.join(" · ")
         : "Produto cadastrado para acompanhamento histórico na Nexora.";
     }
+function isInvalidTextValue(value) {
+  const text = String(value || "").trim().toLowerCase();
 
+  return (
+    !text ||
+    text === "1" ||
+    text === "0" ||
+    text === "n/a" ||
+    text === "na" ||
+    text === "null" ||
+    text === "undefined" ||
+    text === "teste"
+  );
+}
+
+function getSafeProductName(p) {
+  const candidates = [
+    p?.product_name,
+    p?.name,
+    p?.asin
+  ];
+
+  const valid = candidates.find(value => !isInvalidTextValue(value));
+
+  return valid || "Produto sem nome definido";
+}
+
+function isValidImageUrl(value) {
+  const text = String(value || "").trim();
+
+  return /^https?:\/\//i.test(text);
+}
+
+function isDraftWithoutResult(diagnostic) {
+  const status = String(diagnostic?.status || "").toLowerCase();
+  const score = getScoreFromDiagnostic(diagnostic);
+
+  return status === "draft" && (!Number.isFinite(score) || score <= 0);
+}
+
+function getBrainPriorityRow(diagnosticId) {
+  const priority = [
+    ["synth", "sintese", "síntese", "synthesis", "final"],
+    ["c3"],
+    ["c2"],
+    ["c1"]
+  ];
+
+  for (const codes of priority) {
+    const row = brainResults.find(item =>
+      item.diagnostic_id === diagnosticId &&
+      codes.includes(String(item.brain_code || "").toLowerCase())
+    );
+
+    if (row) return row;
+  }
+
+  return null;
+}
+
+function getBrainScoreFromRow(row) {
+  const result = row?.result_data || {};
+  const code = String(row?.brain_code || "").toLowerCase();
+
+  const score =
+    result.score_final ??
+    result.score_mercado ??
+    result.score_pagina ??
+    result.score_geral ??
+    row?.score ??
+    null;
+
+  const number = Number(score);
+
+  if (!Number.isFinite(number) || number <= 0) return null;
+
+  return Math.round(number);
+}
+
+    
     function getLatestC1Result() {
       const c1Rows = brainResults
         .filter(row => String(row.brain_code || "").toLowerCase() === "c1")
@@ -763,34 +846,33 @@
     }
 
     function getLatestDiagnostic() {
-      return diagnostics[0] || null;
-    }
-
+  return diagnostics.find(d => !isDraftWithoutResult(d)) || diagnostics[0] || null;
+}
     function getScoreFromDiagnostic(diagnostic) {
-      if (!diagnostic) return null;
+  if (!diagnostic) return null;
 
-      const brain = brainResults.find(row =>
-        row.diagnostic_id === diagnostic.id &&
-        String(row.brain_code || "").toLowerCase() === "c1"
-      );
+  const preferredRow = getBrainPriorityRow(diagnostic.id);
+  const preferredScore = getBrainScoreFromRow(preferredRow);
 
-      const result = brain?.result_data || {};
+  if (Number.isFinite(preferredScore) && preferredScore > 0) {
+    return preferredScore;
+  }
 
-      const score =
-        result.score_geral ??
-        brain?.score ??
-        diagnostic.final_score ??
-        diagnostic.score ??
-        diagnostic.score_final ??
-        null;
+  const score =
+    diagnostic.final_score ??
+    diagnostic.score ??
+    diagnostic.score_final ??
+    null;
 
-      const number = Number(score);
+  const number = Number(score);
 
-      return Number.isFinite(number) ? Math.round(number) : null;
-    }
+  if (!Number.isFinite(number) || number <= 0) return null;
 
+  return Math.round(number);
+}
     function renderMetrics() {
-      const latestDiagnostic = getLatestDiagnostic();
+      const completedDiagnostics = diagnostics.filter(d => !isDraftWithoutResult(d));
+      const latestDiagnostic = completedDiagnostics[0] || getLatestDiagnostic();
       const latestC1Row = getLatestC1Result();
       const latestC1 = latestC1Row?.result_data || {};
 
@@ -804,7 +886,7 @@
 
       updateStatusPill(latestScore, latestDiagnostic?.status);
 
-      document.getElementById("metricTotalDiagnostics").textContent = diagnostics.length;
+     document.getElementById("metricTotalDiagnostics").textContent = completedDiagnostics.length;
 
       const scoreEvolution = calculateScoreEvolution();
 
@@ -820,22 +902,24 @@
         formatPercent(latestC1.acos ?? latestDiagnostic?.acos);
     }
 
-    function calculateScoreEvolution() {
-      const chronological = [...diagnostics].reverse();
-      const scores = chronological
-        .map(getScoreFromDiagnostic)
-        .filter(value => Number.isFinite(value));
+   function calculateScoreEvolution() {
+  const chronological = [...diagnostics]
+    .filter(d => !isDraftWithoutResult(d))
+    .reverse();
 
-      if (scores.length < 2) return "—";
+  const scores = chronological
+    .map(getScoreFromDiagnostic)
+    .filter(value => Number.isFinite(value) && value > 0);
 
-      const first = scores[0];
-      const last = scores[scores.length - 1];
-      const diff = last - first;
+  if (scores.length < 2) return "—";
 
-      if (diff > 0) return `+${diff}`;
-      return String(diff);
-    }
+  const first = scores[0];
+  const last = scores[scores.length - 1];
+  const diff = last - first;
 
+  if (diff > 0) return `+${diff}`;
+  return String(diff);
+}
     function updateStatusPill(score, status) {
       const pill = document.getElementById("latestStatus");
       const normalized = String(status || "").toLowerCase();
@@ -863,19 +947,31 @@
     }
 
     function renderCurrentInsight() {
-      const latestC1Row = getLatestC1Result();
-      const latestC1 = latestC1Row?.result_data || {};
-      const latestDiagnostic = getLatestDiagnostic();
+  const latestDiagnostic = diagnostics.find(d => !isDraftWithoutResult(d)) || getLatestDiagnostic();
 
-      const text =
-        latestC1.diagnostico_executivo ||
-        latestC1.gap_principal ||
-        latestC1.root_cause ||
-        latestDiagnostic?.root_cause ||
-        "Ainda não existe uma leitura consolidada para este produto. Gere um diagnóstico para iniciar o acompanhamento histórico.";
+  if (!latestDiagnostic) {
+    document.getElementById("currentInsight").textContent =
+      "Ainda não existe uma leitura consolidada para este produto. Gere um diagnóstico para iniciar o acompanhamento histórico.";
+    return;
+  }
 
-      document.getElementById("currentInsight").textContent = text;
-    }
+  const preferredRow = getBrainPriorityRow(latestDiagnostic.id);
+  const result = preferredRow?.result_data || {};
+
+  const text =
+    result.causa_raiz_consolidada ||
+    result.resumo_cliente ||
+    result.leitura_cruzada ||
+    result.diagnostico_executivo ||
+    result.dinamica_mercado ||
+    result.problema_principal ||
+    result.gap_principal ||
+    result.root_cause ||
+    latestDiagnostic?.root_cause ||
+    "Ainda não existe uma leitura consolidada para este produto. Gere um diagnóstico para iniciar o acompanhamento histórico.";
+
+  document.getElementById("currentInsight").textContent = text;
+}
 
     function renderBrainCards() {
       const latestDiagnostic = getLatestDiagnostic();
@@ -919,9 +1015,11 @@
       const historyList = document.getElementById("historyList");
       const historyCount = document.getElementById("historyCount");
 
-      historyCount.textContent = `${diagnostics.length} ${diagnostics.length === 1 ? "registro" : "registros"}`;
+      const visibleDiagnostics = diagnostics.filter(d => !isDraftWithoutResult(d));
 
-      if (!diagnostics.length) {
+historyCount.textContent = `${visibleDiagnostics.length} ${visibleDiagnostics.length === 1 ? "registro" : "registros"}`;
+
+if (!visibleDiagnostics.length) {
         historyList.innerHTML = `
           <div class="empty-box">
             Nenhum diagnóstico encontrado para este produto.
@@ -930,21 +1028,26 @@
         return;
       }
 
-      historyList.innerHTML = diagnostics.map(d => {
-        const score = getScoreFromDiagnostic(d);
-        const c1Row = brainResults.find(row =>
-          row.diagnostic_id === d.id &&
-          String(row.brain_code || "").toLowerCase() === "c1"
-        );
+      historyList.innerHTML = visibleDiagnostics.map(d => {
+       const score = getScoreFromDiagnostic(d);
+const preferredRow = getBrainPriorityRow(d.id);
+const result = preferredRow?.result_data || {};
 
-        const result = c1Row?.result_data || {};
+const title =
+  result.causa_raiz_consolidada ||
+  result.root_cause ||
+  d.root_cause ||
+  result.dinamica_mercado ||
+  result.problema_principal ||
+  d.category ||
+  "Diagnóstico do produto";
 
-        const title = result.root_cause || d.root_cause || d.category || "Diagnóstico do produto";
-        const summary =
-          result.gap_principal ||
-          result.diagnostico_executivo ||
-          "Diagnóstico salvo para este produto.";
-
+const summary =
+  result.resumo_cliente ||
+  result.leitura_cruzada ||
+  result.diagnostico_executivo ||
+  result.gap_principal ||
+  "Diagnóstico salvo para este produto.";
         return `
           <div class="history-row">
             <div>
@@ -972,14 +1075,16 @@
     function renderChart() {
       const chart = document.getElementById("scoreChart");
 
-      const chronological = [...diagnostics].reverse();
+      const chronological = [...diagnostics]
+  .filter(d => !isDraftWithoutResult(d))
+  .reverse();
       const scores = chronological
         .map(d => ({
           id: d.id,
           date: d.created_at,
           score: getScoreFromDiagnostic(d)
         }))
-        .filter(item => Number.isFinite(item.score));
+        .filter(item => Number.isFinite(item.score) && item.score > 0);
 
       if (!scores.length) {
         chart.innerHTML = `
