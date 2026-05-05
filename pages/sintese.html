@@ -183,11 +183,11 @@
         Cruzamento dos três cérebros: performance, página e mercado. A síntese identifica a causa raiz consolidada, a gravidade, os gaps principais e a ordem correta de ação.
       </p>
 <div class="actions-row">
-  <button class="btn-secondary" onclick="location.href='./dashboard.html'">
-    Voltar para Dashboard
+  <button class="btn-secondary" onclick="voltarParaProdutoOuDashboard()">
+    Voltar ao produto
   </button>
 
-  <button class="btn-secondary" onclick="location.href='./mercado.html'">
+  <button class="btn-secondary" onclick="irParaCerebro3()">
     Voltar ao Cérebro 3
   </button>
 
@@ -215,7 +215,28 @@
 
     await requireAuth();
 
-    const msg = document.getElementById("msg");
+const urlParams = new URLSearchParams(window.location.search);
+
+const productIdFromUrl = urlParams.get("product_id");
+const diagnosticIdFromUrl = urlParams.get("diagnostic_id");
+
+if (productIdFromUrl) {
+  localStorage.setItem("nx_product_id", productIdFromUrl);
+}
+
+if (diagnosticIdFromUrl) {
+  localStorage.setItem("nx_diagnostic_id", diagnosticIdFromUrl);
+}
+
+const currentProductId =
+  productIdFromUrl ||
+  localStorage.getItem("nx_product_id");
+
+const currentDiagnosticId =
+  diagnosticIdFromUrl ||
+  localStorage.getItem("nx_diagnostic_id");
+
+const msg = document.getElementById("msg");
     const contextArea = document.getElementById("contextArea");
     const resultArea = document.getElementById("resultArea");
 
@@ -246,17 +267,17 @@
           </p>
 
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;">
-            <button class="btn-secondary" onclick="location.href='./diagnostico.html'">
-              Ir para Cérebro 1
-            </button>
+           <button class="btn-secondary" onclick="irParaCerebro1()">
+  Ir para Cérebro 1
+</button>
 
-            <button class="btn-secondary" onclick="location.href='./pagina.html'">
-              Ir para Cérebro 2
-            </button>
+<button class="btn-secondary" onclick="irParaCerebro2()">
+  Ir para Cérebro 2
+</button>
 
-            <button class="btn-primary" onclick="location.href='./mercado.html'">
-              Ir para Cérebro 3
-            </button>
+<button class="btn-primary" onclick="irParaCerebro3()">
+  Ir para Cérebro 3
+</button>
           </div>
         `;
         return;
@@ -307,23 +328,27 @@
       const aiResult = await gerarSinteseComIA(C1, C2, C3, baseResult);
       const result = aplicarIASobreSintese(baseResult, aiResult);
 
-      const fullResult = {
-        ...result,
-        diagnostic_id: diagnosticId,
-        source: {
-          c1: C1,
-          c2: C2,
-          c3: C3
-        },
-        ts: new Date().toISOString()
-      };
+     const fullResult = {
+  ...result,
+  diagnostic_id: diagnosticId,
+  product_id: currentProductId || null,
+  source: {
+    c1: C1,
+    c2: C2,
+    c3: C3
+  },
+  ts: new Date().toISOString()
+};
 
       localStorage.setItem("nx_synth", JSON.stringify(fullResult));
 
       try {
         await updateDiagnostic(diagnosticId, {
-          status: result.ia_usada ? "synthesis_ai_completed" : "synthesis_completed"
-        });
+  status: result.ia_usada ? "synthesis_ai_completed" : "synthesis_completed",
+  product_id: currentProductId || null,
+  final_score: result.score_final,
+  root_cause: result.causa_raiz_consolidada || result.causa_raiz || null
+});
 
         await saveBrainResult({
           diagnosticId,
@@ -649,6 +674,42 @@ Retorne exatamente este JSON:
       };
     }
 
+    window.irParaCerebro1 = function () {
+  const productId = currentProductId || localStorage.getItem("nx_product_id");
+  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
+
+  window.location.href =
+    `./diagnostico.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
+};
+
+window.irParaCerebro2 = function () {
+  const productId = currentProductId || localStorage.getItem("nx_product_id");
+  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
+
+  window.location.href =
+    `./pagina.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
+};
+
+window.irParaCerebro3 = function () {
+  const productId = currentProductId || localStorage.getItem("nx_product_id");
+  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
+
+  window.location.href =
+    `./mercado.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
+};
+
+window.voltarParaProdutoOuDashboard = function () {
+  const productId = currentProductId || localStorage.getItem("nx_product_id");
+  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
+
+  if (productId) {
+    window.location.href =
+      `./produto.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
+    return;
+  }
+
+  window.location.href = "./dashboard.html";
+};
     function limparTextoIA(texto) {
       const value = String(texto || "").trim();
 
@@ -682,7 +743,11 @@ window.abrirRelatorio = function () {
     return;
   }
 
-  location.href = "./relatorio.html";
+  const productId = currentProductId || localStorage.getItem("nx_product_id");
+  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
+
+  location.href =
+    `./relatorio.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
 };
     function limparLeituraExecutivaIA(value) {
   if (!value) return "";
@@ -879,14 +944,18 @@ window.abrirRelatorio = function () {
         </div>
 
         <div class="actions-row">
-          <button class="btn-secondary" onclick="location.href='./mercado.html'">
-            Voltar ao Cérebro 3
-          </button>
+  <button class="btn-secondary" onclick="irParaCerebro3()">
+    Voltar ao Cérebro 3
+  </button>
 
-          <button class="btn-primary" onclick="location.href='./relatorio.html'">
-            Ir para Relatório
-          </button>
-        </div>
+  <button class="btn-secondary" onclick="voltarParaProdutoOuDashboard()">
+    Voltar ao produto
+  </button>
+
+  <button class="btn-primary" onclick="abrirRelatorio()">
+    Ir para Relatório
+  </button>
+</div>
       `;
 
       resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
