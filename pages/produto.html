@@ -885,34 +885,36 @@
       setBrainCard("c1", "brainC1");
       setBrainCard("c2", "brainC2");
       setBrainCard("c3", "brainC3");
-      setBrainCard("sintese", "brainSynth", ["sintese", "synthesis", "final"]);
+      setBrainCard("sintese", "brainSynth", ["synth", "sintese", "síntese", "synthesis", "final"]);
     }
 
     function setBrainCard(code, elementId, acceptedCodes = [code]) {
-      const normalizedCodes = acceptedCodes.map(c => String(c).toLowerCase());
+  const normalizedCodes = acceptedCodes.map(c => String(c).toLowerCase());
 
-      const row = brainResults.find(item =>
-        item.diagnostic_id === currentDiagnosticId &&
-        normalizedCodes.includes(String(item.brain_code || "").toLowerCase())
-      ) || brainResults.find(item =>
-        normalizedCodes.includes(String(item.brain_code || "").toLowerCase())
-      );
+  const row = brainResults.find(item =>
+    item.diagnostic_id === currentDiagnosticId &&
+    normalizedCodes.includes(String(item.brain_code || "").toLowerCase())
+  ) || brainResults.find(item =>
+    normalizedCodes.includes(String(item.brain_code || "").toLowerCase())
+  );
 
-      if (!row) return;
+  if (!row) return;
 
-      const result = row.result_data || {};
+  const result = row.result_data || {};
 
-      const summary =
-        result.root_cause ||
-        result.gap_principal ||
-        result.diagnostico_executivo ||
-        result.resumo_executivo ||
-        "Resultado salvo para este produto.";
+  const summary =
+    result.causa_raiz_consolidada ||
+    result.resumo_cliente ||
+    result.diagnostico_executivo ||
+    result.leitura_cruzada ||
+    result.root_cause ||
+    result.gap_principal ||
+    result.resumo_executivo ||
+    "Resultado salvo para este produto.";
 
-      document.getElementById(elementId).textContent =
-        String(summary).slice(0, 170) + (String(summary).length > 170 ? "..." : "");
-    }
-
+  document.getElementById(elementId).textContent =
+    String(summary).slice(0, 170) + (String(summary).length > 170 ? "..." : "");
+}
     function renderHistory() {
       const historyList = document.getElementById("historyList");
       const historyCount = document.getElementById("historyCount");
