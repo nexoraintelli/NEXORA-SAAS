@@ -982,6 +982,45 @@
         </div>
       </section>
 
+<section class="panel" id="planPanel">
+  <div class="section-head">
+    <div>
+      <h2>Plano e créditos</h2>
+      <p style="color:var(--nx-muted);font-size:13px;margin-top:6px;">
+        Acompanhe o plano ativo, diagnósticos disponíveis e limites de uso da Nexora.
+      </p>
+    </div>
+
+    <span class="status-pill status-done" id="planStatus">Carregando</span>
+  </div>
+
+  <div class="overview-panel">
+    <div class="overview-card">
+      <p>Plano atual</p>
+      <strong id="planName">-</strong>
+    </div>
+
+    <div class="overview-card">
+      <p>Diagnósticos disponíveis</p>
+      <strong id="planRemainingDiagnostics">-</strong>
+    </div>
+
+    <div class="overview-card">
+      <p>Uso no período</p>
+      <strong id="planUsage">-</strong>
+    </div>
+
+    <div class="overview-card">
+      <p>Produtos permitidos</p>
+      <strong id="planProductLimit">-</strong>
+    </div>
+  </div>
+
+  <p class="overview-note" id="planNote">
+    O uso de créditos será contabilizado quando um diagnóstico completo for iniciado.
+  </p>
+</section>
+      
       <section class="panel flow-panel">
         <div class="section-head">
           <h2>Fluxo Nexora</h2>
@@ -1329,16 +1368,17 @@
   </div>
 </div>
   <script type="module">
-    import { sb } from "../js/supabaseClient.js";
+   import { sb } from "../js/supabaseClient.js";
 import { requireAuth, logout } from "../js/auth.js";
 import { createDiagnostic } from "../js/diagnostics.js";
 import { createProduct, listProducts } from "../js/product.js";
+import { getCurrentUserPlan, getRemainingDiagnostics, formatPlanName } from "../js/plans.js";
 
     let currentUserId = null;
 
     const user = await requireAuth();
 
-    if (user) {
+   if (user) {
   currentUserId = user.id;
   document.getElementById("userEmail").textContent = user.email;
 
@@ -1347,10 +1387,68 @@ import { createProduct, listProducts } from "../js/product.js";
     settingsEmail.textContent = user.email || "-";
   }
 
+  loadUserPlan();
   loadDiagnostics(user.id);
   loadProducts();
 }
 
+async function loadUserPlan() {
+  try {
+    const plan = await getCurrentUserPlan();
+    const remaining = getRemainingDiagnostics(plan);
+
+    const planNameEl = document.getElementById("planName");
+    const remainingEl = document.getElementById("planRemainingDiagnostics");
+    const usageEl = document.getElementById("planUsage");
+    const productLimitEl = document.getElementById("planProductLimit");
+    const statusEl = document.getElementById("planStatus");
+    const noteEl = document.getElementById("planNote");
+
+    const isUnlimited = plan.is_admin || plan.unlimited_access;
+
+    if (planNameEl) {
+      planNameEl.textContent = formatPlanName(plan.plan_name);
+    }
+
+    if (remainingEl) {
+      remainingEl.textContent = isUnlimited ? "Ilimitado" : remaining;
+    }
+
+    if (usageEl) {
+      usageEl.textContent = isUnlimited
+        ? "Livre"
+        : `${plan.diagnostics_used || 0}/${plan.diagnostic_limit || 0}`;
+    }
+
+    if (productLimitEl) {
+      productLimitEl.textContent = isUnlimited
+        ? "Ilimitado"
+        : plan.product_limit || 0;
+    }
+
+    if (statusEl) {
+      statusEl.textContent = plan.plan_status === "active" ? "Ativo" : plan.plan_status || "Indefinido";
+      statusEl.className = plan.plan_status === "active"
+        ? "status-pill status-done"
+        : "status-pill status-progress";
+    }
+
+    if (noteEl) {
+      noteEl.textContent = isUnlimited
+        ? "Sua conta possui acesso ilimitado para desenvolvimento e administração da Nexora."
+        : "Cada diagnóstico completo consome 1 crédito quando o Cérebro 1 é gerado com sucesso.";
+    }
+
+  } catch (error) {
+    console.error("Erro ao carregar plano do usuário:", error);
+
+    const noteEl = document.getElementById("planNote");
+    if (noteEl) {
+      noteEl.textContent = "Não foi possível carregar os dados do plano.";
+    }
+  }
+}
+    
 async function loadProducts() {
   const el = document.getElementById("productsList");
 
