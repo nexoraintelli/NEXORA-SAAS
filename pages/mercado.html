@@ -728,12 +728,15 @@ document.querySelectorAll(".option-group").forEach(group => {
       await gerarAnaliseMercado();
     };
 
-    window.prevStep = function () {
+   window.prevStep = function () {
   if (currentStep > 0) {
     currentStep--;
     renderStep();
     return;
   }
+
+  irParaCerebro2();
+};
 
   const productId = currentProductId || localStorage.getItem("nx_product_id");
   const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
@@ -1029,10 +1032,14 @@ ${renderCompetitiveQuadrant(result)}
   <button class="btn-secondary" onclick="voltarParaProdutoOuDashboard()">
     Voltar ao produto
   </button>
-
+  <button class="btn-secondary" onclick="voltarParaProdutoOuDashboard()">
+    Voltar ao produto
+  </button>
   <button class="btn-secondary" onclick="irParaCerebro2()">
     Voltar ao Cérebro 2
   </button>
+
+  
 
   <button class="btn-secondary" onclick="aprofundarResultadoC3ComIA()">
     ${result.ia_usada ? "Aprofundar novamente com IA" : "Aprofundar com IA"}
