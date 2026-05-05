@@ -369,19 +369,23 @@
           </p>
         </div>
 
-        <div class="no-print">
-          <button class="btn-secondary" onclick="location.href='./dashboard.html'">
-            Voltar para Dashboard
-          </button>
+       <div class="no-print">
+  <button class="btn-secondary" onclick="voltarAoProduto()">
+    Voltar ao produto
+  </button>
 
-          <button class="btn-secondary" onclick="location.href='./sintese.html'">
-            Voltar para Síntese
-          </button>
+  <button class="btn-secondary" onclick="voltarParaSintese()">
+    Voltar para Síntese
+  </button>
 
-          <button class="btn-primary" onclick="window.print()">
-            Gerar PDF
-          </button>
-        </div>
+  <button class="btn-secondary" onclick="location.href='./dashboard.html'">
+    Voltar para Dashboard
+  </button>
+
+  <button class="btn-primary" onclick="window.print()">
+    Gerar PDF
+  </button>
+</div>
       </div>
 
       <section class="report-cover">
@@ -466,7 +470,28 @@
   </div>
 
   <script>
-    const synth = JSON.parse(localStorage.getItem("nx_synth") || "null");
+    const urlParams = new URLSearchParams(window.location.search);
+
+const productIdFromUrl = urlParams.get("product_id");
+const diagnosticIdFromUrl = urlParams.get("diagnostic_id");
+
+if (productIdFromUrl) {
+  localStorage.setItem("nx_product_id", productIdFromUrl);
+}
+
+if (diagnosticIdFromUrl) {
+  localStorage.setItem("nx_diagnostic_id", diagnosticIdFromUrl);
+}
+
+const currentProductId =
+  productIdFromUrl ||
+  localStorage.getItem("nx_product_id");
+
+const currentDiagnosticId =
+  diagnosticIdFromUrl ||
+  localStorage.getItem("nx_diagnostic_id");
+
+const synth = JSON.parse(localStorage.getItem("nx_synth") || "null");
 
     if (!synth) {
       document.body.innerHTML = `
@@ -476,16 +501,36 @@
             <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
               Gere a Síntese Final antes de abrir o relatório.
             </p>
-            <button class="btn-primary" style="margin-top:20px;" onclick="location.href='./sintese.html'">
-              Voltar para Síntese
-            </button>
+            <button class="btn-primary" style="margin-top:20px;" onclick="voltarParaSintese()">
+  Voltar para Síntese
+</button>
           </section>
         </main>
       `;
     } else {
       renderReport(synth);
     }
+window.voltarAoProduto = function () {
+  const productId = currentProductId || localStorage.getItem("nx_product_id");
+  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
 
+  if (productId) {
+    window.location.href =
+      `./produto.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
+    return;
+  }
+
+  window.location.href = "./dashboard.html";
+};
+
+window.voltarParaSintese = function () {
+  const productId = currentProductId || localStorage.getItem("nx_product_id");
+  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
+
+  window.location.href =
+    `./sintese.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
+};
+    
     function renderReport(data) {
       document.getElementById("scoreFinal").textContent = data.score_final ?? "-";
       document.getElementById("gravityText").textContent = `Gravidade: ${data.gravidade || "-"}`;
