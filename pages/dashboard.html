@@ -984,15 +984,21 @@
 
 <section class="panel" id="planPanel">
   <div class="section-head">
-    <div>
-      <h2>Plano e créditos</h2>
-      <p style="color:var(--nx-muted);font-size:13px;margin-top:6px;">
-        Acompanhe o plano ativo, diagnósticos disponíveis e limites de uso da Nexora.
-      </p>
-    </div>
-
-    <span class="status-pill status-done" id="planStatus">Carregando</span>
+  <div>
+    <h2>Plano e créditos</h2>
+    <p style="color:var(--nx-muted);font-size:13px;margin-top:6px;">
+      Acompanhe o plano ativo, diagnósticos disponíveis e limites de uso da Nexora.
+    </p>
   </div>
+
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+    <span class="status-pill status-done" id="planStatus">Carregando</span>
+
+    <button class="btn-secondary" onclick="location.href='./planos.html'">
+      Ver planos
+    </button>
+  </div>
+</div>
 
   <div class="overview-panel">
     <div class="overview-card">
