@@ -1263,7 +1263,95 @@ import { createProduct, listProducts } from "../js/product.js";
     if (user) {
   currentUserId = user.id;
   document.getElementById("userEmail").textContent = user.email;
-  async function loadProducts() {
+  loadDiagnostics(user.id);
+  loadProducts();
+}
+
+async function loadProducts() {
+  const el = document.getElementById("productsList");
+
+  if (!el) return;
+
+  try {
+    const products = await listProducts();
+
+    if (!products.length) {
+      el.innerHTML = `
+        <div class="diag-row">
+          <div>
+            <div class="diag-title">Nenhum produto cadastrado ainda</div>
+            <div class="diag-meta">Clique em Adicionar produto para iniciar o acompanhamento.</div>
+          </div>
+
+          <span class="status-pill">Vazio</span>
+
+          <div class="score-badge">-</div>
+
+          <div class="diag-meta">
+            Agora
+          </div>
+
+          <div class="diag-action">
+            <button class="btn-mini" onclick="abrirModalProduto()">
+              Adicionar
+            </button>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    el.innerHTML = products.map(product => {
+      const name =
+        product.product_name ||
+        product.name ||
+        product.asin ||
+        "Produto sem nome";
+
+      const category = product.category || "Categoria não definida";
+      const subcategory = product.subcategory || "Subcategoria não definida";
+      const marketplace = product.marketplace || "Marketplace não definido";
+      const asin = product.asin || "Sem ASIN";
+
+      return `
+        <div class="diag-row">
+          <div>
+            <div class="diag-title">${escapeHtml(name)}</div>
+            <div class="diag-meta">
+              ${escapeHtml(category)} · ${escapeHtml(subcategory)} · ${escapeHtml(marketplace)}
+            </div>
+          </div>
+
+          <span class="status-pill status-progress">
+            Produto
+          </span>
+
+          <div class="score-badge">-</div>
+
+          <div class="diag-meta">
+            ${new Date(product.created_at).toLocaleDateString("pt-BR")}<br>
+            ${escapeHtml(asin)}
+          </div>
+
+          <div class="diag-action">
+            <button class="btn-mini" onclick="abrirProdutoPorId('${escapeHtml(product.id)}')">
+              Abrir produto
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+  } catch (error) {
+    console.error("Erro ao carregar produtos:", error);
+
+    el.innerHTML = `
+      <p style="color:var(--nx-muted);">
+        Não foi possível carregar os produtos cadastrados.
+      </p>
+    `;
+  }
+}
   const el = document.getElementById("productsList");
 
   if (!el) return;
