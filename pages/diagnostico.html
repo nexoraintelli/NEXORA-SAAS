@@ -430,11 +430,27 @@
   </main>
 
   <script type="module">
-    import { requireAuth } from "../js/auth.js";
-    import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
-    import { gerarDiagnosticoBaseC1 } from "../js/cerebro1Engine.js";
+   import { requireAuth } from "../js/auth.js";
+import { sb } from "../js/supabaseClient.js";
+import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
+import { gerarDiagnosticoBaseC1 } from "../js/cerebro1Engine.js";
 
-    await requireAuth();
+const currentUser = await requireAuth();
+
+const urlParams = new URLSearchParams(window.location.search);
+const productIdFromUrl = urlParams.get("product_id");
+const diagnosticIdFromUrl = urlParams.get("diagnostic_id");
+
+if (productIdFromUrl) {
+  localStorage.setItem("nx_product_id", productIdFromUrl);
+}
+
+if (diagnosticIdFromUrl) {
+  localStorage.setItem("nx_diagnostic_id", diagnosticIdFromUrl);
+}
+
+let currentProduct = null;
+let currentProductId = productIdFromUrl || localStorage.getItem("nx_product_id");
 
     const state = {};
     let currentStep = 0;
@@ -842,7 +858,136 @@ const subcategoriasPorCategoria = {
       categorySelect.addEventListener("input", window.atualizarSubcategorias);
       window.atualizarSubcategorias();
     }
+async function carregarProdutoVinculado() {
+  if (!currentUser || !currentProductId) return;
 
+  try {
+    const { data, error } = await sb
+      .from("products")
+      .select("*")
+      .eq("id", currentProductId)
+      .eq("user_id", currentUser.id)
+      .single();
+
+    if (error || !data) {
+      console.warn("Produto vinculado não encontrado:", error);
+      return;
+    }
+
+    currentProduct = data;
+    localStorage.setItem("nx_current_product", JSON.stringify(data));
+
+    preencherCamposComProduto(data);
+  } catch (error) {
+    console.warn("Erro ao carregar produto vinculado:", error);
+  }
+}
+
+function preencherCamposComProduto(product) {
+  const productName =
+    product.product_name ||
+    product.name ||
+    product.asin ||
+    "";
+
+  setInputValue("product", productName);
+
+  preencherCategoria(product.category);
+  preencherSubcategoria(product.subcategory);
+
+  setInputValue("reviews", product.current_reviews);
+  setInputValue("rating", product.current_rating);
+  setInputValue("price", product.current_price);
+
+  preencherFulfillment(product.fulfillment_type);
+
+  if (productName) {
+    msg.textContent = `Produto carregado: ${productName}. Complete as métricas do diagnóstico.`;
+  }
+}
+
+function preencherCategoria(category) {
+  if (!categorySelect || !category) return;
+
+  const categoryValue = encontrarCategoriaCompatível(category);
+
+  if (categoryValue) {
+    categorySelect.value = categoryValue;
+  } else {
+    const option = document.createElement("option");
+    option.value = category;
+    option.textContent = category;
+    categorySelect.appendChild(option);
+    categorySelect.value = category;
+  }
+
+  window.atualizarSubcategorias();
+}
+
+function preencherSubcategoria(subcategory) {
+  if (!subcategorySelect || !subcategory) return;
+
+  const exists = Array.from(subcategorySelect.options)
+    .some(option => normalizarTexto(option.value) === normalizarTexto(subcategory));
+
+  if (!exists) {
+    const option = document.createElement("option");
+    option.value = subcategory;
+    option.textContent = subcategory;
+    subcategorySelect.appendChild(option);
+  }
+
+  subcategorySelect.value = subcategory;
+}
+
+function encontrarCategoriaCompatível(category) {
+  const alvo = normalizarTexto(category);
+
+  const option = Array.from(categorySelect.options)
+    .find(opt => normalizarTexto(opt.value || opt.textContent) === alvo);
+
+  return option ? option.value : "";
+}
+
+function preencherFulfillment(value) {
+  if (!value) return;
+
+  const normalized = normalizarTexto(value);
+
+  const map = {
+    "fba": "FBA",
+    "fbm": "FBM",
+    "dba": "DBA"
+  };
+
+  const mapped = map[normalized] || value;
+
+  ativarOpcao("fulfillment", mapped);
+}
+
+function ativarOpcao(groupName, value) {
+  const group = document.querySelector(`.option-group[data-group="${groupName}"]`);
+
+  if (!group || !value) return;
+
+  const target = Array.from(group.querySelectorAll(".option-btn"))
+    .find(btn => normalizarTexto(btn.dataset.value) === normalizarTexto(value));
+
+  if (!target) return;
+
+  group.querySelectorAll(".option-btn").forEach(btn => btn.classList.remove("active"));
+  target.classList.add("active");
+  state[groupName] = target.dataset.value;
+}
+
+function setInputValue(id, value) {
+  const el = document.getElementById(id);
+
+  if (!el) return;
+  if (value === undefined || value === null || value === "") return;
+
+  el.value = value;
+}
     function renderStep() {
       steps.forEach((s, i) => s.classList.toggle("active", i === currentStep));
       nextBtn.textContent = currentStep === steps.length - 1 ? "Gerar diagnóstico" : "Continuar";
@@ -855,7 +1000,9 @@ const subcategoriasPorCategoria = {
 
       if (currentStep < steps.length - 1) {
         currentStep++;
-        renderStep();
+        
+      await carregarProdutoVinculado();
+renderStep();
         return;
       }
 
@@ -972,27 +1119,30 @@ const subcategoriasPorCategoria = {
       };
 
       const fullResult = {
-        ...data,
-        ...result,
-        benchmark,
-        bm: benchmark,
-        diagnostic_id: diagnosticId,
-        ts: new Date().toISOString()
-      };
+  ...data,
+  ...result,
+  benchmark,
+  bm: benchmark,
+  diagnostic_id: diagnosticId,
+  product_id: currentProductId || null,
+  product_record: currentProduct || null,
+  ts: new Date().toISOString()
+};
 
       localStorage.setItem("nx_c1", JSON.stringify(fullResult));
 
       await updateDiagnostic(diagnosticId, {
-        status: "c1_completed",
-        category: data.category,
-        subcategory: data.subcategory,
-        ctr: data.ctr,
-        cvr: data.cvr,
-        acos: data.acos,
-        tacos: data.tacos,
-        root_cause: result.root_cause,
-        final_score: result.score_geral
-      });
+  status: "c1_completed",
+  product_id: currentProductId || null,
+  category: data.category,
+  subcategory: data.subcategory,
+  ctr: data.ctr,
+  cvr: data.cvr,
+  acos: data.acos,
+  tacos: data.tacos,
+  root_cause: result.root_cause,
+  final_score: result.score_geral
+});
 
       await saveBrainResult({
         diagnosticId,
@@ -1359,15 +1509,21 @@ ${result.ia_usada && result.leitura_por_pilar_ia ? `
             ${result.ia_usada ? "Aprofundar novamente com IA" : "Aprofundar com IA"}
           </button>
 
-          <button class="btn-primary" onclick="location.href='./pagina.html'">
-            Ir para Cérebro 2
-          </button>
+         <button class="btn-primary" onclick="irParaCerebro2()">
+  Ir para Cérebro 2
+</button>
         </div>
       `;
 
       resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+window.irParaCerebro2 = function () {
+  const diagnosticId = getDiagnosticId();
+  const productId = currentProductId || localStorage.getItem("nx_product_id");
 
+  window.location.href =
+    `./pagina.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
+};
     window.aprofundarResultadoComIA = async function () {
       const raw = localStorage.getItem("nx_c1");
 
