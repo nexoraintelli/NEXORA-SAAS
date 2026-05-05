@@ -587,9 +587,10 @@
   </main>
 
   <script type="module">
-    import { requireAuth } from "../js/auth.js";
-    import { sb } from "../js/supabaseClient.js";
-    import { createDiagnostic } from "../js/diagnostics.js";
+   import { requireAuth } from "../js/auth.js";
+import { sb } from "../js/supabaseClient.js";
+import { createDiagnostic } from "../js/diagnostics.js";
+import { canCreateDiagnostic } from "../js/plans.js";
 
     const notice = document.getElementById("notice");
     const loadingText = document.getElementById("loadingText");
@@ -1128,36 +1129,47 @@ const summary =
       `;
     }
 
-    window.novoDiagnosticoProduto = async function () {
-      if (!currentProductId) {
-        alert("Nenhum produto ativo encontrado.");
-        return;
-      }
+   window.novoDiagnosticoProduto = async function () {
+  if (!currentProductId) {
+    alert("Nenhum produto ativo encontrado.");
+    return;
+  }
 
-      try {
-        const diagnostic = await createDiagnostic({
-          productId: currentProductId
-        });
+  try {
+    const permission = await canCreateDiagnostic();
 
-        localStorage.setItem("nx_diagnostic_id", diagnostic.id);
-        localStorage.setItem("nx_product_id", currentProductId);
+    if (!permission.allowed) {
+      const message = encodeURIComponent(
+        permission.reason || "Você atingiu o limite de diagnósticos do seu plano."
+      );
 
-        [
-          "nx_c1",
-          "nx_c2",
-          "nx_c3",
-          "nx_synth",
-          "nexora_sintese_result",
-          "nexora_relatorio_mapeado"
-        ].forEach(k => localStorage.removeItem(k));
+      window.location.href = `./planos.html?reason=${message}`;
+      return;
+    }
 
-        window.location.href =
-          `./diagnostico.html?product_id=${encodeURIComponent(currentProductId)}&diagnostic_id=${encodeURIComponent(diagnostic.id)}`;
-      } catch (error) {
-        console.error("Erro ao criar novo diagnóstico do produto:", error);
-        alert("Não foi possível criar um novo diagnóstico para este produto.");
-      }
-    };
+    const diagnostic = await createDiagnostic({
+      productId: currentProductId
+    });
+
+    localStorage.setItem("nx_diagnostic_id", diagnostic.id);
+    localStorage.setItem("nx_product_id", currentProductId);
+
+    [
+      "nx_c1",
+      "nx_c2",
+      "nx_c3",
+      "nx_synth",
+      "nexora_sintese_result",
+      "nexora_relatorio_mapeado"
+    ].forEach(k => localStorage.removeItem(k));
+
+    window.location.href =
+      `./diagnostico.html?product_id=${encodeURIComponent(currentProductId)}&diagnostic_id=${encodeURIComponent(diagnostic.id)}`;
+  } catch (error) {
+    console.error("Erro ao criar novo diagnóstico do produto:", error);
+    alert("Não foi possível criar um novo diagnóstico para este produto.");
+  }
+};
 
     window.abrirDiagnosticoHistorico = function (diagnosticId) {
       localStorage.setItem("nx_diagnostic_id", diagnosticId);
