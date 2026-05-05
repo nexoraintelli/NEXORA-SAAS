@@ -430,10 +430,11 @@
   </main>
 
   <script type="module">
-   import { requireAuth } from "../js/auth.js";
+  import { requireAuth } from "../js/auth.js";
 import { sb } from "../js/supabaseClient.js";
 import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
 import { gerarDiagnosticoBaseC1 } from "../js/cerebro1Engine.js";
+import { incrementDiagnosticUsage } from "../js/plans.js";
 
 const currentUser = await requireAuth();
 
@@ -1082,7 +1083,9 @@ renderStep();
 
       msg.textContent = "Gerando análise profunda do Cérebro 1...";
 
-      const data = {
+const jaTinhaC1 = await diagnosticoJaTemC1(diagnosticId);
+
+const data = {
         category: v("category"),
         subcategory: v("subcategory"),
         product: v("product"),
@@ -1157,15 +1160,22 @@ renderStep();
 });
 
       await saveBrainResult({
-        diagnosticId,
-        brainCode: "c1",
-        brainName: "Cérebro 1 - Diagnóstico de Performance",
-        score: result.score_geral,
-        resultData: fullResult
-      });
+  diagnosticId,
+  brainCode: "c1",
+  brainName: "Cérebro 1 - Diagnóstico de Performance",
+  score: result.score_geral,
+  resultData: fullResult
+});
 
-      renderResult(fullResult);
-      msg.textContent = "Diagnóstico salvo com sucesso.";
+if (!jaTinhaC1) {
+  await incrementDiagnosticUsage();
+}
+
+renderResult(fullResult);
+
+msg.textContent = jaTinhaC1
+  ? "Diagnóstico atualizado com sucesso. Nenhum crédito adicional foi consumido."
+  : "Diagnóstico salvo com sucesso. 1 crédito foi consumido.";
     }
 
     async function aprofundarComIA(data, benchmark, baseResult) {
@@ -1643,6 +1653,24 @@ window.irParaCerebro2 = function () {
 
       msg.textContent = "Análise aprofundada com IA aplicada.";
     };
+async function diagnosticoJaTemC1(diagnosticId) {
+  if (!diagnosticId) return false;
+
+  const { data, error } = await sb
+    .from("brain_results")
+    .select("id")
+    .eq("diagnostic_id", diagnosticId)
+    .eq("brain_code", "c1")
+    .limit(1);
+
+  if (error) {
+    console.warn("Não foi possível verificar C1 existente:", error);
+    return false;
+  }
+
+  return Array.isArray(data) && data.length > 0;
+}
+    
 function smallTextCard(title, text) {
   return `
     <div class="metric-card">
