@@ -1372,8 +1372,12 @@
 import { requireAuth, logout } from "../js/auth.js";
 import { createDiagnostic } from "../js/diagnostics.js";
 import { createProduct, listProducts } from "../js/product.js";
-import { getCurrentUserPlan, getRemainingDiagnostics, formatPlanName } from "../js/plans.js";
-
+import {
+  getCurrentUserPlan,
+  getRemainingDiagnostics,
+  formatPlanName,
+  canCreateDiagnostic
+} from "../js/plans.js";
     let currentUserId = null;
 
     const user = await requireAuth();
@@ -1565,21 +1569,43 @@ window.abrirModalClienteEmBreve = function () {
   alert("A área de clientes será ativada em uma próxima etapa. Por enquanto, os produtos ficam vinculados diretamente ao usuário logado.");
 };
     window.novoDiagnostico = async function () {
-      [
-        "nx_c1",
-        "nx_c2",
-        "nx_c3",
-        "nx_synth",
-        "nexora_sintese_result",
-        "nexora_relatorio_mapeado"
-      ].forEach(k => localStorage.removeItem(k));
+  try {
+    const permission = await canCreateDiagnostic();
 
-      const diag = await createDiagnostic();
+    if (!permission.allowed) {
+      abrirModalUpgrade(permission.reason);
+      return;
+    }
 
-      localStorage.setItem("nx_diagnostic_id", diag.id);
+    [
+      "nx_c1",
+      "nx_c2",
+      "nx_c3",
+      "nx_synth",
+      "nexora_sintese_result",
+      "nexora_relatorio_mapeado"
+    ].forEach(k => localStorage.removeItem(k));
 
-      window.location.href = "./diagnostico.html";
-    };
+    const diag = await createDiagnostic();
+
+    localStorage.setItem("nx_diagnostic_id", diag.id);
+
+    window.location.href =
+      `./diagnostico.html?diagnostic_id=${encodeURIComponent(diag.id)}`;
+  } catch (error) {
+    console.error("Erro ao iniciar novo diagnóstico:", error);
+    alert("Não foi possível iniciar um novo diagnóstico. Verifique seu plano e tente novamente.");
+  }
+};
+    window.abrirModalUpgrade = function (reason) {
+  const message =
+    reason ||
+    "Você atingiu o limite do seu plano.";
+
+  alert(
+    `${message}\n\nPara liberar mais diagnósticos, escolha um plano maior ou fale com a Nexora.`
+  );
+};
 window.abrirRelatorio = function () {
   const synth = localStorage.getItem("nx_synth");
 
