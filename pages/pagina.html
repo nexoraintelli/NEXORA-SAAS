@@ -716,11 +716,28 @@ input[type="file"],
     };
 
     window.prevStep = function () {
-      if (currentStep > 0) {
-        currentStep--;
-        renderStep();
-      }
-    };
+  if (currentStep > 0) {
+    currentStep--;
+    renderStep();
+    return;
+  }
+
+  const productId =
+    new URLSearchParams(window.location.search).get("product_id") ||
+    localStorage.getItem("nx_product_id");
+
+  const diagnosticId =
+    new URLSearchParams(window.location.search).get("diagnostic_id") ||
+    localStorage.getItem("nx_diagnostic_id");
+
+  if (productId) {
+    window.location.href =
+      `./produto.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
+    return;
+  }
+
+  window.location.href = "./dashboard.html";
+};
 
     function validarEtapa(step) {
       if (!C1) {
