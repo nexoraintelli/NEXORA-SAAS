@@ -1608,13 +1608,11 @@ window.abrirModalClienteEmBreve = function () {
   }
 };
     window.abrirModalUpgrade = function (reason) {
-  const message =
-    reason ||
-    "Você atingiu o limite do seu plano.";
-
-  alert(
-    `${message}\n\nPara liberar mais diagnósticos, escolha um plano maior ou fale com a Nexora.`
+  const message = encodeURIComponent(
+    reason || "Você atingiu o limite do seu plano."
   );
+
+  window.location.href = `./planos.html?reason=${message}`;
 };
 window.abrirRelatorio = function () {
   const synth = localStorage.getItem("nx_synth");
