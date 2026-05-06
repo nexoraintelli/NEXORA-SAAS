@@ -312,7 +312,6 @@ async function carregarBrainResultsDoSupabase(diagnosticId) {
     console.warn("Não foi possível reconstruir contexto da síntese:", error);
   }
 }
-
     function renderContext() {
       if (!C1 || !C2 || !C3) {
         contextArea.innerHTML = `
