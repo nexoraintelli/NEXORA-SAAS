@@ -558,10 +558,14 @@ async function initAdmin() {
         alert("Pedido marcado como pago e plano/créditos atualizados com sucesso.");
 
         await carregarAdmin();
-      } catch (error) {
-        console.error("Erro ao marcar pedido como pago:", error);
-        alert("Não foi possível marcar o pedido como pago.");
-      }
+     } catch (error) {
+  console.error("Erro ao marcar pedido como pago:", error);
+
+  alert(
+    error?.message ||
+    "Não foi possível marcar o pedido como pago."
+  );
+}
     };
 
     async function atualizarPedidoComoPago(order) {
@@ -578,22 +582,28 @@ async function initAdmin() {
     }
 
     async function aplicarPedidoNoPlano(order) {
-      const planKey = String(order.plan_name || "").toLowerCase();
-      const planConfig = NEXORA_PLANS[planKey];
+  const planKey = String(order.plan_name || "").toLowerCase();
+  const planConfig = NEXORA_PLANS[planKey];
 
-      if (!planConfig) {
-        throw new Error("Configuração do plano não encontrada.");
-      }
+  if (!planConfig) {
+    throw new Error("Configuração do plano não encontrada.");
+  }
 
-      const existingPlan = await buscarPlanoPorUsuario(order.user_id);
+  const existingPlan = await buscarPlanoPorUsuario(order.user_id);
 
-      if (planConfig.order_type === "credits") {
-        await aplicarCreditoExtra(existingPlan, order, planConfig);
-        return;
-      }
+  if (existingPlan?.is_admin === true || existingPlan?.unlimited_access === true) {
+    throw new Error(
+      "Este pedido pertence a uma conta Admin. O plano admin não pode ser sobrescrito por uma assinatura comum."
+    );
+  }
 
-      await aplicarAssinatura(existingPlan, order, planConfig);
-    }
+  if (planConfig.order_type === "credits") {
+    await aplicarCreditoExtra(existingPlan, order, planConfig);
+    return;
+  }
+
+  await aplicarAssinatura(existingPlan, order, planConfig);
+}
 
     async function buscarPlanoPorUsuario(userId) {
       const { data, error } = await sb
