@@ -100,7 +100,30 @@
       flex-wrap: wrap;
       justify-content: flex-end;
     }
+.btn-primary {
+  background: linear-gradient(135deg, #8b1e1e, #b32626);
+  border: 1px solid rgba(255, 90, 90, 0.35);
+  color: #fff;
+  box-shadow: 0 14px 34px rgba(139, 30, 30, 0.28);
+}
 
+.btn-primary:hover {
+  background: linear-gradient(135deg, #9f2424, #d03434);
+  border-color: rgba(255, 120, 120, 0.48);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.12);
+  color: #fff;
+}
+
+.btn-secondary:hover {
+  background: rgba(139, 30, 30, 0.16);
+  border-color: rgba(179, 38, 38, 0.38);
+  transform: translateY(-1px);
+}
     .current-plan-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
