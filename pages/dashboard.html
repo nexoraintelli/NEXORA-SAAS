@@ -1389,6 +1389,7 @@ import {
   canCreateDiagnostic
 } from "../js/plans.js";
     let currentUserId = null;
+    let currentProducts = [];
 
     const user = await requireAuth();
 
@@ -1470,6 +1471,13 @@ async function loadProducts() {
 
   try {
     const products = await listProducts();
+    currentProducts = products || [];
+
+const clientsProductsCount = document.getElementById("clientsProductsCount");
+
+if (clientsProductsCount) {
+  clientsProductsCount.textContent = currentProducts.length;
+}
 
     if (!products.length) {
       el.innerHTML = `
@@ -1550,6 +1558,59 @@ async function loadProducts() {
 }
 
 window.logoutUser = logout;
+    async function canCreateProductByPlan() {
+  const plan = await getCurrentUserPlan();
+
+  if (!plan) {
+    return {
+      allowed: false,
+      reason: "Plano não encontrado."
+    };
+  }
+
+  if (plan.plan_status !== "active" && plan.plan_status !== "trial") {
+    return {
+      allowed: false,
+      reason: "Seu plano não está ativo."
+    };
+  }
+
+  if (plan.is_admin || plan.unlimited_access) {
+    return {
+      allowed: true,
+      reason: "Acesso ilimitado.",
+      plan
+    };
+  }
+
+  let productsCount = currentProducts.length;
+
+  if (!productsCount) {
+    try {
+      const products = await listProducts();
+      currentProducts = products || [];
+      productsCount = currentProducts.length;
+    } catch (error) {
+      console.warn("Não foi possível contar produtos:", error);
+    }
+  }
+
+  const productLimit = Number(plan.product_limit || 0);
+
+  if (productsCount >= productLimit) {
+    return {
+      allowed: false,
+      reason: `Você atingiu o limite de produtos do seu plano. Seu plano permite ${productLimit} produto(s).`,
+      plan
+    };
+  }
+
+  return {
+    allowed: true,
+    reason: "Produto permitido.",
+    plan
+  };
+}
 
     window.scrollToDiagnostics = function () {
       document.getElementById("diagnosticsPanel")?.scrollIntoView({
@@ -1626,12 +1687,28 @@ window.abrirRelatorio = function () {
   window.location.href = "./relatorio.html";
 };
     window.loadDiagnostics = loadDiagnostics;
-    window.abrirModalProduto = function () {
-  const modal = document.getElementById("productModal");
-  const msg = document.getElementById("productModalMsg");
+   window.abrirModalProduto = async function () {
+  try {
+    const permission = await canCreateProductByPlan();
 
-  if (msg) msg.textContent = "";
-  if (modal) modal.style.display = "grid";
+    if (!permission.allowed) {
+      const message = encodeURIComponent(
+        permission.reason || "Você atingiu o limite de produtos do seu plano."
+      );
+
+      window.location.href = `./planos.html?reason=${message}`;
+      return;
+    }
+
+    const modal = document.getElementById("productModal");
+    const msg = document.getElementById("productModalMsg");
+
+    if (msg) msg.textContent = "";
+    if (modal) modal.style.display = "grid";
+  } catch (error) {
+    console.error("Erro ao verificar limite de produtos:", error);
+    alert("Não foi possível verificar seu plano. Tente novamente.");
+  }
 };
 
 window.fecharModalProduto = function () {
@@ -1658,7 +1735,18 @@ window.salvarProdutoEIniciarDiagnostico = async function () {
   }
 
   try {
-    msg.textContent = "Salvando produto na Nexora...";
+  const productPermission = await canCreateProductByPlan();
+
+  if (!productPermission.allowed) {
+    const message = encodeURIComponent(
+      productPermission.reason || "Você atingiu o limite de produtos do seu plano."
+    );
+
+    window.location.href = `./planos.html?reason=${message}`;
+    return;
+  }
+
+  msg.textContent = "Salvando produto na Nexora...";
 
     const product = await createProduct({
       product_name: productName,
