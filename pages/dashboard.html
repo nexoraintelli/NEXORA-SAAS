@@ -181,10 +181,10 @@
       line-height: 1.5;
     }
 
-    .main {
-      min-width: 0;
-      padding: 28px 34px 34px;
-    }
+.main {
+  min-width: 0;
+  padding: 34px 42px 44px;
+}
 
     .topbar {
       display: flex;
@@ -296,13 +296,12 @@
       line-height: 1.7;
     }
 
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 14px;
-      margin-bottom: 18px;
-    }
-
+   .kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 26px;
+}
     .kpi-card,
     .panel,
     .quick-card,
@@ -392,11 +391,11 @@
       position: relative;
     }
 
-    .flow-card {
-      min-height: 120px;
-      padding: 16px;
-      position: relative;
-    }
+   .flow-card {
+  min-height: 96px;
+  padding: 14px;
+  position: relative;
+}
 
     .flow-step {
       color: var(--nx-red-2);
@@ -412,22 +411,24 @@
     }
 
     .flow-card p {
-      color: var(--nx-muted);
-      font-size: 12px;
-      line-height: 1.55;
-      margin-top: 6px;
-    }
+  color: var(--nx-muted);
+  font-size: 11px;
+  line-height: 1.45;
+  margin-top: 6px;
+}
 
     .lower-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.35fr) minmax(320px, .8fr);
-      gap: 16px;
-    }
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, .8fr);
+  gap: 24px;
+  align-items: start;
+}
 
     .panel {
-      padding: 18px;
-      min-width: 0;
-    }
+  padding: 24px;
+  min-width: 0;
+  margin-bottom: 24px;
+}
 
     .diagnostics-list {
       display: grid;
@@ -877,10 +878,6 @@
   <span class="nav-icon">↺</span> Histórico
 </button>
 
-          <button class="nav-item" onclick="scrollToClients()">
-  <span class="nav-icon">◌</span> Clientes
-</button>
-
          <button class="nav-item" onclick="abrirRelatorio()">
   <span class="nav-icon">▤</span> Relatórios
 </button>
@@ -889,9 +886,6 @@
   <span class="nav-icon">◈</span> Planos
 </button>
 
-<button class="nav-item" onclick="scrollToSettings()">
-  <span class="nav-icon">⚙</span> Configurações
-</button>
         </nav>
       </div>
 
@@ -1091,84 +1085,7 @@
   </div>
 </section>
       
-      <section class="panel" id="clientsPanel">
-  <div class="section-head">
-    <div>
-      <h2>Clientes</h2>
-      <p style="color:var(--nx-muted);font-size:13px;margin-top:6px;">
-        Área para organizar contas, marcas ou sellers vinculados aos produtos analisados.
-      </p>
-    </div>
-
-    <button class="btn-secondary" onclick="abrirModalClienteEmBreve()">
-      + Adicionar cliente
-    </button>
-  </div>
-
-  <div class="overview-panel">
-    <div class="overview-card">
-      <p>Clientes cadastrados</p>
-      <strong>0</strong>
-    </div>
-
-    <div class="overview-card">
-      <p>Produtos vinculados</p>
-      <strong id="clientsProductsCount">-</strong>
-    </div>
-
-    <div class="overview-card">
-      <p>Diagnósticos ativos</p>
-      <strong id="clientsDiagnosticsCount">-</strong>
-    </div>
-
-    <div class="overview-card">
-      <p>Status do módulo</p>
-      <strong>Estrutura</strong>
-    </div>
-  </div>
-
-  <p class="overview-note">
-    Nesta versão, os produtos ficam vinculados diretamente ao usuário logado.
-    Em uma próxima etapa, será possível organizar produtos por cliente, marca, seller ou agência.
-  </p>
-</section>
-      <section class="panel" id="settingsPanel">
-  <div class="section-head">
-    <div>
-      <h2>Configurações</h2>
-      <p style="color:var(--nx-muted);font-size:13px;margin-top:6px;">
-        Preferências da conta, estrutura de diagnóstico e dados do ambiente Nexora.
-      </p>
-    </div>
-  </div>
-
-  <div class="overview-panel">
-    <div class="overview-card">
-      <p>Conta</p>
-      <strong id="settingsUserEmail">-</strong>
-    </div>
-
-    <div class="overview-card">
-      <p>Banco de dados</p>
-      <strong>Supabase</strong>
-    </div>
-
-    <div class="overview-card">
-      <p>Diagnósticos</p>
-      <strong>Ativo</strong>
-    </div>
-
-    <div class="overview-card">
-      <p>IA Nexora</p>
-      <strong>Conectada</strong>
-    </div>
-  </div>
-
-  <p class="overview-note">
-    Esta área poderá receber preferências de relatório, permissões de equipe, dados da empresa,
-    plano contratado e configurações da IA.
-  </p>
-</section>
+      
       <section class="lower-grid">
         <div class="panel" id="diagnosticsPanel">
           <div class="section-head">
@@ -1624,21 +1541,8 @@ window.scrollToProducts = function () {
     block: "start"
   });
 };
-    window.scrollToClients = function () {
-  document.getElementById("clientsPanel")?.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
-};
-window.scrollToSettings = function () {
-  document.getElementById("settingsPanel")?.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
-};
-window.abrirModalClienteEmBreve = function () {
-  alert("A área de clientes será ativada em uma próxima etapa. Por enquanto, os produtos ficam vinculados diretamente ao usuário logado.");
-};
+    
+
     window.novoDiagnostico = async function () {
   try {
     const permission = await canCreateDiagnostic();
