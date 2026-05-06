@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles/global.css">
   <link rel="icon" href="../assets/logo.png">
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root {
@@ -122,7 +124,57 @@
       align-items: stretch;
       width: 100%;
     }
+  .product-info-panel {
+  margin-top: 26px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.025);
+  border-radius: 20px;
+  padding: 20px;
+}
 
+.product-info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.product-info-card {
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.025);
+  border-radius: 14px;
+  padding: 14px;
+  min-width: 0;
+}
+
+.product-info-card p {
+  color: var(--muted);
+  font-size: 11px;
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.product-info-card strong {
+  display: block;
+  font-family: Syne, sans-serif;
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 900px) {
+  .product-info-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .product-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+    
     .score-panel,
     .root-panel {
       border-radius: 20px;
@@ -410,6 +462,31 @@
             <p id="reportDate" style="font-size:13px;margin-top:16px;"></p>
           </div>
         </div>
+        <div class="product-info-panel" id="productInfoPanel">
+  <span class="pill">Produto analisado</span>
+
+  <div class="product-info-grid">
+    <div class="product-info-card">
+      <p>Produto</p>
+      <strong id="reportProductName">-</strong>
+    </div>
+
+    <div class="product-info-card">
+      <p>ASIN / SKU</p>
+      <strong id="reportProductCode">-</strong>
+    </div>
+
+    <div class="product-info-card">
+      <p>Categoria</p>
+      <strong id="reportProductCategory">-</strong>
+    </div>
+
+    <div class="product-info-card">
+      <p>Marketplace</p>
+      <strong id="reportProductMarketplace">-</strong>
+    </div>
+  </div>
+</div>
       </section>
 
       <main class="report-content">
@@ -469,8 +546,11 @@
     </div>
   </div>
 
-  <script>
-    const urlParams = new URLSearchParams(window.location.search);
+ <script type="module">
+   import { requireAuth } from "../js/auth.js";
+   import { sb } from "../js/supabaseClient.js";
+   
+  const urlParams = new URLSearchParams(window.location.search);
 
 const productIdFromUrl = urlParams.get("product_id");
 const diagnosticIdFromUrl = urlParams.get("diagnostic_id");
@@ -492,24 +572,25 @@ const currentDiagnosticId =
   localStorage.getItem("nx_diagnostic_id");
 
 const synth = JSON.parse(localStorage.getItem("nx_synth") || "null");
+   let currentProduct = null;
 
-    if (!synth) {
-      document.body.innerHTML = `
-        <main class="wrap">
-          <section class="card">
-            <h1>Relatório não encontrado</h1>
-            <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
-              Gere a Síntese Final antes de abrir o relatório.
-            </p>
-            <button class="btn-primary" style="margin-top:20px;" onclick="voltarParaSintese()">
-  Voltar para Síntese
-</button>
-          </section>
-        </main>
-      `;
-    } else {
-      renderReport(synth);
-    }
+   if (!synth) {
+  document.body.innerHTML = `
+    <main class="wrap">
+      <section class="card">
+        <h1>Relatório não encontrado</h1>
+        <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
+          Gere a Síntese Final antes de abrir o relatório.
+        </p>
+        <button class="btn-primary" style="margin-top:20px;" onclick="voltarParaSintese()">
+          Voltar para Síntese
+        </button>
+      </section>
+    </main>
+  `;
+} else {
+  await initReport();
+}
 window.voltarAoProduto = function () {
   const productId = currentProductId || localStorage.getItem("nx_product_id");
   const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
@@ -530,7 +611,77 @@ window.voltarParaSintese = function () {
   window.location.href =
     `./sintese.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
 };
-    
+async function initReport() {
+  try {
+    await requireAuth();
+
+    if (currentProductId) {
+      await loadCurrentProduct();
+    }
+
+    renderReport(synth);
+    renderProductInfo();
+  } catch (error) {
+    console.warn("Relatório renderizado sem dados completos do produto:", error);
+
+    renderReport(synth);
+    renderProductInfo();
+  }
+}
+
+async function loadCurrentProduct() {
+  const { data, error } = await sb
+    .from("products")
+    .select("*")
+    .eq("id", currentProductId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("Não foi possível carregar produto do relatório:", error);
+    return;
+  }
+
+  currentProduct = data || null;
+}
+
+function renderProductInfo() {
+  const name =
+    currentProduct?.product_name ||
+    currentProduct?.name ||
+    currentProduct?.asin ||
+    synth?.product_name ||
+    synth?.product ||
+    "Produto não identificado";
+
+  const asin = currentProduct?.asin || "—";
+  const sku = currentProduct?.sku || "—";
+
+  const category =
+    currentProduct?.category ||
+    synth?.category ||
+    "Categoria não identificada";
+
+  const subcategory =
+    currentProduct?.subcategory ||
+    synth?.subcategory ||
+    "Subcategoria não identificada";
+
+  const marketplace =
+    currentProduct?.marketplace ||
+    synth?.marketplace ||
+    "Marketplace não identificado";
+
+  const productNameEl = document.getElementById("reportProductName");
+  const productCodeEl = document.getElementById("reportProductCode");
+  const productCategoryEl = document.getElementById("reportProductCategory");
+  const productMarketplaceEl = document.getElementById("reportProductMarketplace");
+
+  if (productNameEl) productNameEl.textContent = name;
+  if (productCodeEl) productCodeEl.textContent = `ASIN: ${asin} · SKU: ${sku}`;
+  if (productCategoryEl) productCategoryEl.textContent = `${category} · ${subcategory}`;
+  if (productMarketplaceEl) productMarketplaceEl.textContent = marketplace;
+}
+   
     function renderReport(data) {
       document.getElementById("scoreFinal").textContent = data.score_final ?? "-";
       document.getElementById("gravityText").textContent = `Gravidade: ${data.gravidade || "-"}`;
