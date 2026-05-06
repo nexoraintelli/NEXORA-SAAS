@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Nexora · Admin</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/global.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --nx-red: #8b1e1e;
+      --nx-red-2: #b32626;
+      --nx-border: rgba(255,255,255,.11);
+      --nx-muted: #9ca3c7;
+      --nx-text: #f7f7fb;
+      --nx-green: #3ddc97;
+      --nx-yellow: #f0a33a;
+      --nx-danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--nx-text);
+      background:
+        radial-gradient(circle at 16% 15%, rgba(139,30,30,.35), transparent 26%),
+        radial-gradient(circle at 78% 8%, rgba(179,38,38,.22), transparent 26%),
+        linear-gradient(135deg, #07090e 0%, #101115 45%, #1a0000 100%);
+      overflow-x: hidden;
+    }
+
+    .admin-shell {
+      width: min(1240px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 30px 0 46px;
+    }
+
+    .panel,
+    .order-row,
+    .stat-card {
+      border: 1px solid var(--nx-border);
+      background: linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+      border-radius: 22px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.22);
+    }
+
+    .panel {
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    h1, h2, h3 {
+      font-family: Syne, sans-serif;
+      letter-spacing: -.04em;
+    }
+
+    h1 {
+      font-size: clamp(34px, 5vw, 56px);
+      margin: 0;
+      line-height: 1.02;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .section-label {
+      font-family: Syne, sans-serif;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.58);
+      font-size: 11px;
+      margin-bottom: 10px;
+    }
+
+    .muted {
+      color: var(--nx-muted);
+      line-height: 1.7;
+      font-size: 13px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .stat-card {
+      padding: 16px;
+    }
+
+    .stat-card p {
+      color: var(--nx-muted);
+      font-size: 12px;
+      margin: 0;
+    }
+
+    .stat-card strong {
+      display: block;
+      margin-top: 8px;
+      font-family: Syne, sans-serif;
+      font-size: 30px;
+    }
+
+    .orders-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .order-row {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(190px,.7fr) 120px 260px;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .order-row h3 {
+      margin: 0;
+      font-size: 19px;
+    }
+
+    .order-row p {
+      margin: 6px 0 0;
+      color: var(--nx-muted);
+      font-size: 12px;
+      line-height: 1.55;
+      word-break: break-word;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      width: fit-content;
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+    }
+
+    .status-paid {
+      color: #78f0bd;
+      background: rgba(61,220,151,.12);
+      border-color: rgba(61,220,151,.30);
+    }
+
+    .status-pending {
+      color: #ffd28d;
+      background: rgba(240,163,58,.12);
+      border-color: rgba(240,163,58,.30);
+    }
+
+    .status-cancelled,
+    .status-failed {
+      color: #fecaca;
+      background: rgba(239,68,68,.12);
+      border-color: rgba(239,68,68,.30);
+    }
+
+    .small-btn {
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 12px;
+      padding: 10px 12px;
+      color: white;
+      background: rgba(255,255,255,.045);
+      cursor: pointer;
+      font-family: DM Sans, sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .small-btn.primary {
+      background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+      border-color: rgba(139,92,246,.55);
+    }
+
+    .small-btn.danger {
+      background: rgba(239,68,68,.14);
+      border-color: rgba(239,68,68,.35);
+    }
+
+    .admin-note {
+      border: 1px solid rgba(240,163,58,.25);
+      background: rgba(240,163,58,.08);
+      color: #ffd28d;
+      border-radius: 16px;
+      padding: 14px;
+      line-height: 1.6;
+      font-size: 13px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 980px) {
+      .stats-grid,
+      .order-row {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="admin-shell">
+
+    <section class="panel">
+      <div class="topbar">
+        <div>
+          <p class="section-label">Nexora Intelligence · Admin</p>
+          <h1>Painel Admin</h1>
+          <p class="muted">
+            Controle interno para pedidos, planos e ativações manuais da Nexora.
+          </p>
+          <p class="muted" id="adminEmail">Carregando usuário...</p>
+        </div>
+
+        <div class="actions">
+          <button class="btn-secondary" onclick="location.href='./dashboard.html'">
+            Voltar ao Dashboard
+          </button>
+
+          <button class="btn-primary" onclick="carregarAdmin()">
+            Atualizar
+          </button>
+        </div>
+      </div>
+
+      <div class="admin-note">
+        Nesta fase, o Admin permite marcar pedidos como pagos manualmente.
+        Depois, o Mercado Pago/Pagar.me fará essa ativação automaticamente por webhook.
+      </div>
+    </section>
+
+    <section class="panel">
+      <p class="section-label">Resumo</p>
+      <h2>Visão geral</h2>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <p>Pedidos totais</p>
+          <strong id="statOrders">-</strong>
+        </div>
+
+        <div class="stat-card">
+          <p>Pendentes</p>
+          <strong id="statPending">-</strong>
+        </div>
+
+        <div class="stat-card">
+          <p>Pagos</p>
+          <strong id="statPaid">-</strong>
+        </div>
+
+        <div class="stat-card">
+          <p>Planos ativos</p>
+          <strong id="statPlans">-</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="topbar" style="margin-bottom:0;">
+        <div>
+          <p class="section-label">Billing</p>
+          <h2>Pedidos recentes</h2>
+          <p class="muted">
+            Pedidos criados pelos usuários na página de Planos.
+          </p>
+        </div>
+      </div>
+
+      <div class="orders-list" id="ordersList">
+        <div class="order-row">
+          <div>
+            <h3>Carregando pedidos...</h3>
+            <p>Aguarde alguns segundos.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="topbar" style="margin-bottom:0;">
+        <div>
+          <p class="section-label">Usuários</p>
+          <h2>Planos cadastrados</h2>
+          <p class="muted">
+            Lista de planos existentes em user_plans.
+          </p>
+        </div>
+      </div>
+
+      <div class="orders-list" id="plansList">
+        <div class="order-row">
+          <div>
+            <h3>Carregando planos...</h3>
+            <p>Aguarde alguns segundos.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module">
+    import { requireAuth } from "../js/auth.js";
+    import { sb } from "../js/supabaseClient.js";
+    import { getCurrentUserPlan } from "../js/plans.js";
+    import { NEXORA_PLANS, formatCurrencyBRL } from "../js/billing.js";
+
+    let currentUser = null;
+    let adminPlan = null;
+    let orders = [];
+    let plans = [];
+
+    await initAdmin();
+
+    async function initAdmin() {
+      currentUser = await requireAuth();
+
+      if (!currentUser) return;
+
+      document.getElementById("adminEmail").textContent = currentUser.email || currentUser.id;
+
+      adminPlan = await getCurrentUserPlan();
+
+      const isAdmin = adminPlan?.is_admin === true && adminPlan?.unlimited_access === true;
+
+      if (!isAdmin) {
+        alert("Acesso negado. Esta página é exclusiva para administradores da Nexora.");
+        window.location.href = "./dashboard.html";
+        return;
+      }
+
+      await carregarAdmin();
+    }
+
+    window.carregarAdmin = async function () {
+      await Promise.all([
+        carregarPedidos(),
+        carregarPlanos()
+      ]);
+
+      renderStats();
+      renderOrders();
+      renderPlans();
+    };
+
+    async function carregarPedidos() {
+      const { data, error } = await sb
+        .from("payment_orders")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(80);
+
+      if (error) {
+        console.error("Erro ao carregar pedidos:", error);
+        orders = [];
+        return;
+      }
+
+      orders = data || [];
+    }
+
+    async function carregarPlanos() {
+      const { data, error } = await sb
+        .from("user_plans")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(80);
+
+      if (error) {
+        console.error("Erro ao carregar planos:", error);
+        plans = [];
+        return;
+      }
+
+      plans = data || [];
+    }
+
+    function renderStats() {
+      const paid = orders.filter(o => String(o.status).toLowerCase() === "paid").length;
+      const pending = orders.filter(o => String(o.status).toLowerCase() === "pending").length;
+      const activePlans = plans.filter(p => String(p.plan_status).toLowerCase() === "active").length;
+
+      document.getElementById("statOrders").textContent = orders.length;
+      document.getElementById("statPending").textContent = pending;
+      document.getElementById("statPaid").textContent = paid;
+      document.getElementById("statPlans").textContent = activePlans;
+    }
+
+    function renderOrders() {
+      const el = document.getElementById("ordersList");
+
+      if (!orders.length) {
+        el.innerHTML = `
+          <div class="order-row">
+            <div>
+              <h3>Nenhum pedido encontrado</h3>
+              <p>Quando usuários criarem pedidos em Planos, eles aparecerão aqui.</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      el.innerHTML = orders.map(order => {
+        const isPending = String(order.status || "").toLowerCase() === "pending";
+
+        return `
+          <div class="order-row">
+            <div>
+              <h3>${escapeHtml(order.plan_label || order.plan_name || "Pedido Nexora")}</h3>
+              <p>
+                ID pedido: ${escapeHtml(order.id)}<br>
+                User ID: ${escapeHtml(order.user_id)}<br>
+                Criado em ${formatDateTime(order.created_at)}
+              </p>
+            </div>
+
+            <div>
+              <p>Tipo</p>
+              <strong>${escapeHtml(formatOrderType(order.order_type))}</strong>
+              <p>
+                ${Number(order.diagnostics_included || 0)} diagnósticos ·
+                ${Number(order.products_included || 0)} produtos
+              </p>
+            </div>
+
+            <div>
+              <p>Valor</p>
+              <strong>${formatCurrencyBRL(order.amount)}</strong>
+              <br>
+              <span class="status-pill ${getOrderStatusClass(order.status)}">
+                ${escapeHtml(formatOrderStatus(order.status))}
+              </span>
+            </div>
+
+            <div class="actions">
+              ${isPending ? `
+                <button class="small-btn primary" onclick="marcarPedidoPago('${escapeHtml(order.id)}')">
+                  Marcar como pago
+                </button>
+
+                <button class="small-btn danger" onclick="cancelarPedido('${escapeHtml(order.id)}')">
+                  Cancelar
+                </button>
+              ` : `
+                <span class="muted">Nenhuma ação disponível</span>
+              `}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderPlans() {
+      const el = document.getElementById("plansList");
+
+      if (!plans.length) {
+        el.innerHTML = `
+          <div class="order-row">
+            <div>
+              <h3>Nenhum plano encontrado</h3>
+              <p>Usuários com planos aparecerão aqui.</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      el.innerHTML = plans.map(plan => {
+        const isAdmin = plan.is_admin || plan.unlimited_access;
+
+        return `
+          <div class="order-row">
+            <div>
+              <h3>${escapeHtml(formatPlanLabel(plan.plan_name))}</h3>
+              <p>
+                User ID: ${escapeHtml(plan.user_id)}<br>
+                Criado em ${formatDateTime(plan.created_at)}
+              </p>
+            </div>
+
+            <div>
+              <p>Status</p>
+              <strong>${escapeHtml(plan.plan_status || "-")}</strong>
+              <p>${isAdmin ? "Acesso ilimitado" : "Acesso limitado por plano"}</p>
+            </div>
+
+            <div>
+              <p>Uso</p>
+              <strong>${isAdmin ? "Livre" : `${plan.diagnostics_used || 0}/${plan.diagnostic_limit || 0}`}</strong>
+              <p>Produtos: ${isAdmin ? "Ilimitado" : plan.product_limit || 0}</p>
+            </div>
+
+            <div class="actions">
+              <button class="small-btn" onclick="copiarTexto('${escapeHtml(plan.user_id)}')">
+                Copiar User ID
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    window.marcarPedidoPago = async function (orderId) {
+      const order = orders.find(o => o.id === orderId);
+
+      if (!order) {
+        alert("Pedido não encontrado.");
+        return;
+      }
+
+      const confirmacao = confirm(
+        `Marcar o pedido ${order.plan_label || order.plan_name} como pago e ativar o plano/créditos deste usuário?`
+      );
+
+      if (!confirmacao) return;
+
+      try {
+        await atualizarPedidoComoPago(order);
+        await aplicarPedidoNoPlano(order);
+
+        alert("Pedido marcado como pago e plano/créditos atualizados com sucesso.");
+
+        await carregarAdmin();
+      } catch (error) {
+        console.error("Erro ao marcar pedido como pago:", error);
+        alert("Não foi possível marcar o pedido como pago.");
+      }
+    };
+
+    async function atualizarPedidoComoPago(order) {
+      const { error } = await sb
+        .from("payment_orders")
+        .update({
+          status: "paid",
+          paid_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", order.id);
+
+      if (error) throw error;
+    }
+
+    async function aplicarPedidoNoPlano(order) {
+      const planKey = String(order.plan_name || "").toLowerCase();
+      const planConfig = NEXORA_PLANS[planKey];
+
+      if (!planConfig) {
+        throw new Error("Configuração do plano não encontrada.");
+      }
+
+      const existingPlan = await buscarPlanoPorUsuario(order.user_id);
+
+      if (planConfig.order_type === "credits") {
+        await aplicarCreditoExtra(existingPlan, order, planConfig);
+        return;
+      }
+
+      await aplicarAssinatura(existingPlan, order, planConfig);
+    }
+
+    async function buscarPlanoPorUsuario(userId) {
+      const { data, error } = await sb
+        .from("user_plans")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      return Array.isArray(data) && data.length ? data[0] : null;
+    }
+
+    async function aplicarAssinatura(existingPlan, order, planConfig) {
+      const payload = {
+        user_id: order.user_id,
+        plan_name: planConfig.plan_name,
+        plan_status: "active",
+        diagnostic_limit: planConfig.diagnostics_included,
+        product_limit: planConfig.products_included,
+        diagnostics_used: 0,
+        is_admin: false,
+        unlimited_access: false,
+        current_period_start: new Date().toISOString(),
+        current_period_end: getNextMonthISO(),
+        updated_at: new Date().toISOString()
+      };
+
+      if (existingPlan) {
+        const { error } = await sb
+          .from("user_plans")
+          .update(payload)
+          .eq("id", existingPlan.id);
+
+        if (error) throw error;
+        return;
+      }
+
+      const { error } = await sb
+        .from("user_plans")
+        .insert({
+          ...payload,
+          created_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+    }
+
+    async function aplicarCreditoExtra(existingPlan, order, planConfig) {
+      if (!existingPlan) {
+        await aplicarAssinatura(null, order, {
+          ...planConfig,
+          plan_name: "solo",
+          products_included: 3
+        });
+        return;
+      }
+
+      const nextLimit =
+        Number(existingPlan.diagnostic_limit || 0) +
+        Number(planConfig.diagnostics_included || 0);
+
+      const { error } = await sb
+        .from("user_plans")
+        .update({
+          diagnostic_limit: nextLimit,
+          plan_status: "active",
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", existingPlan.id);
+
+      if (error) throw error;
+    }
+
+    window.cancelarPedido = async function (orderId) {
+      const confirmacao = confirm("Cancelar este pedido pendente?");
+
+      if (!confirmacao) return;
+
+      try {
+        const { error } = await sb
+          .from("payment_orders")
+          .update({
+            status: "cancelled",
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", orderId);
+
+        if (error) throw error;
+
+        alert("Pedido cancelado.");
+        await carregarAdmin();
+      } catch (error) {
+        console.error("Erro ao cancelar pedido:", error);
+        alert("Não foi possível cancelar o pedido.");
+      }
+    };
+
+    window.copiarTexto = async function (text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        alert("Copiado.");
+      } catch {
+        alert(text);
+      }
+    };
+
+    function getNextMonthISO() {
+      const date = new Date();
+      date.setMonth(date.getMonth() + 1);
+      return date.toISOString();
+    }
+
+    function formatOrderType(type) {
+      const map = {
+        subscription: "Assinatura",
+        credits: "Créditos extras"
+      };
+
+      return map[String(type || "").toLowerCase()] || "Pedido";
+    }
+
+    function formatOrderStatus(status) {
+      const map = {
+        pending: "Pendente",
+        paid: "Pago",
+        cancelled: "Cancelado",
+        failed: "Falhou"
+      };
+
+      return map[String(status || "").toLowerCase()] || "Pendente";
+    }
+
+    function getOrderStatusClass(status) {
+      const normalized = String(status || "").toLowerCase();
+
+      if (normalized === "paid") return "status-paid";
+      if (normalized === "pending") return "status-pending";
+      if (normalized === "cancelled") return "status-cancelled";
+
+      return "status-failed";
+    }
+
+    function formatPlanLabel(planName) {
+      const map = {
+        free: "Teste",
+        teste: "Teste",
+        solo: "Solo",
+        consultor: "Consultor",
+        pro: "Pro",
+        agencia: "Agência",
+        agencia_plus: "Agência Plus",
+        admin: "Admin"
+      };
+
+      return map[String(planName || "").toLowerCase()] || "Plano";
+    }
+
+    function formatDateTime(date) {
+      if (!date) return "—";
+
+      try {
+        return new Date(date).toLocaleString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      } catch {
+        return "—";
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+  </script>
+</body>
+</html>
