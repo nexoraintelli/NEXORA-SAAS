@@ -375,7 +375,7 @@ async function carregarBrainResultsDoSupabase(diagnosticId) {
         return;
       }
 
-      cconst diagnosticId = currentDiagnosticId || getDiagnosticId();
+     const diagnosticId = currentDiagnosticId || getDiagnosticId();
 
       if (!diagnosticId) {
         msg.textContent = "Nenhum diagnóstico ativo. Volte ao dashboard e inicie um novo diagnóstico.";
