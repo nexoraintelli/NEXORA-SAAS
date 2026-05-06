@@ -269,7 +269,6 @@ function carregarContextoLocalStorage() {
     C3 = JSON.parse(localStorage.getItem("nx_c3") || "null");
   } catch (e) {}
 }
-
 async function carregarBrainResultsDoSupabase(diagnosticId) {
   try {
     const { data, error } = await sb
@@ -312,6 +311,7 @@ async function carregarBrainResultsDoSupabase(diagnosticId) {
     console.warn("Não foi possível reconstruir contexto da síntese:", error);
   }
 }
+
     function renderContext() {
       if (!C1 || !C2 || !C3) {
         contextArea.innerHTML = `
