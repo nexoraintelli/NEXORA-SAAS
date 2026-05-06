@@ -210,8 +210,9 @@
 
   <script type="module">
     import { requireAuth } from "../js/auth.js";
-    import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
-    import { gerarSinteseFinal } from "../js/synthesisEngine.js";
+import { sb } from "../js/supabaseClient.js";
+import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
+import { gerarSinteseFinal } from "../js/synthesisEngine.js";
 
     await requireAuth();
 
@@ -241,20 +242,76 @@ const msg = document.getElementById("msg");
     const resultArea = document.getElementById("resultArea");
 
     let C1 = null;
-    let C2 = null;
-    let C3 = null;
+let C2 = null;
+let C3 = null;
+let savedSynthFromDb = null;
 
-    try {
-      C1 = JSON.parse(localStorage.getItem("nx_c1") || "null");
-    } catch (e) {}
+await carregarContextoDoDiagnostico();
 
-    try {
-      C2 = JSON.parse(localStorage.getItem("nx_c2") || "null");
-    } catch (e) {}
+async function carregarContextoDoDiagnostico() {
+  carregarContextoLocalStorage();
 
-    try {
-      C3 = JSON.parse(localStorage.getItem("nx_c3") || "null");
-    } catch (e) {}
+  if (currentDiagnosticId) {
+    await carregarBrainResultsDoSupabase(currentDiagnosticId);
+  }
+}
+
+function carregarContextoLocalStorage() {
+  try {
+    C1 = JSON.parse(localStorage.getItem("nx_c1") || "null");
+  } catch (e) {}
+
+  try {
+    C2 = JSON.parse(localStorage.getItem("nx_c2") || "null");
+  } catch (e) {}
+
+  try {
+    C3 = JSON.parse(localStorage.getItem("nx_c3") || "null");
+  } catch (e) {}
+}
+
+async function carregarBrainResultsDoSupabase(diagnosticId) {
+  try {
+    const { data, error } = await sb
+      .from("brain_results")
+      .select("*")
+      .eq("diagnostic_id", diagnosticId);
+
+    if (error) {
+      console.warn("Erro ao carregar brain_results da síntese:", error);
+      return;
+    }
+
+    const rows = data || [];
+
+    const c1Row = rows.find(row => String(row.brain_code || "").toLowerCase() === "c1");
+    const c2Row = rows.find(row => String(row.brain_code || "").toLowerCase() === "c2");
+    const c3Row = rows.find(row => String(row.brain_code || "").toLowerCase() === "c3");
+    const synthRow = rows.find(row => String(row.brain_code || "").toLowerCase() === "synth");
+
+    if (c1Row?.result_data) {
+      C1 = c1Row.result_data;
+      localStorage.setItem("nx_c1", JSON.stringify(C1));
+    }
+
+    if (c2Row?.result_data) {
+      C2 = c2Row.result_data;
+      localStorage.setItem("nx_c2", JSON.stringify(C2));
+    }
+
+    if (c3Row?.result_data) {
+      C3 = c3Row.result_data;
+      localStorage.setItem("nx_c3", JSON.stringify(C3));
+    }
+
+    if (synthRow?.result_data) {
+      savedSynthFromDb = synthRow.result_data;
+      localStorage.setItem("nx_synth", JSON.stringify(savedSynthFromDb));
+    }
+  } catch (error) {
+    console.warn("Não foi possível reconstruir contexto da síntese:", error);
+  }
+}
 
     function renderContext() {
       if (!C1 || !C2 || !C3) {
@@ -301,11 +358,15 @@ const msg = document.getElementById("msg");
 
     renderContext();
     try {
-  const savedSynth = JSON.parse(localStorage.getItem("nx_synth") || "null");
+  const savedSynth =
+    savedSynthFromDb ||
+    JSON.parse(localStorage.getItem("nx_synth") || "null");
 
   if (savedSynth) {
     renderResult(savedSynth);
-    msg.textContent = "Síntese Final já encontrada neste diagnóstico.";
+    msg.textContent = savedSynthFromDb
+      ? "Síntese Final carregada do histórico deste diagnóstico."
+      : "Síntese Final já encontrada neste diagnóstico.";
   }
 } catch (e) {}
 
@@ -315,7 +376,7 @@ const msg = document.getElementById("msg");
         return;
       }
 
-      const diagnosticId = getDiagnosticId();
+      cconst diagnosticId = currentDiagnosticId || getDiagnosticId();
 
       if (!diagnosticId) {
         msg.textContent = "Nenhum diagnóstico ativo. Volte ao dashboard e inicie um novo diagnóstico.";
