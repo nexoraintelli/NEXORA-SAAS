@@ -241,7 +241,73 @@
       line-height: 1.7;
       margin-top: 14px;
     }
+.credit-explanation-panel {
+  border-color: rgba(188, 116, 30, 0.24);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(188,116,30,.12), transparent 28%),
+    linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+}
 
+.credit-explanation-head h2 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.credit-explanation-head p {
+  color: var(--nx-muted);
+  line-height: 1.7;
+  margin-top: 8px;
+  max-width: 760px;
+}
+
+.credit-flow-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.credit-flow-card {
+  border: 1px solid rgba(255,255,255,.09);
+  background: rgba(255,255,255,.025);
+  border-radius: 16px;
+  padding: 14px;
+  min-height: 124px;
+}
+
+.credit-flow-card span {
+  color: #f0a33a;
+  font-family: Syne, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.credit-flow-card strong {
+  display: block;
+  font-family: Syne, sans-serif;
+  font-size: 15px;
+  margin-top: 10px;
+}
+
+.credit-flow-card p {
+  color: var(--nx-muted);
+  font-size: 11.5px;
+  line-height: 1.45;
+  margin-top: 6px;
+}
+
+@media (max-width: 980px) {
+  .credit-flow-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .credit-flow-grid {
+    grid-template-columns: 1fr;
+  }
+}
     .status-pill {
       display: inline-flex;
       border-radius: 999px;
@@ -296,9 +362,9 @@
             Voltar ao Dashboard
           </button>
 
-          <button class="btn-primary" onclick="solicitarUpgrade('conversa')">
-            Falar com a Nexora
-          </button>
+         <button class="btn-primary" onclick="window.open('https://wa.me/5511971545949?text=Olá!%20Gostaria%20de%20falar%20sobre%20os%20planos%20da%20Nexora%20Intelligence.', '_blank')">
+  Falar com a Nexora
+</button>
         </div>
       </div>
     </section>
@@ -339,7 +405,51 @@
         Carregando informações do plano...
       </p>
     </section>
+<section class="panel credit-explanation-panel">
+  <div class="credit-explanation-head">
+    <div>
+      <p class="section-label">Como funciona o crédito</p>
+      <h2>1 crédito = 1 diagnóstico completo</h2>
+      <p>
+        Cada crédito libera uma análise completa de produto: Cérebro 1, Cérebro 2, Cérebro 3,
+        Síntese estratégica e Relatório final. O crédito é consumido apenas quando o Cérebro 1
+        é gerado com sucesso.
+      </p>
+    </div>
+  </div>
 
+  <div class="credit-flow-grid">
+    <div class="credit-flow-card">
+      <span>01</span>
+      <strong>Cérebro 1</strong>
+      <p>Performance, métricas, PPC, operação e causa raiz inicial.</p>
+    </div>
+
+    <div class="credit-flow-card">
+      <span>02</span>
+      <strong>Cérebro 2</strong>
+      <p>Página, imagens, título, comunicação, confiança e conversão.</p>
+    </div>
+
+    <div class="credit-flow-card">
+      <span>03</span>
+      <strong>Cérebro 3</strong>
+      <p>Mercado, concorrência, preço, força dominante e quadrante competitivo.</p>
+    </div>
+
+    <div class="credit-flow-card">
+      <span>04</span>
+      <strong>Síntese</strong>
+      <p>Cruzamento dos sinais para identificar a causa raiz consolidada.</p>
+    </div>
+
+    <div class="credit-flow-card">
+      <span>05</span>
+      <strong>Relatório</strong>
+      <p>Entrega final com score, gaps, prioridades e plano de ação.</p>
+    </div>
+  </div>
+</section>
     <section class="panel">
       <p class="section-label">Assinaturas</p>
       <h2>Planos mensais</h2>
@@ -352,10 +462,10 @@
             <div class="price">R$ 0 <span>/ primeiro acesso</span></div>
 
             <div class="plan-list">
-              <div>1 diagnóstico completo</div>
+              <div>1 diagnóstico completo para conhecer o fluxo Nexora</div>
               <div>1 produto monitorado</div>
-              <div>Relatório final incluso</div>
-              <div>Ideal para conhecer a Nexora</div>
+              <div>Síntese estratégica e relatório final inclusos</div>
+              <div>Ideal para primeiro acesso</div>
             </div>
           </div>
 
@@ -371,10 +481,10 @@
             <div class="price">R$ 49 <span>/ mês</span></div>
 
             <div class="plan-list">
-              <div>5 diagnósticos/mês</div>
-              <div>3 produtos monitorados</div>
-              <div>IA Nexora inclusa</div>
-              <div>Relatórios finais</div>
+             <div>5 diagnósticos completos por mês</div>
+            <div>3 produtos monitorados</div>
+            <div>Síntese estratégica com IA</div>
+            <div>Relatórios finais inclusos</div>
             </div>
           </div>
 
@@ -385,15 +495,15 @@
 
         <article class="plan-card featured">
           <div>
-            <span class="plan-tag">Mais indicado</span>
+           <span class="plan-tag">Mais indicado para consultores</span>
             <h3>Consultor</h3>
             <div class="price">R$ 97 <span>/ mês</span></div>
 
             <div class="plan-list">
-              <div>15 diagnósticos/mês</div>
+              <div>15 diagnósticos completos por mês</div>
               <div>10 produtos monitorados</div>
               <div>Histórico por produto</div>
-              <div>Relatórios para clientes</div>
+              <div>Relatórios para apresentar a clientes</div>
             </div>
           </div>
 
@@ -409,29 +519,29 @@
             <div class="price">R$ 197 <span>/ mês</span></div>
 
             <div class="plan-list">
-              <div>40 diagnósticos/mês</div>
+              <div>40 diagnósticos completos por mês</div>
               <div>25 produtos monitorados</div>
-              <div>IA Nexora inclusa</div>
-              <div>Uso recorrente para consultoria</div>
+              <div>Síntese estratégica com IA</div>
+              <div>Ideal para operação recorrente</div>
             </div>
           </div>
 
-          <button class="btn-secondary"onclick="solicitarUpgrade('pro')":>
-            Solicitar plano
-          </button>
+          <button class="btn-secondary" onclick="solicitarUpgrade('pro')">
+  Solicitar plano
+</button>
         </article>
 
         <article class="plan-card">
           <div>
-            <span class="plan-tag">Agência</span>
+            <span class="plan-tag">Mais indicado para agências</span>
             <h3>Agência</h3>
             <div class="price">R$ 397 <span>/ mês</span></div>
 
             <div class="plan-list">
-              <div>100 diagnósticos/mês</div>
+              <div>100 diagnósticos completo por mês</div>
               <div>60 produtos monitorados</div>
               <div>Relatórios para carteira de clientes</div>
-              <div>Ideal para equipes pequenas/médias</div>
+              <div>Ideal para agências pequenas e médias</div>
             </div>
           </div>
 
@@ -447,9 +557,9 @@
             <div class="price">R$ 697 <span>/ mês</span></div>
 
             <div class="plan-list">
-              <div>250 diagnósticos/mês</div>
+              <div>250 diagnósticos completos por mês</div>
               <div>150 produtos monitorados</div>
-              <div>Uso em alto volume</div>
+              <div>Uso em alto volume de análises</div>
               <div>Suporte prioritário</div>
             </div>
           </div>
@@ -512,9 +622,9 @@
         </div>
       </div>
 
-      <p class="note">
-        Os créditos extras poderão ser ativados manualmente nesta fase beta. Depois, essa área poderá ser conectada a Pix, Mercado Pago, Pagar.me ou Stripe.
-      </p>
+     <p class="note">
+  Nesta fase inicial, a ativação de planos e créditos pode ser confirmada manualmente após validação do pedido. Em breve, a liberação será automática via pagamento integrado.
+</p>
     </section>
 
     <section class="panel">
@@ -692,7 +802,7 @@ if (reason) {
       `Plano/Pacote: ${order.plan_label}\n` +
       `Valor: ${formatCurrencyBRL(order.amount)}\n` +
       `Status: pendente\n\n` +
-      `Na próxima etapa, este pedido será conectado ao checkout automático.`
+      `Seu pedido foi registrado. A ativação será confirmada após validação do pagamento.`
     );
 
     await carregarPedidosRecentes();
