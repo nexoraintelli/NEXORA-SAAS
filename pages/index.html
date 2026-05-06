@@ -42,17 +42,18 @@
       scroll-behavior: smooth;
     }
 
-    body {
-      min-height: 100vh;
-      font-family: "DM Sans", sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 0% 18%, rgba(139, 30, 30, .38), transparent 26%),
-        radial-gradient(circle at 96% 12%, rgba(179, 38, 38, .18), transparent 26%),
-        radial-gradient(circle at 8% 82%, rgba(128, 0, 0, .30), transparent 28%),
-        linear-gradient(135deg, #07080d 0%, #0d0f16 44%, #14070a 100%);
-      overflow-x: hidden;
-    }
+   body {
+  min-height: 100vh;
+  font-family: "DM Sans", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 0% 18%, rgba(139, 30, 30, .30), transparent 25%),
+    radial-gradient(circle at 96% 12%, rgba(179, 38, 38, .14), transparent 26%),
+    radial-gradient(circle at 8% 82%, rgba(128, 0, 0, .24), transparent 28%),
+    radial-gradient(circle at 50% 44%, rgba(0, 0, 0, .76), transparent 38%),
+    linear-gradient(135deg, #030407 0%, #07080d 42%, #100305 100%);
+  overflow-x: hidden;
+}
 
     body::before {
       content: "";
@@ -69,15 +70,16 @@
     }
 
     body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background:
-        radial-gradient(circle at 18% 50%, rgba(179, 38, 38, .12), transparent 22%),
-        radial-gradient(circle at 92% 70%, rgba(188, 116, 30, .08), transparent 26%);
-      z-index: 0;
-    }
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.76) 0%, rgba(0,0,0,.42) 34%, rgba(0,0,0,.18) 52%, rgba(0,0,0,.36) 100%),
+    radial-gradient(circle at 18% 50%, rgba(179, 38, 38, .08), transparent 22%),
+    radial-gradient(circle at 92% 70%, rgba(188, 116, 30, .06), transparent 26%);
+  z-index: 0;
+}
 
     a {
       color: inherit;
@@ -252,9 +254,10 @@
 }
 
     .hero-copy {
-      position: relative;
-      z-index: 2;
-    }
+  position: relative;
+  z-index: 2;
+  padding-left: 28px;
+}
 
     .eyebrow {
       display: inline-flex;
@@ -828,12 +831,11 @@
 }
 
 .hero-grid {
-  grid-template-columns: minmax(0, 0.92fr) minmax(340px, 0.68fr) !important;
-  gap: 34px !important;
-  min-height: 440px !important;
+  grid-template-columns: minmax(0, .82fr) minmax(420px, .82fr) !important;
+  gap: 12px !important;
+  min-height: 445px !important;
   align-items: center !important;
 }
-
 .hero h1 {
   font-size: clamp(34px, 3.55vw, 54px) !important;
   line-height: 1.02 !important;
@@ -910,7 +912,7 @@
 
 .hero-stats {
   margin-top: 24px !important;
-  max-width: 560px !important;
+  max-width: 500px !important;
 }
 
 .stat {
@@ -937,9 +939,10 @@
     min-height: auto !important;
   }
 
-  .hero-scanner {
-    min-height: 320px !important;
-  }
+ .hero-scanner {
+  min-height: 430px !important;
+  transform: translateX(-34px);
+}
 
   .scanner-orbit {
     width: min(300px, 100%) !important;
@@ -1271,7 +1274,7 @@
     <header class="header">
       <div class="container header-inner">
       <a href="./index.html" class="brand">
-  <img src="../logo-horizontal.png%20(2).png" alt="Nexora Intelligence" class="brand-image">
+  <img src="../logo-horizontal.png" alt="Nexora Intelligence" class="brand-image">
 </a>
 
         <nav class="nav">
@@ -1530,7 +1533,7 @@
    <footer class="footer">
   <div class="container footer-inner">
     <a href="./index.html" class="brand footer-brand">
-      <img src="../logo-horizontal.png%20(2).png" alt="Nexora Intelligence" class="brand-image footer-logo">
+      <img src="../logo-horizontal.png" alt="Nexora Intelligence" class="brand-image footer-logo">
     </a>
 
     <div>Diagnóstico sistêmico Amazon com inteligência real.</div>
