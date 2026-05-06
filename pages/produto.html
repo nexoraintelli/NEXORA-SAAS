@@ -539,7 +539,7 @@
             <strong>Cérebro 1</strong>
             <p id="brainC1">Performance ainda não analisada.</p>
           </div>
-          <button class="btn-secondary" onclick="abrirEtapa('./diagnostico.html')">Abrir</button>
+          <button class="btn-secondary" onclick="abrirEtapaPorBrain('./diagnostico.html', 'c1')">Abrir</button>
         </div>
 
         <div class="brain-card">
@@ -547,7 +547,7 @@
             <strong>Cérebro 2</strong>
             <p id="brainC2">Página ainda não analisada.</p>
           </div>
-          <button class="btn-secondary" onclick="abrirEtapa('./pagina.html')">Abrir</button>
+          <button class="btn-secondary" onclick="abrirEtapaPorBrain('./pagina.html', 'c2')">Abrir</button>
         </div>
 
         <div class="brain-card">
@@ -555,7 +555,7 @@
             <strong>Cérebro 3</strong>
             <p id="brainC3">Mercado ainda não analisado.</p>
           </div>
-          <button class="btn-secondary" onclick="abrirEtapa('./mercado.html')">Abrir</button>
+          <button class="btn-secondary" onclick="abrirEtapaPorBrain('./mercado.html', 'c3')">Abrir</button>
         </div>
 
         <div class="brain-card">
@@ -563,7 +563,7 @@
             <strong>Síntese</strong>
             <p id="brainSynth">Síntese ainda não gerada.</p>
           </div>
-          <button class="btn-secondary" onclick="abrirEtapa('./sintese.html')">Abrir</button>
+          <button class="btn-secondary" onclick="abrirEtapaPorBrain('./sintese.html', 'synth')">Abrir</button>
         </div>
       </div>
     </section>
@@ -984,16 +984,32 @@ function getBrainScoreFromRow(row) {
       setBrainCard("c3", "brainC3");
       setBrainCard("sintese", "brainSynth", ["synth", "sintese", "síntese", "synthesis", "final"]);
     }
+function getCodesForStage(stage) {
+  const normalized = String(stage || "").toLowerCase();
 
+  const map = {
+    c1: ["c1"],
+    c2: ["c2"],
+    c3: ["c3"],
+    synth: ["synth", "sintese", "síntese", "synthesis", "final"]
+  };
+
+  return map[normalized] || [normalized];
+}
+
+function getLatestBrainResultByStage(stage) {
+  const acceptedCodes = getCodesForStage(stage);
+
+  return [...brainResults]
+    .filter(item =>
+      acceptedCodes.includes(String(item.brain_code || "").toLowerCase())
+    )
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0] || null;
+}
+    
     function setBrainCard(code, elementId, acceptedCodes = [code]) {
-  const normalizedCodes = acceptedCodes.map(c => String(c).toLowerCase());
-
-  const row = brainResults.find(item =>
-    item.diagnostic_id === currentDiagnosticId &&
-    normalizedCodes.includes(String(item.brain_code || "").toLowerCase())
-  ) || brainResults.find(item =>
-    normalizedCodes.includes(String(item.brain_code || "").toLowerCase())
-  );
+  const stage = code === "sintese" ? "synth" : code;
+  const row = getLatestBrainResultByStage(stage);
 
   if (!row) return;
 
@@ -1180,17 +1196,34 @@ const summary =
     };
 
     window.abrirEtapa = function (page) {
-      if (currentDiagnosticId) {
-        localStorage.setItem("nx_diagnostic_id", currentDiagnosticId);
-      }
+  if (currentDiagnosticId) {
+    localStorage.setItem("nx_diagnostic_id", currentDiagnosticId);
+  }
 
-      if (currentProductId) {
-        localStorage.setItem("nx_product_id", currentProductId);
-      }
+  if (currentProductId) {
+    localStorage.setItem("nx_product_id", currentProductId);
+  }
 
-      window.location.href =
-        `${page}?product_id=${encodeURIComponent(currentProductId || "")}&diagnostic_id=${encodeURIComponent(currentDiagnosticId || "")}`;
-    };
+  window.location.href =
+    `${page}?product_id=${encodeURIComponent(currentProductId || "")}&diagnostic_id=${encodeURIComponent(currentDiagnosticId || "")}`;
+};
+
+window.abrirEtapaPorBrain = function (page, stage) {
+  const row = getLatestBrainResultByStage(stage);
+
+  const diagnosticId = row?.diagnostic_id || currentDiagnosticId || "";
+
+  if (diagnosticId) {
+    localStorage.setItem("nx_diagnostic_id", diagnosticId);
+  }
+
+  if (currentProductId) {
+    localStorage.setItem("nx_product_id", currentProductId);
+  }
+
+  window.location.href =
+    `${page}?product_id=${encodeURIComponent(currentProductId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId)}`;
+};
 
     function getStatusClass(score) {
       if (!Number.isFinite(score)) return "status-warning";
