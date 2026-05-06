@@ -344,9 +344,11 @@
     let orders = [];
     let plans = [];
 
-    await initAdmin();
+   window.carregarAdmin = carregarAdmin;
 
-    async function initAdmin() {
+await initAdmin();
+
+async function initAdmin() {
       currentUser = await requireAuth();
 
       if (!currentUser) return;
@@ -366,16 +368,16 @@
       await carregarAdmin();
     }
 
-    window.carregarAdmin = async function () {
-      await Promise.all([
-        carregarPedidos(),
-        carregarPlanos()
-      ]);
+    async function carregarAdmin() {
+  await Promise.all([
+    carregarPedidos(),
+    carregarPlanos()
+  ]);
 
-      renderStats();
-      renderOrders();
-      renderPlans();
-    };
+  renderStats();
+  renderOrders();
+  renderPlans();
+}
 
     async function carregarPedidos() {
       const { data, error } = await sb
