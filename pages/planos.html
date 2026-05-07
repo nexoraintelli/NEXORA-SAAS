@@ -387,7 +387,7 @@
           </button>
 
          <button class="btn-primary" onclick="window.open('https://wa.me/5511971545949?text=Olá!%20Gostaria%20de%20falar%20sobre%20os%20planos%20da%20Nexora%20Intelligence.', '_blank')">
-  Falar com a Nexora
+  Preciso de ajuda
 </button>
         </div>
       </div>
@@ -476,7 +476,7 @@
 </section>
     <section class="panel">
       <p class="section-label">Assinaturas</p>
-      <h2>Planos mensais</h2>
+      <h2>Escolha seu plano Nexora</h2>
 
       <div class="plans-grid">
         <article class="plan-card">
@@ -494,7 +494,7 @@
           </div>
 
           <button class="btn-secondary" onclick="solicitarUpgrade('teste')">
-            Solicitar acesso
+            Começar teste grátis
           </button>
         </article>
 
@@ -513,7 +513,7 @@
           </div>
 
           <button class="btn-secondary" onclick="solicitarUpgrade('solo')">
-            Solicitar plano
+            Assinar plano
           </button>
         </article>
 
@@ -598,10 +598,10 @@
 <section class="panel">
   <div class="topbar" style="margin-bottom:0;">
     <div>
-      <p class="section-label">Billing</p>
+     <p class="section-label">Pagamentos</p>
       <h2>Pedidos recentes</h2>
       <p style="color:var(--nx-muted);font-size:13px;margin-top:6px;">
-        Acompanhe solicitações de planos e pacotes criadas dentro da Nexora.
+        Acompanhe seus pedidos de assinatura e pacotes de créditos dentro da Nexora.
       </p>
     </div>
   </div>
@@ -623,7 +623,7 @@
           <div class="price">R$ 47</div>
           <p>Adiciona 10 diagnósticos completos ao plano atual.</p>
           <button class="btn-secondary" onclick="solicitarUpgrade('extra_10')">
-            Solicitar
+            Comprar créditos
           </button>
         </div>
 
@@ -632,7 +632,7 @@
           <div class="price">R$ 97</div>
           <p>Adiciona 25 diagnósticos completos ao plano atual.</p>
           <button class="btn-secondary" onclick="solicitarUpgrade('extra_25')">
-            Solicitar
+            Comprar créditos
           </button>
         </div>
 
@@ -641,7 +641,7 @@
           <div class="price">R$ 297</div>
           <p>Adiciona 100 diagnósticos completos ao plano atual.</p>
           <button class="btn-secondary" onclick="solicitarUpgrade('extra_100')">
-            Solicitar
+            Comprar créditos
           </button>
         </div>
       </div>
@@ -826,7 +826,7 @@ if (reason) {
         `Acesso de teste solicitado com sucesso!\n\n` +
         `Plano/Pacote: ${order.plan_label}\n` +
         `Status: pendente\n\n` +
-        `Seu pedido foi registrado.`
+        `Seu acesso teste foi registrado. Você poderá iniciar a primeira análise pela Nexora.`
       );
 
       await carregarPedidosRecentes();
