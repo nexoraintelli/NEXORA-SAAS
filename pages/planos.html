@@ -532,7 +532,7 @@
           </div>
 
           <button class="btn-primary" onclick="solicitarUpgrade('consultor')">
-            Solicitar plano
+            Assinar plano
           </button>
         </article>
 
@@ -551,7 +551,7 @@
           </div>
 
           <button class="btn-secondary" onclick="solicitarUpgrade('pro')">
-  Solicitar plano
+  Assinar plano
 </button>
         </article>
 
@@ -570,7 +570,7 @@
           </div>
 
           <button class="btn-secondary" onclick="solicitarUpgrade('agencia')">
-            Solicitar plano
+            Assinar plano
           </button>
         </article>
 
@@ -589,7 +589,7 @@
           </div>
 
           <button class="btn-secondary" onclick="solicitarUpgrade('agencia_plus')">
-            Solicitar plano
+            Assinar plano
           </button>
         </article>
       </div>
@@ -647,7 +647,7 @@
       </div>
 
      <p class="note">
-  Nesta fase inicial, a ativação de planos e créditos pode ser confirmada manualmente após validação do pedido. Em breve, a liberação será automática via pagamento integrado.
+  Após o pagamento, seu pedido será registrado na Nexora. Nesta etapa de testes, a confirmação poderá ser validada manualmente antes da liberação automática definitiva.
 </p>
     </section>
 
@@ -817,24 +817,56 @@ if (reason) {
   }
 }
 
-   window.solicitarUpgrade = async function (planKey) {
+  window.solicitarUpgrade = async function (planKey) {
   try {
     const order = await createPaymentOrder(planKey);
 
-    alert(
-      `Pedido criado com sucesso!\n\n` +
-      `Plano/Pacote: ${order.plan_label}\n` +
-      `Valor: ${formatCurrencyBRL(order.amount)}\n` +
-      `Status: pendente\n\n` +
-      `Seu pedido foi registrado. A ativação será confirmada após validação do pagamento.`
-    );
+    if (planKey === "teste") {
+      alert(
+        `Acesso de teste solicitado com sucesso!\n\n` +
+        `Plano/Pacote: ${order.plan_label}\n` +
+        `Status: pendente\n\n` +
+        `Seu pedido foi registrado.`
+      );
 
-    await carregarPedidosRecentes();
+      await carregarPedidosRecentes();
 
-window.location.href = `./planos.html?order=${encodeURIComponent(order.id)}`;
+      window.location.href = `./planos.html?order=${encodeURIComponent(order.id)}`;
+      return;
+    }
+
+    const response = await fetch("/api/create-payment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        planKey,
+        orderId: order.id,
+        userId: user?.id || null,
+        userEmail: user?.email || null
+      })
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok || !data?.checkout_url) {
+      console.error("Erro ao criar checkout:", data);
+
+      alert(
+        "O pedido foi criado, mas não foi possível abrir o pagamento. " +
+        "Tente novamente ou fale com a Nexora."
+      );
+
+      await carregarPedidosRecentes();
+      return;
+    }
+
+    window.location.href = data.checkout_url;
+
   } catch (error) {
-    console.error("Erro ao criar pedido:", error);
-    alert("Não foi possível criar o pedido. Tente novamente.");
+    console.error("Erro ao criar pedido/pagamento:", error);
+    alert("Não foi possível iniciar o pagamento. Tente novamente.");
   }
 };
 function formatOrderType(type) {
