@@ -706,6 +706,52 @@ import {
 
     const params = new URLSearchParams(window.location.search);
 const reason = params.get("reason");
+const paymentStatus = params.get("payment");
+
+if (paymentStatus) {
+  const messages = {
+    success: {
+      title: "Pagamento aprovado",
+      text: "Seu pagamento foi aprovado. Seu plano ou pacote de créditos será atualizado automaticamente na Nexora em instantes.",
+      status: "status-done"
+    },
+    pending: {
+      title: "Pagamento em análise",
+      text: "Recebemos seu pedido, mas o pagamento ainda está em processamento. Assim que for confirmado, seu plano será atualizado automaticamente.",
+      status: "status-warning"
+    },
+    failure: {
+      title: "Pagamento não concluído",
+      text: "Não foi possível concluir o pagamento. Você pode tentar novamente ou escolher outro meio de pagamento.",
+      status: "status-warning"
+    }
+  };
+
+  const current = messages[paymentStatus] || messages.pending;
+
+  const panel = document.createElement("section");
+  panel.className = "panel";
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap;">
+      <div>
+        <p class="section-label">Status do pagamento</p>
+        <h2>${current.title}</h2>
+        <p class="note">${current.text}</p>
+      </div>
+
+      <span class="status-pill ${current.status}">
+        ${paymentStatus === "success" ? "Aprovado" : paymentStatus === "failure" ? "Falhou" : "Pendente"}
+      </span>
+    </div>
+  `;
+
+  document.querySelector(".plans-shell")?.prepend(panel);
+
+  setTimeout(async () => {
+    await carregarPlano();
+    await carregarPedidosRecentes();
+  }, 2500);
+}
 
 if (reason) {
   const panel = document.createElement("section");
