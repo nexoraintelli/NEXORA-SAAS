@@ -158,11 +158,11 @@ export default async function handler(req, res) {
     }
 
     return res.status(200).json({
-      id: data.id,
-      checkout_url: data.init_point || data.sandbox_init_point,
-      sandbox_checkout_url: data.sandbox_init_point,
-      production_checkout_url: data.init_point
-    });
+  id: data.id,
+  checkout_url: data.sandbox_init_point || data.init_point,
+  sandbox_checkout_url: data.sandbox_init_point,
+  production_checkout_url: data.init_point
+});
   } catch (error) {
     console.error("Erro em create-payment:", error);
 
