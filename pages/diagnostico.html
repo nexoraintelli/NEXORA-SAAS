@@ -1837,9 +1837,80 @@ function smallTextCard(title, text) {
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
     }
+async function carregarC1SalvoDoHistorico() {
+  const diagnosticId =
+    diagnosticIdFromUrl ||
+    getDiagnosticId() ||
+    localStorage.getItem("nx_diagnostic_id");
 
+  if (!diagnosticId || !currentUser?.id) return;
+
+  try {
+    const { data, error } = await sb
+      .from("brain_results")
+      .select("*")
+      .eq("diagnostic_id", diagnosticId)
+      .eq("brain_code", "c1")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data?.result_data) {
+      return;
+    }
+
+    const savedResult = {
+      ...data.result_data,
+      diagnostic_id: diagnosticId,
+      product_id: currentProductId || data.result_data.product_id || null
+    };
+
+    localStorage.setItem("nx_c1", JSON.stringify(savedResult));
+    localStorage.setItem("nx_diagnostic_id", diagnosticId);
+
+    if (savedResult.product_id) {
+      localStorage.setItem("nx_product_id", savedResult.product_id);
+    }
+
+    preencherFormularioComC1Salvo(savedResult);
+    renderResult(savedResult);
+
+    msg.textContent = "Resultado histórico do Cérebro 1 carregado.";
+  } catch (error) {
+    console.warn("Não foi possível carregar o Cérebro 1 salvo:", error);
+  }
+}
+   function preencherFormularioComC1Salvo(result) {
+  if (!result) return;
+
+  setInputValue("category", result.category || result.cat);
+  window.atualizarSubcategorias?.();
+  setInputValue("subcategory", result.subcategory || result.sub);
+  setInputValue("product", result.product);
+
+  setInputValue("impressions", result.impressions);
+  setInputValue("clicks", result.clicks);
+  setInputValue("ctr", result.ctr);
+  setInputValue("sales", result.sales);
+  setInputValue("cvr", result.cvr);
+  setInputValue("reviews", result.reviews || result.rev);
+  setInputValue("rating", result.rating);
+  setInputValue("acos", result.acos);
+  setInputValue("tacos", result.tacos);
+  setInputValue("margin", result.margin || result.mg);
+  setInputValue("roas", result.roas);
+  setInputValue("price", result.price || result.preco);
+
+  ativarOpcao("modelo", result.modelo);
+  ativarOpcao("force", result.force);
+  ativarOpcao("pos", result.pos);
+  ativarOpcao("fulfillment", result.fulfillment || result.fba);
+  ativarOpcao("buybox", result.buybox || result.bb);
+  ativarOpcao("stock", result.stock || result.est);
+} 
     await carregarProdutoVinculado();
-    renderStep();
+await carregarC1SalvoDoHistorico();
+renderStep();
   </script>
 </body>
 </html>
