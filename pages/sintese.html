@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -157,10 +158,68 @@
       margin-top: 24px;
     }
 
+
+
+    .product-context-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(260px, .85fr);
+      gap: 16px;
+      align-items: stretch;
+      margin-top: 18px;
+    }
+
+    .context-section {
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.025);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .context-section h3 {
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .context-heading {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .context-focus {
+      margin-top: 14px;
+      padding: 16px;
+      border: 1px solid rgba(179,38,38,.34);
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(139,30,30,.18), rgba(255,255,255,.025));
+    }
+
+    .context-focus p {
+      color: var(--muted);
+      line-height: 1.65;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+
+    .next-action-card {
+      border-color: rgba(179,38,38,.42);
+      background:
+        radial-gradient(circle at top left, rgba(139,30,30,.24), transparent 28%),
+        rgba(255,255,255,.035);
+    }
+
+    .next-action-card h3 {
+      line-height: 1.35;
+    }
+
     @media (max-width: 900px) {
       .context-grid,
       .score-grid,
-      .score-hero {
+      .score-hero,
+      .product-context-hero {
         grid-template-columns: 1fr;
       }
 
@@ -244,6 +303,7 @@ const msg = document.getElementById("msg");
     let C1 = null;
 let C2 = null;
 let C3 = null;
+let currentProduct = null;
 let savedSynthFromDb = null;
 
 await carregarContextoDoDiagnostico();
@@ -251,8 +311,32 @@ await carregarContextoDoDiagnostico();
 async function carregarContextoDoDiagnostico() {
   carregarContextoLocalStorage();
 
+  if (currentProductId) {
+    await carregarProdutoVinculado(currentProductId);
+  }
+
   if (currentDiagnosticId) {
     await carregarBrainResultsDoSupabase(currentDiagnosticId);
+  }
+}
+
+async function carregarProdutoVinculado(productId) {
+  try {
+    const { data, error } = await sb
+      .from("products")
+      .select("*")
+      .eq("id", productId)
+      .single();
+
+    if (error || !data) {
+      console.warn("Produto da síntese não encontrado:", error);
+      return;
+    }
+
+    currentProduct = data;
+    localStorage.setItem("nx_current_product", JSON.stringify(data));
+  } catch (error) {
+    console.warn("Não foi possível carregar o produto da síntese:", error);
   }
 }
 
@@ -313,14 +397,36 @@ async function carregarBrainResultsDoSupabase(diagnosticId) {
 }
 
     function renderContext() {
+      const productName = getProductName();
+      const productAsin = currentProduct?.asin || C1?.product || "-";
+      const category = currentProduct?.category || C1?.category || C1?.cat || "-";
+      const subcategory = currentProduct?.subcategory || C1?.subcategory || C1?.sub || "-";
+      const marketplace = currentProduct?.marketplace || "-";
+
       if (!C1 || !C2 || !C3) {
         contextArea.innerHTML = `
           <p class="step-label">Contexto obrigatório</p>
           <h2>Cérebros anteriores não encontrados</h2>
 
-          <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
-            Para gerar a Síntese Final, execute primeiro o Cérebro 1, o Cérebro 2 e o Cérebro 3.
-          </p>
+          <div class="product-context-hero">
+            <div class="context-section">
+              <h3>Produto em análise</h3>
+              <div class="context-grid" style="grid-template-columns:repeat(2,1fr);">
+                ${metricCard("Produto", productName)}
+                ${metricCard("ASIN", productAsin)}
+                ${metricCard("Categoria", category)}
+                ${metricCard("Marketplace", marketplace)}
+              </div>
+            </div>
+
+            <div class="context-focus">
+              <span class="tag tag-red">Fluxo incompleto</span>
+              <h3 style="margin-top:10px;">A Síntese precisa dos três cérebros</h3>
+              <p>
+                Para gerar a Síntese Final, execute primeiro o Cérebro 1, o Cérebro 2 e o Cérebro 3 dentro do mesmo diagnóstico.
+              </p>
+            </div>
+          </div>
 
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;">
            <button class="btn-secondary" onclick="irParaCerebro1()">
@@ -343,15 +449,56 @@ async function carregarBrainResultsDoSupabase(diagnosticId) {
         <p class="step-label">Contexto recebido</p>
         <h2>Dados prontos para síntese</h2>
 
-        <div class="context-grid">
-          ${smallCard("Cérebro 1", `${C1.score_geral ?? "-"} / 100`, C1.root_cause || "Performance e métricas")}
-          ${smallCard("Cérebro 2", `${C2.score_pagina ?? "-"} / 100`, C2.problema_principal || "Página e conversão")}
-          ${smallCard("Cérebro 3", `${C3.score_mercado ?? "-"} / 100`, C3.dinamica_mercado || "Mercado e concorrência")}
+        <div class="product-context-hero">
+          <div class="context-section">
+            <h3>Produto em análise</h3>
+            <div class="context-grid" style="grid-template-columns:repeat(2,1fr);">
+              ${metricCard("Produto", productName)}
+              ${metricCard("ASIN", productAsin)}
+              ${metricCard("Categoria", category)}
+              ${metricCard("Subcategoria", subcategory)}
+              ${metricCard("Marketplace", marketplace)}
+              ${metricCard("Diagnóstico", currentDiagnosticId ? "Vinculado" : "Sem ID")}
+            </div>
+          </div>
+
+          <div class="context-focus">
+            <span class="tag tag-red">Objetivo da Síntese</span>
+            <h3 style="margin-top:10px;">Consolidar a causa raiz e definir a ordem correta de ação</h3>
+            <p>
+              A Síntese vai cruzar performance, página e mercado para identificar se o bloqueio principal está em atração, conversão, oferta, autoridade, diferenciação, mídia ou contexto competitivo.
+            </p>
+          </div>
         </div>
 
-        <p style="color:var(--muted);margin-top:18px;line-height:1.7;">
-          A síntese vai cruzar esses sinais para definir a causa raiz consolidada e a ordem correta de ação.
-        </p>
+        <div class="context-heading">
+          <div>
+            <p class="step-label" style="margin-bottom:6px;">Resumo dos três cérebros</p>
+            <h2 style="font-size:24px;">Base estratégica consolidada</h2>
+          </div>
+        </div>
+
+        <div class="context-grid">
+          ${smallCard("Cérebro 1 · Performance", `${C1.score_geral ?? "-"} / 100`, C1.root_cause || "Performance e métricas")}
+          ${smallCard("Cérebro 2 · Página", `${C2.score_pagina ?? "-"} / 100`, C2.problema_principal || "Página e conversão")}
+          ${smallCard("Cérebro 3 · Mercado", `${C3.score_mercado ?? "-"} / 100`, C3.dinamica_mercado || "Mercado e concorrência")}
+        </div>
+
+        <div class="score-grid">
+          ${metricCard("CTR", formatPercent(C1.ctr))}
+          ${metricCard("CVR", formatPercent(C1.cvr))}
+          ${metricCard("ACOS", formatPercent(C1.acos))}
+          ${metricCard("TACOS", formatPercent(C1.tacos))}
+          ${metricCard("Causa raiz C1", C1.root_cause || "-")}
+        </div>
+
+        <div class="score-grid">
+          ${metricCard("Problema C2", C2.problema_principal || "-")}
+          ${metricCard("Gap C2", C2.gap_principal || "-")}
+          ${metricCard("Mercado C3", C3.dinamica_mercado || "-")}
+          ${metricCard("Problema C3", C3.problema_principal || "-")}
+          ${metricCard("Recomendação C3", C3.recomendacao || "-")}
+        </div>
       `;
     }
 
@@ -910,6 +1057,14 @@ window.abrirRelatorio = function () {
           </div>
         </div>
 
+        <div class="result-block next-action-card">
+          <span class="pill-red">Próxima melhor ação</span>
+          <h3 style="margin-top:12px;">${escapeHtml(getNextBestAction(result).title)}</h3>
+          <p style="color:var(--text-muted);line-height:1.8;margin-top:10px;">
+            ${escapeHtml(getNextBestAction(result).detail)}
+          </p>
+        </div>
+
         <div class="score-grid">
           ${metricCard("Performance", scoreValue(result, "performance"))}
           ${metricCard("Página", scoreValue(result, "pagina"))}
@@ -1019,6 +1174,43 @@ window.abrirRelatorio = function () {
       `;
 
       resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+
+    function getProductName() {
+      return (
+        currentProduct?.product_name ||
+        currentProduct?.name ||
+        C1?.product_record?.product_name ||
+        C1?.product ||
+        "Produto em análise"
+      );
+    }
+
+    function formatPercent(value) {
+      if (value === undefined || value === null || value === "") return "-";
+      const number = Number(value);
+      if (!Number.isFinite(number)) return String(value);
+      return `${String(number).replace(".", ",")}%`;
+    }
+
+    function getNextBestAction(result) {
+      const priorities = Array.isArray(result?.prioridades) ? result.prioridades : [];
+      const first = priorities[0] || {};
+
+      const title =
+        result?.decisao_ia ||
+        first.titulo ||
+        result?.recomendacao ||
+        "Priorizar a causa raiz consolidada antes de escalar o produto";
+
+      const detail =
+        first.detalhe ||
+        result?.recomendacao ||
+        result?.resumo_cliente ||
+        "A Nexora recomenda corrigir primeiro o bloqueio que mais conecta performance, página e mercado, antes de aumentar investimento em mídia, preço ou expansão.";
+
+      return { title, detail };
     }
 
     function metricCard(title, value) {
