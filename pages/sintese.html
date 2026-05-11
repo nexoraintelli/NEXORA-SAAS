@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1407,7 +1405,9 @@ window.abrirRelatorio = function () {
             ${cards.map(card => `
               <div class="insight-card">
                 <h4>${escapeHtml(card.title)}</h4>
-                <p>${escapeHtml(card.text)}</p>
+                <div style="margin-top:10px;">
+  ${formatarTextoEmParagrafos(card.text)}
+</div>
               </div>
             `).join("")}
           </div>
@@ -1688,7 +1688,86 @@ window.abrirRelatorio = function () {
 
       return value + "/100";
     }
+function formatarTextoEmParagrafos(texto) {
+  const clean = String(texto || "")
+    .replace(/\\n/g, "\n")
+    .replace(/\s+/g, " ")
+    .trim();
 
+  if (!clean) return "";
+
+  const frases = clean.match(/[^.!?]+[.!?]+/g) || [clean];
+
+  const paragrafos = [];
+  let atual = "";
+
+  frases.forEach((frase) => {
+    const tentativa = `${atual} ${frase}`.trim();
+
+    if (tentativa.length > 360 && atual) {
+      paragrafos.push(atual.trim());
+      atual = frase.trim();
+    } else {
+      atual = tentativa;
+    }
+  });
+
+  if (atual) {
+    paragrafos.push(atual.trim());
+  }
+
+  return paragrafos
+    .map(paragrafo => `
+      <p style="color:var(--text-muted);line-height:1.85;margin-top:12px;">
+        ${escapeHtml(paragrafo)}
+      </p>
+    `)
+    .join("");
+}
+function formatarTextoEmParagrafos(texto) {
+  const clean = String(texto || "")
+    .replace(/\\n/g, "\n")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!clean) return "";
+
+  const frases = clean.match(/[^.!?]+[.!?]+/g) || [clean];
+
+  const paragrafos = [];
+  let atual = "";
+
+  frases.forEach((frase) => {
+    const tentativa = `${atual} ${frase}`.trim();
+
+    if (tentativa.length > 360 && atual) {
+      paragrafos.push(atual.trim());
+      atual = frase.trim();
+    } else {
+      atual = tentativa;
+    }
+  });
+
+  if (atual) {
+    paragrafos.push(atual.trim());
+  }
+
+  return paragrafos
+    .map(paragrafo => `
+      <p style="color:var(--text-muted);line-height:1.85;margin-top:12px;">
+        ${escapeHtml(paragrafo)}
+      </p>
+    `)
+    .join("");
+}
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
     function escapeHtml(value) {
       return String(value ?? "")
         .replaceAll("&", "&amp;")
