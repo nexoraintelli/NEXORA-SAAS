@@ -384,11 +384,12 @@
   </main>
 
   <script type="module">
-    import { requireAuth } from "../js/auth.js";
+import { requireAuth } from "../js/auth.js";
 import { sb } from "../js/supabaseClient.js";
 import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
 import { gerarSinteseFinal } from "../js/synthesisEngine.js";
 import { analisarCincoSistemas } from "../js/nexoraSystemsEngine.js";
+import { analisarSinteseComIA } from "../js/nexoraAI.js";
 
     await requireAuth();
 
@@ -648,16 +649,23 @@ async function carregarBrainResultsDoSupabase(diagnosticId) {
 
       msg.textContent = "Gerando Síntese Final Nexora com IA...";
 
-      const systemsAnalysis = analisarCincoSistemas(C1, C2, C3);
-      const baseResult = {
-        ...gerarSinteseFinal(C1, C2, C3),
-        systems_analysis: systemsAnalysis,
-        next_best_action: systemsAnalysis.nextBestAction
-      };
-      const aiResult = await gerarSinteseComIA(C1, C2, C3, baseResult);
-      const result = aplicarIASobreSintese(baseResult, aiResult);
+    const baseResult = gerarSinteseFinal(C1, C2, C3);
+const systemsAnalysis = analisarCincoSistemas(C1, C2, C3);
 
-     const fullResult = {
+const aiResult = await analisarSinteseComIA({
+  c1: C1,
+  c2: C2,
+  c3: C3,
+  systemsAnalysis,
+  baseSynthesis: baseResult,
+  product: currentProduct || {}
+});
+
+const result = aplicarIANexoraLayerSobreSintese(
+  baseResult,
+  aiResult,
+  systemsAnalysis
+);
   ...result,
   systems_analysis: systemsAnalysis,
   next_best_action: result.next_best_action || systemsAnalysis.nextBestAction,
