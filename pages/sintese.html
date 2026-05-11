@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -287,13 +289,55 @@
       margin-top: 8px;
     }
 
+
+
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .insight-card {
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.025);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .insight-card h4 {
+      font-family: Syne, sans-serif;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .insight-card p {
+      color: var(--text-muted);
+      line-height: 1.75;
+      font-size: 13px;
+      margin-top: 6px;
+      white-space: pre-wrap;
+    }
+
+    .clean-note {
+      border: 1px solid rgba(240,163,58,.28);
+      background: rgba(240,163,58,.07);
+      border-radius: 14px;
+      padding: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
     @media (max-width: 900px) {
       .context-grid,
       .score-grid,
       .score-hero,
       .product-context-hero,
       .systems-grid,
-      .system-summary-grid {
+      .system-summary-grid,
+      .insight-grid {
         grid-template-columns: 1fr;
       }
 
@@ -818,6 +862,8 @@ Retorne exatamente este JSON:
       if (!aiResult) {
         return {
           ...baseResult,
+          diagnostico_executivo: baseResult.diagnostico_executivo || "",
+          leitura_cruzada: baseResult.leitura_cruzada || "",
           ia_usada: false,
           ia_error: true
         };
@@ -840,33 +886,28 @@ Retorne exatamente este JSON:
         prioridades_base: baseResult.prioridades,
         plano_acao_base: baseResult.plano_acao,
 
-        causa_raiz_consolidada: aiResult.causa_raiz_consolidada || baseResult.causa_raiz_consolidada,
-        gravidade: aiResult.gravidade || baseResult.gravidade,
+        causa_raiz_consolidada: limparTextoIA(aiResult.causa_raiz_consolidada) || baseResult.causa_raiz_consolidada,
+        gravidade: limparTextoIA(aiResult.gravidade) || baseResult.gravidade,
 
+        // IA fica separada. Não misturamos no texto principal para evitar JSON/código aparecendo na interface.
         diagnostico_ia: diagnosticoIA,
         leitura_cruzada_ia: leituraIA,
         risco_ia: riscoIA,
         decisao_ia: decisaoIA,
+        resumo_cliente_ia: resumoIA,
 
-        diagnostico_executivo: [
-          baseResult.diagnostico_executivo || "",
-          diagnosticoIA ? "\n\nLeitura complementar da IA Nexora:\n" + diagnosticoIA : ""
-        ].join("").trim(),
-
-        leitura_cruzada: [
-          baseResult.leitura_cruzada || "",
-          leituraIA ? "\n\nLeitura cruzada aprofundada da IA Nexora:\n" + leituraIA : ""
-        ].join("").trim(),
+        diagnostico_executivo: baseResult.diagnostico_executivo || "",
+        leitura_cruzada: baseResult.leitura_cruzada || "",
 
         recomendacao: decisaoIA || baseResult.recomendacao,
         resumo_cliente: resumoIA || baseResult.resumo_cliente,
 
         prioridades: Array.isArray(aiResult.prioridades_finais) && aiResult.prioridades_finais.length
-          ? aiResult.prioridades_finais
+          ? normalizarPrioridades(aiResult.prioridades_finais, baseResult.prioridades)
           : baseResult.prioridades,
 
         plano_acao: Array.isArray(aiResult.plano_acao) && aiResult.plano_acao.length
-          ? aiResult.plano_acao
+          ? normalizarPlanoAcao(aiResult.plano_acao, baseResult.plano_acao)
           : baseResult.plano_acao,
 
         ia_usada: true,
@@ -1104,31 +1145,19 @@ window.abrirRelatorio = function () {
         };
       }
 
+      const iaUsavel = isUsableNarrative(result.diagnostico_ia) || isUsableNarrative(result.leitura_cruzada_ia);
+      const riskText = getStrategicRisk(result);
+      const nextAction = getNextBestAction(result);
+
       resultArea.innerHTML = `
         <p class="step-label">Resultado · Síntese Final</p>
         <h2>Diagnóstico estratégico consolidado</h2>
 
         ${result.ia_usada ? `
           <div class="result-block" style="border-color:rgba(216,139,45,.35);background:rgba(216,139,45,.06);">
-            <strong style="color:#f0a33a;">IA Nexora aplicada na Síntese Final</strong>
+            <strong style="color:#f0a33a;">IA Nexora aplicada como complemento</strong>
             <p style="color:var(--muted);margin-top:6px;font-size:13px;line-height:1.6;">
-              A síntese foi consolidada com a camada de IA da Nexora, cruzando os três cérebros sem descartar a análise da engine.
-            </p>
-          </div>
-        ` : ""}
-
-        ${result.ia_usada && result.diagnostico_ia ? `
-          <div class="result-block" style="border-color:rgba(216,139,45,.24);">
-            <h3>Leitura executiva da IA Nexora</h3>
-            <div class="analysis-text" style="margin-top:14px;">${escapeHtml(limparLeituraExecutivaIA(result.leitura_executiva_ia || result.diagnostico_ia))}</div>
-          </div>
-        ` : ""}
-
-        ${result.ia_usada && result.risco_ia ? `
-          <div class="result-block" style="border-color:rgba(216,139,45,.24);">
-            <h3>Risco estratégico de não corrigir</h3>
-            <p style="color:var(--text-muted);line-height:1.85;margin-top:10px;">
-              ${escapeHtml(result.risco_ia)}
+              A leitura principal abaixo foi organizada pela engine Nexora e pela camada dos 5 Sistemas. Trechos incompletos ou em formato técnico da IA são filtrados para não aparecerem no relatório visual.
             </p>
           </div>
         ` : ""}
@@ -1144,10 +1173,10 @@ window.abrirRelatorio = function () {
             <div>
               <span class="pill-red">Causa raiz consolidada</span>
               <h3 style="margin-top:12px;line-height:1.35;">
-                ${escapeHtml(result.causa_raiz_consolidada)}
+                ${escapeHtml(cleanDisplayText(result.causa_raiz_consolidada) || "-")}
               </h3>
               <p style="color:var(--muted);margin-top:12px;line-height:1.7;">
-                ${escapeHtml(result.resumo_cliente)}
+                ${escapeHtml(cleanDisplayText(result.resumo_cliente) || "A síntese consolidou os três cérebros e priorizou o bloqueio estrutural mais relevante do produto.")}
               </p>
             </div>
           </div>
@@ -1157,11 +1186,20 @@ window.abrirRelatorio = function () {
 
         <div class="result-block next-action-card">
           <span class="pill-red">Próxima melhor ação</span>
-          <h3 style="margin-top:12px;">${escapeHtml(getNextBestAction(result).title)}</h3>
+          <h3 style="margin-top:12px;">${escapeHtml(nextAction.title)}</h3>
           <p style="color:var(--text-muted);line-height:1.8;margin-top:10px;">
-            ${escapeHtml(getNextBestAction(result).detail)}
+            ${escapeHtml(nextAction.detail)}
           </p>
         </div>
+
+        ${riskText ? `
+          <div class="result-block">
+            <h3>Risco estratégico de não corrigir</h3>
+            <p style="color:var(--text-muted);line-height:1.85;margin-top:10px;">
+              ${escapeHtml(riskText)}
+            </p>
+          </div>
+        ` : ""}
 
         <div class="score-grid">
           ${metricCard("Performance", scoreValue(result, "performance"))}
@@ -1171,15 +1209,22 @@ window.abrirRelatorio = function () {
           ${metricCard("Diferenciação", scoreValue(result, "diferenciacao_total"))}
         </div>
 
-        <div class="result-block">
-          <h3>Diagnóstico executivo completo</h3>
-          <div class="analysis-text" style="margin-top:14px;">${escapeHtml(result.diagnostico_executivo)}</div>
-        </div>
+        ${iaUsavel ? renderIAComplementar(result) : ""}
 
-        <div class="result-block">
-          <h3>Leitura cruzada dos 3 Cérebros</h3>
-          <div class="analysis-text" style="margin-top:14px;">${escapeHtml(result.leitura_cruzada)}</div>
-        </div>
+        ${renderInsightCards("Diagnóstico executivo completo", cleanDisplayText(result.diagnostico_executivo), [
+          "Cenário geral",
+          "Causa raiz",
+          "Impacto em conversão",
+          "Relação com mídia e mercado",
+          "Direção recomendada"
+        ])}
+
+        ${renderInsightCards("Leitura cruzada dos 3 Cérebros", cleanDisplayText(result.leitura_cruzada), [
+          "Cérebro 1 · Performance",
+          "Cérebro 2 · Página",
+          "Cérebro 3 · Mercado",
+          "Conclusão cruzada"
+        ])}
 
         <div class="result-block">
           <h3>Gaps consolidados</h3>
@@ -1188,11 +1233,11 @@ window.abrirRelatorio = function () {
             ${(result.gaps || []).map((gap, index) => `
               <div class="gap-card">
                 <span class="tag ${gap.nivel === "CRÍTICO" ? "tag-red" : ""}">${escapeHtml(gap.nivel)}</span>
-                <strong>${index + 1}. ${escapeHtml(gap.titulo)}</strong>
-                <p>${escapeHtml(gap.descricao)}</p>
+                <strong>${index + 1}. ${escapeHtml(cleanDisplayText(gap.titulo))}</strong>
+                <p>${escapeHtml(cleanDisplayText(gap.descricao))}</p>
                 <p style="font-size:12px;color:var(--text-muted);">Origem: ${escapeHtml(gap.origem)}</p>
               </div>
-            `).join("")}
+            `).join("") || `<p style="color:var(--muted);">Nenhum gap consolidado foi retornado pela engine.</p>`}
           </div>
         </div>
 
@@ -1202,14 +1247,14 @@ window.abrirRelatorio = function () {
           <div style="display:grid;gap:12px;margin-top:14px;">
             ${(result.prioridades || []).map((p) => `
               <div class="priority-card">
-                <span class="tag tag-red">Prioridade ${escapeHtml(p.prioridade)}</span>
-                <strong>${escapeHtml(p.titulo)}</strong>
-                <p>${escapeHtml(p.detalhe)}</p>
+                <span class="tag tag-red">Prioridade ${escapeHtml(p.prioridade || "-")}</span>
+                <strong>${escapeHtml(cleanDisplayText(p.titulo))}</strong>
+                <p>${escapeHtml(cleanDisplayText(p.detalhe))}</p>
                 <p style="font-size:12px;color:var(--text-muted);">
-                  Área: ${escapeHtml(p.area)} · Impacto: ${escapeHtml(p.impacto)}
+                  Área: ${escapeHtml(cleanDisplayText(p.area) || "-")} · Impacto: ${escapeHtml(cleanDisplayText(p.impacto) || "-")}
                 </p>
               </div>
-            `).join("")}
+            `).join("") || `<p style="color:var(--muted);">Nenhuma prioridade retornada.</p>`}
           </div>
         </div>
 
@@ -1219,14 +1264,14 @@ window.abrirRelatorio = function () {
           <div style="display:grid;gap:12px;margin-top:14px;">
             ${(result.plano_acao || []).map((p) => `
               <div class="plan-card">
-                <span class="tag">${escapeHtml(p.etapa)} · ${escapeHtml(p.prazo)}</span>
-                <strong>${escapeHtml(p.titulo)}</strong>
-                <p>${escapeHtml(p.descricao)}</p>
+                <span class="tag">${escapeHtml(p.etapa || "Etapa")} · ${escapeHtml(p.prazo || "Prazo")}</span>
+                <strong>${escapeHtml(cleanDisplayText(p.titulo))}</strong>
+                <p>${escapeHtml(cleanDisplayText(p.descricao))}</p>
                 <p style="font-size:12px;color:var(--text-muted);">
-                  Objetivo: ${escapeHtml(p.objetivo)}
+                  Objetivo: ${escapeHtml(cleanDisplayText(p.objetivo) || "-")}
                 </p>
               </div>
-            `).join("")}
+            `).join("") || `<p style="color:var(--muted);">Nenhum plano de ação retornado.</p>`}
           </div>
         </div>
 
@@ -1238,37 +1283,37 @@ window.abrirRelatorio = function () {
               <div class="matrix-card">
                 <span class="tag">${escapeHtml(m.eixo)}</span>
                 <strong>${escapeHtml(m.score)} / 100</strong>
-                <p>${escapeHtml(m.leitura)}</p>
+                <p>${escapeHtml(cleanDisplayText(m.leitura))}</p>
               </div>
-            `).join("")}
+            `).join("") || `<p style="color:var(--muted);">Matriz não disponível para este diagnóstico.</p>`}
           </div>
         </div>
 
         <div class="result-block">
           <h3>Recomendação estratégica final</h3>
           <p style="color:var(--text-muted);line-height:1.8;margin-top:10px;">
-            ${escapeHtml(result.recomendacao)}
+            ${escapeHtml(cleanDisplayText(result.recomendacao) || nextAction.title)}
           </p>
         </div>
 
         <div class="result-block">
           <h3>Resumo para cliente</h3>
-          <div class="analysis-text" style="margin-top:14px;">${escapeHtml(result.resumo_cliente)}</div>
+          <div class="analysis-text" style="margin-top:14px;">${escapeHtml(cleanDisplayText(result.resumo_cliente))}</div>
         </div>
 
         <div class="actions-row">
-  <button class="btn-secondary" onclick="irParaCerebro3()">
-    Voltar ao Cérebro 3
-  </button>
+          <button class="btn-secondary" onclick="irParaCerebro3()">
+            Voltar ao Cérebro 3
+          </button>
 
-  <button class="btn-secondary" onclick="voltarParaProdutoOuDashboard()">
-    Voltar ao produto
-  </button>
+          <button class="btn-secondary" onclick="voltarParaProdutoOuDashboard()">
+            Voltar ao produto
+          </button>
 
-  <button class="btn-primary" onclick="abrirRelatorio()">
-    Ir para Relatório
-  </button>
-</div>
+          <button class="btn-primary" onclick="abrirRelatorio()">
+            Ir para Relatório
+          </button>
+        </div>
       `;
 
       resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1292,6 +1337,29 @@ window.abrirRelatorio = function () {
       return `${String(number).replace(".", ",")}%`;
     }
 
+    function getStrategicRisk(result) {
+      const usableRisk = cleanDisplayText(result?.risco_ia || "");
+      if (usableRisk && usableRisk.length > 140 && !isGenericRisk(usableRisk)) {
+        return usableRisk;
+      }
+
+      const systemsAnalysis = result?.systems_analysis || {};
+      const critical = systemsAnalysis?.mostCriticalSystem?.label || systemsAnalysis?.mostCriticalSystem?.name || "sistema principal";
+      const secondary = systemsAnalysis?.secondarySystem?.label || systemsAnalysis?.secondarySystem?.name || "sistema secundário";
+      const root = cleanDisplayText(result?.causa_raiz_consolidada || result?.causa_raiz || "a causa raiz consolidada");
+
+      return `Se o bloqueio principal não for corrigido, o produto pode continuar recebendo tráfego sem transformar esse tráfego em vendas suficientes. A leitura dos 5 Sistemas indica atenção principal em ${critical}, com impacto secundário em ${secondary}. Na prática, isso pode gerar desperdício de mídia, pressão sobre margem, perda de competitividade e dificuldade de ganhar visibilidade orgânica, porque a Amazon tende a favorecer produtos com maior probabilidade de compra. A prioridade é corrigir ${root} antes de escalar investimento ou expansão.`;
+    }
+
+    function isGenericRisk(text) {
+      const value = normalizeText(text);
+      return (
+        value.includes("necessidade de corrigir a causa raiz") && value.length < 220
+      ) || (
+        value.includes("antes de escalar midia") && value.length < 220
+      );
+    }
+
     function getNextBestAction(result) {
       const systemsAnalysis = result?.systems_analysis || null;
 
@@ -1300,8 +1368,8 @@ window.abrirRelatorio = function () {
         const secondary = systemsAnalysis?.secondarySystem?.label || systemsAnalysis?.secondarySystem?.name || "sistema secundário";
 
         return {
-          title: systemsAnalysis.nextBestAction,
-          detail: `Prioridade definida pela leitura dos 5 Sistemas Nexora. Sistema mais crítico: ${critical}. Sistema secundário em atenção: ${secondary}. Essa ação deve vir antes de escalar mídia, preço ou expansão, porque atua no bloqueio estrutural mais relevante do diagnóstico.`
+          title: cleanDisplayText(systemsAnalysis.nextBestAction),
+          detail: `Esta é a ação principal porque o sistema mais crítico identificado foi ${critical}, com ${secondary} como sistema secundário. Corrigir esse bloqueio vem antes de aumentar mídia, preço ou expansão, pois ele atua diretamente na causa estrutural mais relevante do diagnóstico.`
         };
       }
 
@@ -1309,20 +1377,221 @@ window.abrirRelatorio = function () {
       const first = priorities[0] || {};
 
       const title =
-        first.titulo ||
-        result?.recomendacao ||
-        result?.decisao_ia ||
+        cleanDisplayText(first.titulo) ||
+        cleanDisplayText(result?.recomendacao) ||
         "Priorizar a causa raiz consolidada antes de escalar o produto";
 
       const detail =
-        first.detalhe ||
-        result?.recomendacao ||
-        result?.resumo_cliente ||
+        cleanDisplayText(first.detalhe) ||
+        cleanDisplayText(result?.recomendacao) ||
+        cleanDisplayText(result?.resumo_cliente) ||
         "Corrigir primeiro o bloqueio que mais conecta performance, página e mercado antes de aumentar investimento em mídia, preço ou expansão.";
 
       return { title, detail };
     }
 
+    function renderIAComplementar(result) {
+      const cards = [];
+      if (isUsableNarrative(result.diagnostico_ia)) {
+        cards.push({ title: "Leitura executiva da IA", text: cleanDisplayText(result.diagnostico_ia) });
+      }
+      if (isUsableNarrative(result.leitura_cruzada_ia)) {
+        cards.push({ title: "Leitura cruzada complementar", text: cleanDisplayText(result.leitura_cruzada_ia) });
+      }
+      if (!cards.length) return "";
+
+      return `
+        <div class="result-block" style="border-color:rgba(216,139,45,.24);">
+          <h3>Complemento consultivo da IA Nexora</h3>
+          <div class="insight-grid">
+            ${cards.map(card => `
+              <div class="insight-card">
+                <h4>${escapeHtml(card.title)}</h4>
+                <p>${escapeHtml(card.text)}</p>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderInsightCards(title, rawText, labels = []) {
+      const text = cleanDisplayText(rawText);
+      if (!text) return "";
+
+      const chunks = splitTextIntoCards(text, labels.length || 4);
+
+      return `
+        <div class="result-block">
+          <h3>${escapeHtml(title)}</h3>
+          <div class="insight-grid">
+            ${chunks.map((chunk, index) => `
+              <div class="insight-card">
+                <h4>${escapeHtml(labels[index] || `Leitura ${index + 1}`)}</h4>
+                <p>${escapeHtml(chunk)}</p>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function splitTextIntoCards(text, desiredChunks = 4) {
+      const clean = cleanDisplayText(text);
+      if (!clean) return [];
+
+      const paragraphs = clean
+        .split(/\n{2,}|(?<=\.)\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ])/g)
+        .map(p => p.trim())
+        .filter(Boolean);
+
+      const maxChunks = Math.max(2, Math.min(desiredChunks, 5));
+      const chunks = Array.from({ length: maxChunks }, () => "");
+
+      paragraphs.forEach((paragraph, index) => {
+        const target = index % maxChunks;
+        chunks[target] = [chunks[target], paragraph].filter(Boolean).join("\n\n");
+      });
+
+      return chunks.filter(Boolean);
+    }
+
+    function cleanDisplayText(value) {
+      if (value === undefined || value === null) return "";
+
+      if (typeof value === "object") {
+        return cleanDisplayText(
+          value.leitura_executiva ||
+          value.diagnostico_executivo ||
+          value.diagnostico_executivo_aprofundado ||
+          value.resumo_executivo ||
+          value.resumo_cliente ||
+          value.text ||
+          ""
+        );
+      }
+
+      let text = String(value)
+        .replace(/```json/gi, "")
+        .replace(/```/g, "")
+        .replace(/\\n/g, "\n")
+        .trim();
+
+      if (!text) return "";
+
+      const parsed = tryParseJson(text);
+      if (parsed) {
+        return cleanDisplayText(
+          parsed.diagnostico_executivo_aprofundado ||
+          parsed.leitura_cruzada_aprofundada ||
+          parsed.risco_de_nao_corrigir ||
+          parsed.decisao_estrategica ||
+          parsed.resumo_cliente ||
+          parsed.diagnostico_executivo ||
+          ""
+        );
+      }
+
+      // Se veio um JSON quebrado, remove linhas técnicas e mantém apenas frases legíveis.
+      if (looksLikeCodeOrJson(text)) {
+        text = text
+          .split(/\n+/)
+          .map(line => line.trim())
+          .filter(line => line && !isTechnicalLine(line))
+          .join("\n")
+          .trim();
+      }
+
+      return text
+        .replace(/^"|"$/g, "")
+        .replace(/,$/g, "")
+        .replace(/\{\s*/g, "")
+        .replace(/\}\s*/g, "")
+        .replace(/\[\s*/g, "")
+        .replace(/\]\s*/g, "")
+        .replace(/\s{3,}/g, " ")
+        .trim();
+    }
+
+    function isTechnicalLine(line) {
+      const normalized = normalizeText(line);
+      if (/^[\{\}\[\],]+$/.test(line)) return true;
+      if (/^"?[a-zA-Z0-9_]+"?\s*:/.test(line)) return true;
+      if (normalized.includes("diagnostico_executivo_aprofundado")) return true;
+      if (normalized.includes("leitura_cruzada_aprofundada")) return true;
+      if (normalized.includes("prioridades_finais")) return true;
+      if (normalized.includes("plano_acao")) return true;
+      if (normalized.includes("risco_de_nao_corrigir")) return true;
+      if (normalized.includes("decisao_estrategica")) return true;
+      if (normalized.includes("resumo_cliente")) return true;
+      return false;
+    }
+
+    function looksLikeCodeOrJson(text) {
+      const value = String(text || "");
+      const signals = ["{", "}", "[", "]", '"diagnostico_', '"plano_acao"', '"prioridades_finais"', '"etapa"', '"titulo"'];
+      return signals.filter(signal => value.includes(signal)).length >= 2;
+    }
+
+    function tryParseJson(text) {
+      try {
+        return JSON.parse(text);
+      } catch (e) {}
+
+      const first = text.indexOf("{");
+      const last = text.lastIndexOf("}");
+      if (first !== -1 && last !== -1 && last > first) {
+        try {
+          return JSON.parse(text.slice(first, last + 1));
+        } catch (e) {}
+      }
+
+      return null;
+    }
+
+    function isUsableNarrative(value) {
+      const text = cleanDisplayText(value);
+      if (!text || text.length < 180) return false;
+      if (looksLikeCodeOrJson(text)) return false;
+      return true;
+    }
+
+    function normalizeText(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+    }
+
+    function normalizarPrioridades(items = [], fallback = []) {
+      const clean = items
+        .filter(item => item && typeof item === "object")
+        .map((item, index) => ({
+          prioridade: cleanDisplayText(item.prioridade || String(index + 1)),
+          area: cleanDisplayText(item.area || "Estratégia"),
+          titulo: cleanDisplayText(item.titulo || item.acao || `Prioridade ${index + 1}`),
+          detalhe: cleanDisplayText(item.detalhe || item.descricao || ""),
+          impacto: cleanDisplayText(item.impacto || "")
+        }))
+        .filter(item => item.titulo || item.detalhe);
+
+      return clean.length ? clean : fallback;
+    }
+
+    function normalizarPlanoAcao(items = [], fallback = []) {
+      const clean = items
+        .filter(item => item && typeof item === "object")
+        .map((item, index) => ({
+          etapa: cleanDisplayText(item.etapa || `Etapa ${index + 1}`),
+          prazo: cleanDisplayText(item.prazo || ""),
+          titulo: cleanDisplayText(item.titulo || item.acao || `Ação ${index + 1}`),
+          descricao: cleanDisplayText(item.descricao || item.detalhe || ""),
+          objetivo: cleanDisplayText(item.objetivo || item.impacto || "")
+        }))
+        .filter(item => item.titulo || item.descricao);
+
+      return clean.length ? clean : fallback;
+    }
 
     function renderSystemsAnalysis(systemsAnalysis) {
       if (!systemsAnalysis || !Array.isArray(systemsAnalysis.systemsList)) {
