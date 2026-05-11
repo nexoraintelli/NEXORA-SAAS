@@ -1158,15 +1158,21 @@ window.abrirRelatorio = function () {
       resultArea.innerHTML = `
         <p class="step-label">Resultado · Síntese Final</p>
         <h2>Diagnóstico estratégico consolidado</h2>
-
-        ${result.ia_usada ? `
-          <div class="result-block" style="border-color:rgba(216,139,45,.35);background:rgba(216,139,45,.06);">
-            <strong style="color:#f0a33a;">IA Nexora aplicada como complemento</strong>
-            <p style="color:var(--muted);margin-top:6px;font-size:13px;line-height:1.6;">
-              A leitura principal abaixo foi organizada pela engine Nexora e pela camada dos 5 Sistemas. Trechos incompletos ou em formato técnico da IA são filtrados para não aparecerem no relatório visual.
-            </p>
-          </div>
-        ` : ""}
+${result.ia_usada && isUsableNarrative(result.diagnostico_ia) ? `
+  <div class="result-block" style="border-color:rgba(216,139,45,.35);background:rgba(216,139,45,.06);">
+    <strong style="color:#f0a33a;">IA Nexora aplicada como complemento</strong>
+    <p style="color:var(--muted);margin-top:6px;font-size:13px;line-height:1.6;">
+      A leitura consultiva foi enriquecida pela camada de IA Nexora, mantendo a análise principal baseada na engine dos 5 Sistemas.
+    </p>
+  </div>
+` : `
+  <div class="result-block" style="border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.025);">
+    <strong>Síntese gerada pela engine Nexora</strong>
+    <p style="color:var(--muted);margin-top:6px;font-size:13px;line-height:1.6;">
+      A camada de IA complementar não retornou uma leitura utilizável neste momento. A análise abaixo foi gerada com base na metodologia dos 5 Sistemas Nexora.
+    </p>
+  </div>
+`}
 
         <div class="result-block">
           <div class="score-hero">
