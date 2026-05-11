@@ -876,9 +876,123 @@ input[type="file"],
 
       if (currentStep < steps.length - 1) {
         currentStep++;
-        renderStep();
-        return;
-      }
+       const abriuHistoricoC2 = await carregarC2SalvoDoHistorico();
+        async function carregarC2SalvoDoHistorico() {
+  const diagnosticId =
+    diagnosticIdFromUrl ||
+    currentDiagnosticId ||
+    getDiagnosticId() ||
+    localStorage.getItem("nx_diagnostic_id");
+
+  if (!diagnosticId || !currentUser?.id) return false;
+
+  try {
+    const { data, error } = await sb
+      .from("brain_results")
+      .select("*")
+      .eq("diagnostic_id", diagnosticId)
+      .eq("brain_code", "c2")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data?.result_data) {
+      return false;
+    }
+
+    const savedResult = {
+      ...data.result_data,
+      diagnostic_id: diagnosticId,
+      product_id: currentProductId || data.result_data.product_id || null
+    };
+
+    localStorage.setItem("nx_c2", JSON.stringify(savedResult));
+    localStorage.setItem("nx_diagnostic_id", diagnosticId);
+
+    if (savedResult.product_id) {
+      localStorage.setItem("nx_product_id", savedResult.product_id);
+      currentProductId = savedResult.product_id;
+    }
+
+    preencherFormularioComC2Salvo(savedResult);
+    renderResult(savedResult);
+
+    msg.textContent = "Resultado histórico do Cérebro 2 carregado.";
+    return true;
+  } catch (error) {
+    console.warn("Não foi possível carregar o Cérebro 2 salvo:", error);
+    return false;
+  }
+}
+
+function preencherFormularioComC2Salvo(result) {
+  if (!result) return;
+
+  setInputValue("imageNotes", result.imageNotes);
+
+  setInputValue("title", result.title);
+  setInputValue("keyword", result.keyword);
+  setInputValue("mainBenefit", result.mainBenefit);
+
+  setInputValue("bullets", result.bullets);
+  setInputValue("differentials", result.differentials);
+  setInputValue("objections", result.objections);
+  setInputValue("description", result.description);
+
+  setInputValue("reviews", result.reviews);
+  setInputValue("rating", result.rating);
+  setInputValue("price", result.price);
+
+  ativarOpcaoC2("imageClarity", result.imageClarity);
+  ativarOpcaoC2("oneSecondUnderstanding", result.oneSecondUnderstanding);
+  ativarOpcaoC2("benefitVisible", result.benefitVisible);
+  ativarOpcaoC2("competitiveContrast", result.competitiveContrast);
+  ativarOpcaoC2("visualPerception", result.visualPerception);
+
+  ativarOpcaoC2("titleQuality", result.titleQuality);
+  ativarOpcaoC2("seoQuality", result.seoQuality);
+  ativarOpcaoC2("titleClarity", result.titleClarity);
+
+  ativarOpcaoC2("communicationQuality", result.communicationQuality);
+  ativarOpcaoC2("differentiationQuality", result.differentiationQuality);
+  ativarOpcaoC2("objectionCoverage", result.objectionCoverage);
+
+  ativarOpcaoC2("hasAplus", result.hasAplus);
+  ativarOpcaoC2("hasVideo", result.hasVideo);
+  ativarOpcaoC2("hasSocialImages", result.hasSocialImages);
+  ativarOpcaoC2("trustLevel", result.trustLevel);
+
+  ativarOpcaoC2("hasCoupon", result.hasCoupon);
+  ativarOpcaoC2("offerAlignment", result.offerAlignment);
+}
+
+function ativarOpcaoC2(groupName, value) {
+  if (!groupName || !value) return;
+
+  const group = document.querySelector(`.option-group[data-group="${groupName}"]`);
+  if (!group) return;
+
+  const target = Array.from(group.querySelectorAll(".option-btn"))
+    .find(btn => normalizarTextoC2(btn.dataset.value) === normalizarTextoC2(value));
+
+  if (!target) return;
+
+  group.querySelectorAll(".option-btn").forEach(btn => btn.classList.remove("active"));
+  target.classList.add("active");
+  state[groupName] = target.dataset.value;
+}
+
+function normalizarTextoC2(value) {
+  return String(value || "")
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+if (!abriuHistoricoC2) {
+  renderStep();
+}
 
       await gerarAnalisePagina();
     };
