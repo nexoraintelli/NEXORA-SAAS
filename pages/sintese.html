@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -215,11 +214,86 @@
       line-height: 1.35;
     }
 
+
+    .systems-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .system-card {
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      background: rgba(255,255,255,.03);
+      min-height: 170px;
+    }
+
+    .system-card.system-critical {
+      border-color: rgba(179,38,38,.48);
+      background: linear-gradient(135deg, rgba(139,30,30,.22), rgba(255,255,255,.025));
+    }
+
+    .system-card.system-warning {
+      border-color: rgba(240,163,58,.36);
+      background: linear-gradient(135deg, rgba(240,163,58,.10), rgba(255,255,255,.025));
+    }
+
+    .system-card.system-healthy {
+      border-color: rgba(61,220,151,.26);
+      background: linear-gradient(135deg, rgba(61,220,151,.08), rgba(255,255,255,.025));
+    }
+
+    .system-card h3 {
+      font-size: 15px;
+      line-height: 1.3;
+      margin-top: 10px;
+    }
+
+    .system-card p {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+      margin-top: 8px;
+    }
+
+    .system-score {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: 30px;
+      line-height: 1;
+      margin-top: 12px;
+    }
+
+    .system-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .system-summary-card {
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(179,38,38,.34);
+      background: rgba(139,30,30,.12);
+    }
+
+    .system-summary-card p {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+
     @media (max-width: 900px) {
       .context-grid,
       .score-grid,
       .score-hero,
-      .product-context-hero {
+      .product-context-hero,
+      .systems-grid,
+      .system-summary-grid {
         grid-template-columns: 1fr;
       }
 
@@ -272,6 +346,7 @@
 import { sb } from "../js/supabaseClient.js";
 import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
 import { gerarSinteseFinal } from "../js/synthesisEngine.js";
+import { analisarCincoSistemas } from "../js/nexoraSystemsEngine.js";
 
     await requireAuth();
 
@@ -531,12 +606,19 @@ async function carregarBrainResultsDoSupabase(diagnosticId) {
 
       msg.textContent = "Gerando Síntese Final Nexora com IA...";
 
-      const baseResult = gerarSinteseFinal(C1, C2, C3);
+      const systemsAnalysis = analisarCincoSistemas(C1, C2, C3);
+      const baseResult = {
+        ...gerarSinteseFinal(C1, C2, C3),
+        systems_analysis: systemsAnalysis,
+        next_best_action: systemsAnalysis.nextBestAction
+      };
       const aiResult = await gerarSinteseComIA(C1, C2, C3, baseResult);
       const result = aplicarIASobreSintese(baseResult, aiResult);
 
      const fullResult = {
   ...result,
+  systems_analysis: systemsAnalysis,
+  next_best_action: result.next_best_action || systemsAnalysis.nextBestAction,
   diagnostic_id: diagnosticId,
   product_id: currentProductId || null,
   source: {
@@ -583,6 +665,13 @@ A Nexora já rodou três cérebros antes desta síntese:
 - Cérebro 1: performance, métricas, PPC, rentabilidade e operação;
 - Cérebro 2: página, imagem, SEO, comunicação, confiança e oferta;
 - Cérebro 3: mercado, concorrência, preço, barreira, diferenciação e quadrante competitivo.
+
+A metodologia original da Nexora cruza os três cérebros em 5 sistemas proprietários:
+- Unit Economics: crescimento com lucro, margem, ACOS, TACOS e sustentabilidade;
+- Market Forces: força dominante da categoria, como preço, reviews, marca, diferenciação ou operação;
+- Category Competition: preço relativo, reviews, barreira de entrada, quadrante e gap competitivo;
+- Amazon Algorithm: relevância, atração, CTR, CVR, SEO, conversão e probabilidade de entrega;
+- Operational Structure: FBA/FBM, Prime, Buy Box, estoque, logística e disponibilidade.
 
 IMPORTANTE:
 A engine Nexora já gerou uma síntese base. Sua função NÃO é substituir a engine. Sua função é consolidar, aprofundar e transformar os sinais dos três cérebros em uma leitura executiva final, consultiva e acionável.
@@ -1008,6 +1097,13 @@ window.abrirRelatorio = function () {
     function renderResult(result) {
       resultArea.style.display = "block";
 
+      if (!result.systems_analysis && C1 && C2 && C3) {
+        result = {
+          ...result,
+          systems_analysis: analisarCincoSistemas(C1, C2, C3)
+        };
+      }
+
       resultArea.innerHTML = `
         <p class="step-label">Resultado · Síntese Final</p>
         <h2>Diagnóstico estratégico consolidado</h2>
@@ -1056,6 +1152,8 @@ window.abrirRelatorio = function () {
             </div>
           </div>
         </div>
+
+        ${renderSystemsAnalysis(result.systems_analysis)}
 
         <div class="result-block next-action-card">
           <span class="pill-red">Próxima melhor ação</span>
@@ -1195,22 +1293,102 @@ window.abrirRelatorio = function () {
     }
 
     function getNextBestAction(result) {
+      const systemsAnalysis = result?.systems_analysis || null;
+
+      if (systemsAnalysis?.nextBestAction) {
+        const critical = systemsAnalysis?.mostCriticalSystem?.label || systemsAnalysis?.mostCriticalSystem?.name || "Sistema crítico";
+        const secondary = systemsAnalysis?.secondarySystem?.label || systemsAnalysis?.secondarySystem?.name || "sistema secundário";
+
+        return {
+          title: systemsAnalysis.nextBestAction,
+          detail: `Prioridade definida pela leitura dos 5 Sistemas Nexora. Sistema mais crítico: ${critical}. Sistema secundário em atenção: ${secondary}. Essa ação deve vir antes de escalar mídia, preço ou expansão, porque atua no bloqueio estrutural mais relevante do diagnóstico.`
+        };
+      }
+
       const priorities = Array.isArray(result?.prioridades) ? result.prioridades : [];
       const first = priorities[0] || {};
 
       const title =
-        result?.decisao_ia ||
         first.titulo ||
         result?.recomendacao ||
+        result?.decisao_ia ||
         "Priorizar a causa raiz consolidada antes de escalar o produto";
 
       const detail =
         first.detalhe ||
         result?.recomendacao ||
         result?.resumo_cliente ||
-        "A Nexora recomenda corrigir primeiro o bloqueio que mais conecta performance, página e mercado, antes de aumentar investimento em mídia, preço ou expansão.";
+        "Corrigir primeiro o bloqueio que mais conecta performance, página e mercado antes de aumentar investimento em mídia, preço ou expansão.";
 
       return { title, detail };
+    }
+
+
+    function renderSystemsAnalysis(systemsAnalysis) {
+      if (!systemsAnalysis || !Array.isArray(systemsAnalysis.systemsList)) {
+        return "";
+      }
+
+      const critical = systemsAnalysis.mostCriticalSystem || {};
+      const secondary = systemsAnalysis.secondarySystem || {};
+
+      return `
+        <div class="result-block">
+          <p class="step-label">Diagnóstico sistêmico Nexora</p>
+          <h3>Os 5 sistemas que controlam este produto</h3>
+          <p style="color:var(--muted);line-height:1.7;margin-top:8px;">
+            Esta leitura reconecta os três cérebros à metodologia original da Nexora: não basta olhar métrica, é preciso entender qual sistema está travando a performance.
+          </p>
+
+          <div class="systems-grid">
+            ${systemsAnalysis.systemsList.map(system => systemCard(system)).join("")}
+          </div>
+
+          <div class="system-summary-grid">
+            <div class="system-summary-card">
+              <span class="tag tag-red">Sistema mais crítico</span>
+              <h3 style="margin-top:10px;">${escapeHtml(critical.label || critical.name || "-")}</h3>
+              <p>${escapeHtml(critical.reason || "-")}</p>
+            </div>
+
+            <div class="system-summary-card">
+              <span class="tag">Sistema secundário</span>
+              <h3 style="margin-top:10px;">${escapeHtml(secondary.label || secondary.name || "-")}</h3>
+              <p>${escapeHtml(secondary.reason || "-")}</p>
+            </div>
+          </div>
+
+          <div class="context-focus" style="margin-top:14px;">
+            <span class="tag tag-red">Leitura estratégica</span>
+            <p>${escapeHtml(systemsAnalysis.strategicReading || "-")}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    function systemCard(system) {
+      const className = getSystemCardClass(system.status);
+      const evidences = Array.isArray(system.evidences) ? system.evidences.slice(0, 2) : [];
+
+      return `
+        <div class="system-card ${className}">
+          <span class="tag ${system.status === "Crítico" ? "tag-red" : ""}">${escapeHtml(system.status || "-")}</span>
+          <div class="system-score">${escapeHtml(system.score ?? "-")}</div>
+          <h3>${escapeHtml(system.label || system.name || "-")}</h3>
+          <p>${escapeHtml(system.reason || "-")}</p>
+          ${evidences.length ? `
+            <p style="color:var(--text-muted);font-size:11.5px;">
+              Evidências: ${escapeHtml(evidences.join(" · "))}
+            </p>
+          ` : ""}
+        </div>
+      `;
+    }
+
+    function getSystemCardClass(status) {
+      if (status === "Crítico") return "system-critical";
+      if (status === "Atenção") return "system-warning";
+      return "system-healthy";
     }
 
     function metricCard(title, value) {
