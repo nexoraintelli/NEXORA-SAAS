@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1467,6 +1466,14 @@ window.aprofundarResultadoC2ComIA = async function () {
     return;
   }
 
+const leituraComplementarIA = limparTextoIAComplementar(
+  aiResult.diagnostico_executivo_aprofundado ||
+  aiResult.diagnostico_executivo ||
+  aiResult.leitura_executiva ||
+  aiResult.analise ||
+  ""
+);
+  
   const updated = {
     ...fullResult,
 
@@ -1481,12 +1488,13 @@ window.aprofundarResultadoC2ComIA = async function () {
     leitura_por_pilar_ia: aiResult.leitura_por_pilar || null,
     plano_de_acao_ia: Array.isArray(aiResult.plano_de_acao) ? aiResult.plano_de_acao : [],
 
-    diagnostico_executivo: [
-      fullResult.diagnostico_executivo || "",
-      aiResult.diagnostico_executivo_aprofundado
-        ? "\n\nLeitura complementar da IA Nexora:\n" + aiResult.diagnostico_executivo_aprofundado
-        : ""
-    ].join("").trim(),
+   diagnostico_executivo:
+  [
+    fullResult.diagnostico_executivo || "",
+    leituraComplementarIA
+      ? "\n\nLeitura complementar da IA Nexora:\n" + leituraComplementarIA
+      : ""
+  ].join("").trim(),
 
     impacto: aiResult.risco_de_nao_corrigir || fullResult.impacto,
 
@@ -1671,7 +1679,104 @@ function smallCard(title, value, extraClass = "") {
       const number = Number(String(value).replace(",", "."));
       return Number.isFinite(number) ? number : 0;
     }
+function limparTextoIAComplementar(value) {
+  if (!value) return "";
 
+  if (typeof value === "object") {
+    return (
+      value.diagnostico_executivo_aprofundado ||
+      value.diagnostico_executivo ||
+      value.leitura_executiva ||
+      value.analise ||
+      value.resumo ||
+      ""
+    );
+  }
+
+  let text = String(value)
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
+
+  if (text.startsWith("{")) {
+    try {
+      const parsed = JSON.parse(text);
+
+      return (
+        parsed.diagnostico_executivo_aprofundado ||
+        parsed.diagnostico_executivo ||
+        parsed.leitura_executiva ||
+        parsed.analise ||
+        parsed.resumo ||
+        ""
+      );
+    } catch (error) {
+      // segue para limpeza manual
+    }
+  }
+
+  return text
+    .replace(/^\{/, "")
+    .replace(/\}$/, "")
+    .replace(/"diagnostico_executivo_aprofundado"\s*:\s*/gi, "")
+    .replace(/"diagnostico_executivo"\s*:\s*/gi, "")
+    .replace(/"leitura_executiva"\s*:\s*/gi, "")
+    .replace(/"impacto_estrategico"\s*:\s*"[^"]*",?/gi, "")
+    .replace(/"gaps"\s*:\s*\[[\s\S]*?\],?/gi, "")
+    .replace(/"prioridades"\s*:\s*\[[\s\S]*?\],?/gi, "")
+    .replace(/^"/, "")
+    .replace(/",?\s*$/, "")
+    .trim();
+}
+function limparTextoIAComplementar(value) {
+  if (!value) return "";
+
+  if (typeof value === "object") {
+    return (
+      value.diagnostico_executivo_aprofundado ||
+      value.diagnostico_executivo ||
+      value.leitura_executiva ||
+      value.analise ||
+      value.resumo ||
+      ""
+    );
+  }
+
+  let text = String(value)
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
+
+  if (text.startsWith("{")) {
+    try {
+      const parsed = JSON.parse(text);
+
+      return (
+        parsed.diagnostico_executivo_aprofundado ||
+        parsed.diagnostico_executivo ||
+        parsed.leitura_executiva ||
+        parsed.analise ||
+        parsed.resumo ||
+        ""
+      );
+    } catch (error) {}
+  }
+
+  return text
+    .replace(/^\{/, "")
+    .replace(/\}$/, "")
+    .replace(/"diagnostico_executivo_aprofundado"\s*:\s*/gi, "")
+    .replace(/"diagnostico_executivo"\s*:\s*/gi, "")
+    .replace(/"leitura_executiva"\s*:\s*/gi, "")
+    .replace(/"impacto_estrategico"\s*:\s*"[^"]*",?/gi, "")
+    .replace(/"gaps"\s*:\s*\[[\s\S]*?\],?/gi, "")
+    .replace(/"prioridades"\s*:\s*\[[\s\S]*?\],?/gi, "")
+    .replace(/^"/, "")
+    .replace(/",?\s*$/, "")
+    .trim();
+}
+
+    
     function escapeHtml(value) {
       return String(value ?? "")
         .replaceAll("&", "&amp;")
