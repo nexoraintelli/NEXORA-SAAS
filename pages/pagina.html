@@ -877,37 +877,74 @@ input[type="file"],
       if (currentStep < steps.length - 1) {
         currentStep++;
        const abriuHistoricoC2 = await carregarC2SalvoDoHistorico();
-        async function carregarC2SalvoDoHistorico() {
+      async function carregarC2SalvoDoHistorico() {
   const diagnosticId =
     diagnosticIdFromUrl ||
     currentDiagnosticId ||
     getDiagnosticId() ||
     localStorage.getItem("nx_diagnostic_id");
 
-  if (!diagnosticId || !currentUser?.id) return false;
+  if (!currentUser?.id) return false;
 
   try {
-    const { data, error } = await sb
-      .from("brain_results")
-      .select("*")
-      .eq("diagnostic_id", diagnosticId)
-      .eq("brain_code", "c2")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    let row = null;
 
-    if (error || !data?.result_data) {
+    // 1. Primeiro tenta carregar o C2 do diagnóstico atual
+    if (diagnosticId) {
+      const { data, error } = await sb
+        .from("brain_results")
+        .select("*")
+        .eq("diagnostic_id", diagnosticId)
+        .eq("brain_code", "c2")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!error && data?.result_data) {
+        row = data;
+      }
+    }
+
+    // 2. Se não achou C2 nesse diagnóstico, busca o último C2 do produto
+    if (!row && currentProductId) {
+      const { data: diagnosticsData, error: diagnosticsError } = await sb
+        .from("diagnostics")
+        .select("id, product_id, created_at")
+        .eq("product_id", currentProductId)
+        .eq("user_id", currentUser.id)
+        .order("created_at", { ascending: false });
+
+      if (!diagnosticsError && Array.isArray(diagnosticsData) && diagnosticsData.length) {
+        const diagnosticIds = diagnosticsData.map(item => item.id).filter(Boolean);
+
+        const { data: c2Rows, error: c2Error } = await sb
+          .from("brain_results")
+          .select("*")
+          .in("diagnostic_id", diagnosticIds)
+          .eq("brain_code", "c2")
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (!c2Error && Array.isArray(c2Rows) && c2Rows[0]?.result_data) {
+          row = c2Rows[0];
+        }
+      }
+    }
+
+    if (!row?.result_data) {
       return false;
     }
 
     const savedResult = {
-      ...data.result_data,
-      diagnostic_id: diagnosticId,
-      product_id: currentProductId || data.result_data.product_id || null
+      ...row.result_data,
+      diagnostic_id: row.diagnostic_id,
+      product_id: currentProductId || row.result_data.product_id || null
     };
 
+    currentDiagnosticId = row.diagnostic_id;
+
     localStorage.setItem("nx_c2", JSON.stringify(savedResult));
-    localStorage.setItem("nx_diagnostic_id", diagnosticId);
+    localStorage.setItem("nx_diagnostic_id", row.diagnostic_id);
 
     if (savedResult.product_id) {
       localStorage.setItem("nx_product_id", savedResult.product_id);
