@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -557,6 +556,21 @@
       color: #ffd28d;
     }
 
+.status-danger {
+  background: rgba(239,68,68,.12);
+  border-color: rgba(239,68,68,.30);
+  color: #fecaca;
+}
+
+.product-monitor-row .diag-title {
+  font-size: 16px;
+}
+
+.product-monitor-row .diag-meta + .diag-meta {
+  margin-top: 4px;
+}
+
+
     .score-badge {
       width: 50px;
       height: 50px;
@@ -1013,7 +1027,7 @@
         <div class="hero-content">
           <h2>Seu centro de operação para analisar performance, página e mercado na Amazon.</h2>
           <p>
-            A Nexora cruza métricas, página e contexto competitivo para indicar onde o produto está travado e qual deve ser a próxima ação.
+            A Nexora cruza performance, página, mercado e os 5 Sistemas para indicar onde o produto está travado e qual deve ser a próxima ação.
           </p>
         </div>
       </section>
@@ -1391,6 +1405,8 @@ import {
 } from "../js/plans.js";
     let currentUserId = null;
     let currentProducts = [];
+    let currentProductDiagnostics = [];
+    let currentProductBrainResults = [];
 
     const user = await requireAuth();
 
@@ -1465,6 +1481,137 @@ async function loadUserPlan() {
   }
 }
     
+
+async function loadProductDiagnosticData(products = []) {
+  const productIds = products.map(product => product.id).filter(Boolean);
+
+  currentProductDiagnostics = [];
+  currentProductBrainResults = [];
+
+  if (!productIds.length || !currentUserId) return;
+
+  const { data: diagnosticsData, error: diagnosticsError } = await sb
+    .from("diagnostics")
+    .select("*")
+    .eq("user_id", currentUserId)
+    .in("product_id", productIds)
+    .order("created_at", { ascending: false });
+
+  if (diagnosticsError) {
+    console.warn("Não foi possível carregar diagnósticos dos produtos:", diagnosticsError);
+    return;
+  }
+
+  currentProductDiagnostics = diagnosticsData || [];
+
+  const diagnosticIds = currentProductDiagnostics.map(item => item.id).filter(Boolean);
+
+  if (!diagnosticIds.length) return;
+
+  const { data: brainData, error: brainError } = await sb
+    .from("brain_results")
+    .select("*")
+    .in("diagnostic_id", diagnosticIds)
+    .order("created_at", { ascending: false });
+
+  if (brainError) {
+    console.warn("Não foi possível carregar resultados dos cérebros no dashboard:", brainError);
+    return;
+  }
+
+  currentProductBrainResults = brainData || [];
+}
+
+function getDiagnosticsForProduct(productId) {
+  return currentProductDiagnostics.filter(item => String(item.product_id) === String(productId));
+}
+
+function getLatestDiagnosticForProduct(productId) {
+  const rows = getDiagnosticsForProduct(productId)
+    .filter(item => !isDraftDiagnostic(item));
+
+  return rows[0] || getDiagnosticsForProduct(productId)[0] || null;
+}
+
+function getBrainRowsForDiagnostic(diagnosticId) {
+  return currentProductBrainResults.filter(item => String(item.diagnostic_id) === String(diagnosticId));
+}
+
+function getSynthRowForDiagnostic(diagnosticId) {
+  return getBrainRowsForDiagnostic(diagnosticId).find(item =>
+    ["synth", "sintese", "síntese", "synthesis", "final"].includes(
+      String(item.brain_code || "").toLowerCase()
+    )
+  );
+}
+
+function getPriorityBrainRowForDashboard(diagnosticId) {
+  const rows = getBrainRowsForDiagnostic(diagnosticId);
+
+  const priority = [
+    ["synth", "sintese", "síntese", "synthesis", "final"],
+    ["c3"],
+    ["c2"],
+    ["c1"]
+  ];
+
+  for (const codes of priority) {
+    const row = rows.find(item =>
+      codes.includes(String(item.brain_code || "").toLowerCase())
+    );
+
+    if (row) return row;
+  }
+
+  return null;
+}
+
+function getProductScore(productId) {
+  const latestDiagnostic = getLatestDiagnosticForProduct(productId);
+  if (!latestDiagnostic) return null;
+
+  const priorityRow = getPriorityBrainRowForDashboard(latestDiagnostic.id);
+  const result = priorityRow?.result_data || {};
+
+  const score =
+    result.score_final ??
+    result.score_mercado ??
+    result.score_pagina ??
+    result.score_geral ??
+    priorityRow?.score ??
+    latestDiagnostic.final_score ??
+    latestDiagnostic.score_final ??
+    latestDiagnostic.score ??
+    null;
+
+  const number = Number(score);
+
+  if (!Number.isFinite(number) || number <= 0) return null;
+
+  return Math.round(number);
+}
+
+function getProductStatusLabel(score, latestDiagnostic) {
+  if (!latestDiagnostic) return "Sem diagnóstico";
+  if (!Number.isFinite(score)) return "Em andamento";
+  if (score >= 75) return "Saudável";
+  if (score >= 50) return "Atenção";
+  return "Crítico";
+}
+
+function getProductStatusClass(score, latestDiagnostic) {
+  if (!latestDiagnostic || !Number.isFinite(score)) return "status-progress";
+  if (score >= 75) return "status-done";
+  if (score >= 50) return "status-progress";
+  return "status-danger";
+}
+
+function isDraftDiagnostic(diagnostic) {
+  const status = String(diagnostic?.status || "").toLowerCase();
+  const score = getDiagnosticScore(diagnostic);
+  return status === "draft" && score === "-";
+}
+
 async function loadProducts() {
   const el = document.getElementById("productsList");
 
@@ -1473,6 +1620,8 @@ async function loadProducts() {
   try {
     const products = await listProducts();
     currentProducts = products || [];
+
+await loadProductDiagnosticData(currentProducts);
 
 const clientsProductsCount = document.getElementById("clientsProductsCount");
 
@@ -1518,33 +1667,61 @@ if (clientsProductsCount) {
       const marketplace = product.marketplace || "Marketplace não definido";
       const asin = product.asin || "Sem ASIN";
 
+      const latestDiagnostic = getLatestDiagnosticForProduct(product.id);
+      const diagnosticsCount = getDiagnosticsForProduct(product.id).filter(item => !isDraftDiagnostic(item)).length;
+      const score = getProductScore(product.id);
+      const statusLabel = getProductStatusLabel(score, latestDiagnostic);
+      const statusClass = getProductStatusClass(score, latestDiagnostic);
+      const synthRow = latestDiagnostic ? getSynthRowForDiagnostic(latestDiagnostic.id) : null;
+      const lastDiagnosticDate = latestDiagnostic?.created_at
+        ? new Date(latestDiagnostic.created_at).toLocaleDateString("pt-BR")
+        : "Sem histórico";
+
+      const actionButton = latestDiagnostic && synthRow
+        ? `
+          <button class="btn-mini" onclick="abrirRelatorioProduto('${escapeHtml(product.id)}', '${escapeHtml(latestDiagnostic.id)}')">
+            Relatório
+          </button>
+        `
+        : latestDiagnostic
+          ? `
+            <button class="btn-mini" onclick="abrirSinteseProduto('${escapeHtml(product.id)}', '${escapeHtml(latestDiagnostic.id)}')">
+              Síntese
+            </button>
+          `
+          : "";
+
       return `
-        <div class="diag-row">
+        <div class="diag-row product-monitor-row">
           <div>
             <div class="diag-title">${escapeHtml(name)}</div>
             <div class="diag-meta">
-              ${escapeHtml(category)} · ${escapeHtml(subcategory)} · ${escapeHtml(marketplace)}
+              ${escapeHtml(asin)} · ${escapeHtml(category)} · ${escapeHtml(subcategory)} · ${escapeHtml(marketplace)}
+            </div>
+            <div class="diag-meta">
+              ${diagnosticsCount} ${diagnosticsCount === 1 ? "diagnóstico" : "diagnósticos"} · Último: ${escapeHtml(lastDiagnosticDate)}
             </div>
           </div>
 
-          <span class="status-pill status-progress">
-            Produto
+          <span class="status-pill ${statusClass}">
+            ${escapeHtml(statusLabel)}
           </span>
 
-          <div class="score-badge">-</div>
+          <div class="score-badge">${Number.isFinite(score) ? score : "-"}</div>
 
           <div class="diag-meta">
-            ${new Date(product.created_at).toLocaleDateString("pt-BR")}<br>
-            ${escapeHtml(asin)}
+            Cadastrado<br>
+            ${new Date(product.created_at).toLocaleDateString("pt-BR")}
           </div>
 
           <div class="diag-action">
             <button class="btn-mini" onclick="iniciarDiagnosticoProduto('${escapeHtml(product.id)}')">
-              Diagnóstico
+              Novo diagnóstico
             </button>
             <button class="btn-mini" onclick="abrirProdutoPorId('${escapeHtml(product.id)}')">
-              Abrir
+              Histórico
             </button>
+            ${actionButton}
           </div>
         </div>
       `;
@@ -1722,15 +1899,25 @@ window.abrirModalUpgrade = function (reason) {
   window.location.href = `./planos.html?reason=${message}`;
 };
 window.abrirRelatorio = function () {
+  const productId = localStorage.getItem("nx_product_id");
+  const diagnosticId = localStorage.getItem("nx_diagnostic_id");
   const synth = localStorage.getItem("nx_synth");
 
-  if (!synth) {
-    alert("Nenhuma Síntese Final encontrada. Gere a Síntese antes de abrir o relatório.");
-    window.location.href = "./sintese.html";
+  if (!diagnosticId) {
+    alert("Nenhum diagnóstico ativo encontrado. Abra um produto ou escolha um diagnóstico no histórico.");
+    scrollToProducts();
     return;
   }
 
-  window.location.href = "./relatorio.html";
+  if (!synth) {
+    alert("Nenhuma Síntese Final encontrada para o diagnóstico ativo. Você será direcionado para a Síntese.");
+    window.location.href =
+      `./sintese.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId)}`;
+    return;
+  }
+
+  window.location.href =
+    `./relatorio.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId)}`;
 };
     window.loadDiagnostics = loadDiagnostics;
    window.abrirModalProduto = async function () {
@@ -1888,6 +2075,32 @@ window.abrirProdutoPorId = function (productId) {
 
   window.location.href =
     `./produto.html?product_id=${encodeURIComponent(productId)}`;
+};
+
+window.abrirRelatorioProduto = function (productId, diagnosticId) {
+  if (!productId || !diagnosticId) {
+    alert("Produto ou diagnóstico não encontrado para abrir o relatório.");
+    return;
+  }
+
+  localStorage.setItem("nx_product_id", productId);
+  localStorage.setItem("nx_diagnostic_id", diagnosticId);
+
+  window.location.href =
+    `./relatorio.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId)}`;
+};
+
+window.abrirSinteseProduto = function (productId, diagnosticId) {
+  if (!productId || !diagnosticId) {
+    alert("Produto ou diagnóstico não encontrado para abrir a síntese.");
+    return;
+  }
+
+  localStorage.setItem("nx_product_id", productId);
+  localStorage.setItem("nx_diagnostic_id", diagnosticId);
+
+  window.location.href =
+    `./sintese.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId)}`;
 };
 
 window.abrirProduto = function (diagnosticId) {
