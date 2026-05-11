@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -712,6 +713,10 @@
 
 .diag-action {
   justify-self: end;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .btn-mini {
@@ -737,6 +742,7 @@
 @media (max-width: 1100px) {
   .diag-action {
     justify-self: start;
+    justify-content: flex-start;
   }
 }
 
@@ -1106,31 +1112,31 @@
       <section class="panel flow-panel">
         <div class="section-head">
           <h2>Fluxo Nexora</h2>
-          <button class="btn-secondary" onclick="location.href='./diagnostico.html'">
+          <button class="btn-secondary" onclick="abrirFluxoEtapa('./diagnostico.html')">
             Abrir fluxo
           </button>
         </div>
 
         <div class="flow-grid">
-          <div class="flow-card" onclick="location.href='./diagnostico.html'">
+          <div class="flow-card" onclick="abrirFluxoEtapa('./diagnostico.html')">
             <span class="flow-step">01</span>
             <h3>Cérebro 1</h3>
             <p>Diagnóstico de performance, métricas, PPC, operação e causa raiz inicial.</p>
           </div>
 
-          <div class="flow-card" onclick="location.href='./pagina.html'">
+          <div class="flow-card" onclick="abrirFluxoEtapa('./pagina.html')">
             <span class="flow-step">02</span>
             <h3>Cérebro 2</h3>
             <p>Leitura de página, imagens, título, comunicação, confiança e conversão.</p>
           </div>
 
-          <div class="flow-card" onclick="location.href='./mercado.html'">
+          <div class="flow-card" onclick="abrirFluxoEtapa('./mercado.html')">
             <span class="flow-step">03</span>
             <h3>Cérebro 3</h3>
             <p>Análise de mercado, concorrência, preço, força dominante e quadrante competitivo.</p>
           </div>
 
-          <div class="flow-card" onclick="location.href='./sintese.html'">
+          <div class="flow-card" onclick="abrirFluxoEtapa('./sintese.html')">
             <span class="flow-step">04</span>
             <h3>Síntese</h3>
             <p>Cruzamento dos três cérebros para definir causa raiz consolidada.</p>
@@ -1533,8 +1539,11 @@ if (clientsProductsCount) {
           </div>
 
           <div class="diag-action">
+            <button class="btn-mini" onclick="iniciarDiagnosticoProduto('${escapeHtml(product.id)}')">
+              Diagnóstico
+            </button>
             <button class="btn-mini" onclick="abrirProdutoPorId('${escapeHtml(product.id)}')">
-              Abrir produto
+              Abrir
             </button>
           </div>
         </div>
@@ -1623,6 +1632,40 @@ window.scrollToProducts = function () {
 
     window.novoDiagnostico = async function () {
   try {
+    if (!currentProducts.length) {
+      try {
+        currentProducts = await listProducts() || [];
+      } catch (error) {
+        console.warn("Não foi possível recarregar produtos antes do diagnóstico:", error);
+      }
+    }
+
+    if (!currentProducts.length) {
+      alert("Cadastre um produto antes de iniciar um diagnóstico. Assim o histórico fica vinculado ao produto correto.");
+      abrirModalProduto();
+      return;
+    }
+
+    if (currentProducts.length === 1) {
+      await iniciarDiagnosticoProduto(currentProducts[0].id);
+      return;
+    }
+
+    scrollToProducts();
+    alert("Escolha o produto que deseja diagnosticar e clique em Diagnóstico no card do produto.");
+  } catch (error) {
+    console.error("Erro ao preparar novo diagnóstico:", error);
+    alert("Não foi possível iniciar um novo diagnóstico. Tente novamente.");
+  }
+};
+
+window.iniciarDiagnosticoProduto = async function (productId) {
+  if (!productId) {
+    alert("Produto sem ID. Abra ou cadastre um produto válido antes de iniciar o diagnóstico.");
+    return;
+  }
+
+  try {
     const permission = await canCreateDiagnostic();
 
     if (!permission.allowed) {
@@ -1639,18 +1682,39 @@ window.scrollToProducts = function () {
       "nexora_relatorio_mapeado"
     ].forEach(k => localStorage.removeItem(k));
 
-    const diag = await createDiagnostic();
+    localStorage.setItem("nx_product_id", productId);
 
-    localStorage.setItem("nx_diagnostic_id", diag.id);
+    const selectedProduct = currentProducts.find(product => String(product.id) === String(productId));
+    if (selectedProduct) {
+      localStorage.setItem("nx_current_product", JSON.stringify(selectedProduct));
+    }
+
+    const diagnostic = await createDiagnostic({
+      productId
+    });
+
+    localStorage.setItem("nx_diagnostic_id", diagnostic.id);
 
     window.location.href =
-      `./diagnostico.html?diagnostic_id=${encodeURIComponent(diag.id)}`;
+      `./diagnostico.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnostic.id)}`;
   } catch (error) {
-    console.error("Erro ao iniciar novo diagnóstico:", error);
-    alert("Não foi possível iniciar um novo diagnóstico. Verifique seu plano e tente novamente.");
+    console.error("Erro ao iniciar diagnóstico vinculado ao produto:", error);
+    alert("Não foi possível iniciar o diagnóstico deste produto. Verifique seu plano e tente novamente.");
   }
 };
-    window.abrirModalUpgrade = function (reason) {
+
+window.abrirFluxoEtapa = function (page) {
+  const productId = localStorage.getItem("nx_product_id");
+  const diagnosticId = localStorage.getItem("nx_diagnostic_id");
+
+  const params = new URLSearchParams();
+  if (productId) params.set("product_id", productId);
+  if (diagnosticId) params.set("diagnostic_id", diagnosticId);
+
+  const query = params.toString();
+  window.location.href = query ? `${page}?${query}` : page;
+};
+window.abrirModalUpgrade = function (reason) {
   const message = encodeURIComponent(
     reason || "Você atingiu o limite do seu plano."
   );
@@ -1800,7 +1864,13 @@ window.abrirProdutoAtual = function () {
     return;
   }
 
-  alert("Nenhum produto ou diagnóstico ativo encontrado. Abra um produto recente ou cadastre um novo produto.");
+  if (currentProducts.length === 1) {
+    abrirProdutoPorId(currentProducts[0].id);
+    return;
+  }
+
+  scrollToProducts();
+  alert("Escolha um produto na lista de Produtos monitorados.");
 };
 
 window.abrirProdutoPorId = function (productId) {
@@ -1810,6 +1880,11 @@ window.abrirProdutoPorId = function (productId) {
   }
 
   localStorage.setItem("nx_product_id", productId);
+
+  const selectedProduct = currentProducts.find(product => String(product.id) === String(productId));
+  if (selectedProduct) {
+    localStorage.setItem("nx_current_product", JSON.stringify(selectedProduct));
+  }
 
   window.location.href =
     `./produto.html?product_id=${encodeURIComponent(productId)}`;
@@ -1832,26 +1907,6 @@ function getModalValue(id) {
   return el ? String(el.value || "").trim() : "";
 }
     
-    window.abrirProduto = function (diagnosticId) {
-  if (!diagnosticId) {
-    alert("Não foi possível abrir este produto porque o diagnóstico não possui ID.");
-    return;
-  }
-      window.abrirProdutoAtual = function () {
-  const diagnosticId = localStorage.getItem("nx_diagnostic_id");
-
-  if (!diagnosticId) {
-    alert("Nenhum diagnóstico ativo encontrado. Abra um diagnóstico recente ou inicie uma nova análise.");
-    return;
-  }
-
-  window.location.href = `./produto.html?diagnostic_id=${encodeURIComponent(diagnosticId)}`;
-};
-
-  localStorage.setItem("nx_diagnostic_id", diagnosticId);
-  window.location.href = `./produto.html?diagnostic_id=${encodeURIComponent(diagnosticId)}`;
-};
-
     async function loadDiagnostics(userId) {
       if (!userId) return;
 
@@ -1901,12 +1956,14 @@ function getModalValue(id) {
         const status = d.status || "draft";
         const isDone = isDiagnosticComplete(d);
         const score = getDiagnosticScore(d);
+        const diagTitle = d.product_name || d.name || d.category || "Diagnóstico Amazon";
+        const diagSubtitle = [d.category, d.subcategory].filter(Boolean).join(" · ") || "Produto vinculado ao histórico";
 
         return `
   <div class="diag-row">
     <div>
-      <div class="diag-title">${escapeHtml(d.category || "Diagnóstico Amazon")}</div>
-      <div class="diag-meta">${escapeHtml(d.subcategory || "Categoria não definida")}</div>
+      <div class="diag-title">${escapeHtml(diagTitle)}</div>
+      <div class="diag-meta">${escapeHtml(diagSubtitle)}</div>
     </div>
 
     <span class="status-pill ${isDone ? "status-done" : "status-progress"}">
