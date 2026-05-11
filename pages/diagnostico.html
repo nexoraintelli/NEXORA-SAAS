@@ -1908,9 +1908,12 @@ async function carregarC1SalvoDoHistorico() {
   ativarOpcao("buybox", result.buybox || result.bb);
   ativarOpcao("stock", result.stock || result.est);
 } 
-    await carregarProdutoVinculado();
-await carregarC1SalvoDoHistorico();
-renderStep();
+   await carregarProdutoVinculado();
+const abriuHistoricoC1 = await carregarC1SalvoDoHistorico();
+
+if (!abriuHistoricoC1) {
+  renderStep();
+}
   </script>
 </body>
 </html>
