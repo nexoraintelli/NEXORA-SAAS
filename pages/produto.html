@@ -1290,12 +1290,22 @@ window.abrirRelatorioHistorico = function (diagnosticId) {
 };
 
 window.abrirEtapaPorBrain = function (page, stage) {
-  const row = getLatestBrainResultByStage(stage);
+  const selectedDiagnosticId =
+    new URLSearchParams(window.location.search).get("diagnostic_id") ||
+    currentDiagnosticId ||
+    localStorage.getItem("nx_diagnostic_id") ||
+    "";
 
-  const diagnosticId = row?.diagnostic_id || currentDiagnosticId || "";
+  let diagnosticId = selectedDiagnosticId;
+
+  if (!diagnosticId) {
+    const row = getLatestBrainResultByStage(stage);
+    diagnosticId = row?.diagnostic_id || "";
+  }
 
   if (diagnosticId) {
     localStorage.setItem("nx_diagnostic_id", diagnosticId);
+    currentDiagnosticId = diagnosticId;
   }
 
   if (currentProductId) {
@@ -1303,7 +1313,7 @@ window.abrirEtapaPorBrain = function (page, stage) {
   }
 
   window.location.href =
-    `${page}?product_id=${encodeURIComponent(currentProductId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId)}`;
+    `${page}?product_id=${encodeURIComponent(currentProductId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
 };
 
     function getStatusClass(score) {
