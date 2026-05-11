@@ -1728,55 +1728,8 @@ function limparTextoIAComplementar(value) {
     .replace(/",?\s*$/, "")
     .trim();
 }
-function limparTextoIAComplementar(value) {
-  if (!value) return "";
 
-  if (typeof value === "object") {
-    return (
-      value.diagnostico_executivo_aprofundado ||
-      value.diagnostico_executivo ||
-      value.leitura_executiva ||
-      value.analise ||
-      value.resumo ||
-      ""
-    );
-  }
 
-  let text = String(value)
-    .replace(/```json/gi, "")
-    .replace(/```/g, "")
-    .trim();
-
-  if (text.startsWith("{")) {
-    try {
-      const parsed = JSON.parse(text);
-
-      return (
-        parsed.diagnostico_executivo_aprofundado ||
-        parsed.diagnostico_executivo ||
-        parsed.leitura_executiva ||
-        parsed.analise ||
-        parsed.resumo ||
-        ""
-      );
-    } catch (error) {}
-  }
-
-  return text
-    .replace(/^\{/, "")
-    .replace(/\}$/, "")
-    .replace(/"diagnostico_executivo_aprofundado"\s*:\s*/gi, "")
-    .replace(/"diagnostico_executivo"\s*:\s*/gi, "")
-    .replace(/"leitura_executiva"\s*:\s*/gi, "")
-    .replace(/"impacto_estrategico"\s*:\s*"[^"]*",?/gi, "")
-    .replace(/"gaps"\s*:\s*\[[\s\S]*?\],?/gi, "")
-    .replace(/"prioridades"\s*:\s*\[[\s\S]*?\],?/gi, "")
-    .replace(/^"/, "")
-    .replace(/",?\s*$/, "")
-    .trim();
-}
-
-    
     function escapeHtml(value) {
       return String(value ?? "")
         .replaceAll("&", "&amp;")
