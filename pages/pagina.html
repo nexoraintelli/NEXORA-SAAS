@@ -871,18 +871,46 @@ input[type="file"],
       renderProgress();
     }
 
-    window.nextStep = async function () {
-      if (!validarEtapa(currentStep)) return;
+   window.nextStep = async function () {
+  if (!validarEtapa(currentStep)) return;
 
-      if (currentStep < steps.length - 1) {
-        currentStep++;
-       const abriuHistoricoC2 = await carregarC2SalvoDoHistorico();
-      async function carregarC2SalvoDoHistorico() {
+  if (currentStep < steps.length - 1) {
+    currentStep++;
+    renderStep();
+    return;
+  }
+
+  await gerarAnalisePagina();
+};
+
+function getC2FromSynthPayload(synth) {
+  if (!synth) return null;
+
+  return (
+    synth?.source?.c2 ||
+    synth?.sources?.c2 ||
+    synth?.brains?.c2 ||
+    synth?.cerebros?.c2 ||
+    synth?.c2 ||
+    synth?.C2 ||
+    synth?.brain2 ||
+    synth?.pagina ||
+    synth?.page_analysis ||
+    null
+  );
+}
+
+async function carregarC2SalvoDoHistorico() {
   const diagnosticId =
     diagnosticIdFromUrl ||
     currentDiagnosticId ||
     getDiagnosticId() ||
     localStorage.getItem("nx_diagnostic_id");
+
+  console.log("Tentando carregar histórico C2:", {
+    diagnosticId,
+    currentProductId
+  });
 
   if (!diagnosticId || !currentUser?.id) {
     console.warn("C2 histórico: sem diagnosticId ou usuário.");
@@ -892,50 +920,58 @@ input[type="file"],
   try {
     let savedResult = null;
 
-    // 1. Tenta carregar C2 salvo diretamente em brain_results
-    const { data: c2Row, error: c2Error } = await sb
+    // 1. Primeiro tenta carregar C2 direto em brain_results
+    const { data: c2Rows, error: c2Error } = await sb
       .from("brain_results")
       .select("*")
       .eq("diagnostic_id", diagnosticId)
-      .eq("brain_code", "c2")
+      .in("brain_code", ["c2", "pagina", "page", "brain2", "cerebro2"])
       .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(5);
 
-    if (!c2Error && c2Row?.result_data) {
-      savedResult = {
-        ...c2Row.result_data,
-        diagnostic_id: diagnosticId,
-        product_id: currentProductId || c2Row.result_data.product_id || null
-      };
+    console.log("C2 rows encontradas:", c2Rows, c2Error);
+
+    if (!c2Error && Array.isArray(c2Rows) && c2Rows.length) {
+      const row = c2Rows.find(item => getBrainPayload(item));
+      const payload = getBrainPayload(row);
+
+      if (payload) {
+        savedResult = {
+          ...payload,
+          diagnostic_id: diagnosticId,
+          product_id: currentProductId || payload.product_id || null
+        };
+      }
     }
 
-    // 2. Se não encontrar C2 direto, tenta carregar C2 dentro da Síntese
+    // 2. Se não achou C2 direto, tenta carregar C2 dentro da Síntese
     if (!savedResult) {
-      const { data: synthRow, error: synthError } = await sb
+      const { data: synthRows, error: synthError } = await sb
         .from("brain_results")
         .select("*")
         .eq("diagnostic_id", diagnosticId)
         .in("brain_code", ["synth", "sintese", "síntese", "synthesis", "final"])
         .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .limit(5);
 
-      if (!synthError && synthRow?.result_data) {
-        const synth = synthRow.result_data;
+      console.log("Síntese rows encontradas:", synthRows, synthError);
 
-        const c2FromSynth =
-          synth?.source?.c2 ||
-          synth?.sources?.c2 ||
-          synth?.c2 ||
-          synth?.brain2 ||
-          null;
+      if (!synthError && Array.isArray(synthRows) && synthRows.length) {
+        const synthRow = synthRows.find(item => getBrainPayload(item));
+        const synthPayload = getBrainPayload(synthRow);
+        const c2FromSynth = getC2FromSynthPayload(synthPayload);
+
+        console.log("C2 extraído da síntese:", c2FromSynth);
 
         if (c2FromSynth) {
           savedResult = {
             ...c2FromSynth,
             diagnostic_id: diagnosticId,
-            product_id: currentProductId || synth.product_id || c2FromSynth.product_id || null
+            product_id:
+              currentProductId ||
+              synthPayload?.product_id ||
+              c2FromSynth.product_id ||
+              null
           };
         }
       }
@@ -958,6 +994,12 @@ input[type="file"],
 
     preencherFormularioComC2Salvo(savedResult);
     renderResult(savedResult);
+
+    steps.forEach(step => step.classList.remove("active"));
+
+    if (nextBtn) {
+      nextBtn.textContent = "Regerar análise";
+    }
 
     msg.textContent = "Resultado histórico do Cérebro 2 carregado.";
     return true;
@@ -1031,11 +1073,6 @@ function normalizarTextoC2(value) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 }
-
-if (!abriuHistoricoC2) {
-  renderStep();
-}
-
       await gerarAnalisePagina();
     };
 
@@ -1941,6 +1978,11 @@ window.handleMultipleImageUpload = function (event, targetId, labelId) {
   });
 };
     renderStep();
+    const abriuHistoricoC2 = await carregarC2SalvoDoHistorico();
+
+if (!abriuHistoricoC2) {
+  renderStep();
+}
   </script>
 </body>
 </html>
