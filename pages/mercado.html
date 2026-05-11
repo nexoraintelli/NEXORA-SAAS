@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -396,6 +397,90 @@
     min-height: 300px;
   }
 }
+
+
+/* Contexto consolidado - Cérebro 3 */
+.context-summary-panel {
+  margin-top: 18px;
+  display: grid;
+  gap: 16px;
+}
+
+.context-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.context-summary-card {
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 18px;
+  padding: 16px;
+  background:
+    radial-gradient(circle at top left, rgba(139,30,30,.16), transparent 42%),
+    rgba(255,255,255,.025);
+}
+
+.context-summary-card h3 {
+  font-family: Syne, sans-serif;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.context-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.context-mini {
+  min-height: 82px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255,255,255,.025);
+}
+
+.context-mini p {
+  color: var(--muted);
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.context-mini strong {
+  display: block;
+  font-family: Syne, sans-serif;
+  font-size: 17px;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.context-root-cause {
+  grid-column: 1 / -1;
+  border-color: rgba(179,38,38,.30);
+  background: rgba(139,30,30,.12);
+}
+
+.context-objective {
+  border: 1px solid rgba(179,38,38,.25);
+  border-radius: 18px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(139,30,30,.14), rgba(255,255,255,.025));
+}
+
+.context-objective p {
+  color: var(--muted);
+  line-height: 1.75;
+  margin-top: 8px;
+}
+
+@media (max-width: 900px) {
+  .context-summary-grid,
+  .context-mini-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
   </style>
 </head>
 
@@ -595,10 +680,11 @@
 
   <script type="module">
     import { requireAuth } from "../js/auth.js";
+    import { sb } from "../js/supabaseClient.js";
     import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
     import { analisarMercadoBase } from "../js/cerebro3Engine.js";
 
-   await requireAuth();
+   const currentUser = await requireAuth();
 
 const urlParams = new URLSearchParams(window.location.search);
 
@@ -633,14 +719,108 @@ let currentStep = 0;
 
     let C1 = null;
     let C2 = null;
+    let currentProduct = null;
 
-    try {
-      C1 = JSON.parse(localStorage.getItem("nx_c1") || "null");
-    } catch (e) {}
+    function readLocalJson(key) {
+      try {
+        return JSON.parse(localStorage.getItem(key) || "null");
+      } catch (error) {
+        return null;
+      }
+    }
 
-    try {
-      C2 = JSON.parse(localStorage.getItem("nx_c2") || "null");
-    } catch (e) {}
+    function extractBrainPayload(row) {
+      if (!row) return null;
+
+      return (
+        row.result_data ||
+        row.resultData ||
+        row.result ||
+        row.data ||
+        row.output ||
+        row.payload ||
+        null
+      );
+    }
+
+    async function buscarBrainResult(brainCode) {
+      const diagnosticId = currentDiagnosticId || getDiagnosticId();
+
+      if (!diagnosticId || !currentUser?.id) return null;
+
+      try {
+        const { data, error } = await sb
+          .from("brain_results")
+          .select("*")
+          .eq("diagnostic_id", diagnosticId)
+          .eq("brain_code", brainCode)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (error) {
+          console.warn(`Não foi possível buscar ${brainCode} no Supabase:`, error);
+          return null;
+        }
+
+        const row = Array.isArray(data) ? data[0] : data;
+        return extractBrainPayload(row);
+      } catch (error) {
+        console.warn(`Erro ao buscar ${brainCode} no Supabase:`, error);
+        return null;
+      }
+    }
+
+    async function carregarProdutoAtual() {
+      if (!currentProductId || !currentUser?.id) return null;
+
+      try {
+        const { data, error } = await sb
+          .from("products")
+          .select("*")
+          .eq("id", currentProductId)
+          .eq("user_id", currentUser.id)
+          .single();
+
+        if (error || !data) {
+          console.warn("Produto atual não encontrado no Cérebro 3:", error);
+          return null;
+        }
+
+        currentProduct = data;
+        localStorage.setItem("nx_current_product", JSON.stringify(data));
+
+        if (!document.getElementById("productPrice")?.value && data.current_price) {
+          document.getElementById("productPrice").value = data.current_price;
+        }
+
+        return data;
+      } catch (error) {
+        console.warn("Erro ao carregar produto atual no Cérebro 3:", error);
+        return null;
+      }
+    }
+
+    async function carregarContextosAnteriores() {
+      C1 = readLocalJson("nx_c1");
+      C2 = readLocalJson("nx_c2");
+
+      if (!C1) {
+        C1 = await buscarBrainResult("c1");
+        if (C1) localStorage.setItem("nx_c1", JSON.stringify(C1));
+      }
+
+      if (!C2) {
+        C2 = await buscarBrainResult("c2");
+        if (C2) localStorage.setItem("nx_c2", JSON.stringify(C2));
+      }
+
+      await carregarProdutoAtual();
+    }
+
+    function formatPercent(value) {
+      if (value === undefined || value === null || value === "") return "-";
+      return `${value}%`;
+    }
 
     function renderContext() {
       if (!C1 || !C2) {
@@ -665,24 +845,66 @@ let currentStep = 0;
         return;
       }
 
+      const productName =
+        currentProduct?.product_name ||
+        currentProduct?.name ||
+        C1.product ||
+        "Produto em análise";
+
+      const category = C1.subcategory || C1.sub || C1.category || C1.cat || currentProduct?.subcategory || "-";
+      const c1Score = C1.score_geral ?? C1.score ?? "-";
+      const c2Score = C2.score_pagina ?? C2.score ?? "-";
+      const c2Problem = C2.problema_principal || C2.gap_principal || "-";
+      const c1Root = C1.root_cause || C1.gap_principal || "-";
+
       contextArea.innerHTML = `
         <p class="step-label">Contexto consolidado</p>
         <h2>Leitura recebida dos Cérebros 1 e 2</h2>
 
-        <div class="context-grid">
-          ${smallCard("Causa raiz C1", C1.root_cause || "-")}
-          ${smallCard("Score C1", (C1.score_geral ?? "-") + "/100")}
-          ${smallCard("Problema C2", C2.problema_principal || "-")}
-          ${smallCard("Score C2", (C2.score_pagina ?? "-") + "/100")}
-        </div>
-
-        <p style="color:var(--muted);margin-top:18px;line-height:1.7;">
-          O Cérebro 3 vai validar se o mercado reforça, agrava ou contradiz a hipótese dos Cérebros anteriores.
+        <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
+          Produto em análise: <strong style="color:#fff;">${escapeHtml(productName)}</strong>
         </p>
+
+        <div class="context-summary-panel">
+          <div class="context-summary-grid">
+            <div class="context-summary-card">
+              <h3>Performance · Cérebro 1</h3>
+              <div class="context-mini-grid">
+                ${contextMini("Categoria", category)}
+                ${contextMini("Score C1", `${c1Score}/100`)}
+                ${contextMini("CTR", formatPercent(C1.ctr))}
+                ${contextMini("CVR", formatPercent(C1.cvr))}
+                ${contextMini("ACOS", formatPercent(C1.acos))}
+                ${contextMini("TACOS", formatPercent(C1.tacos))}
+                ${contextMini("Causa raiz", c1Root, "context-root-cause")}
+              </div>
+            </div>
+
+            <div class="context-summary-card">
+              <h3>Página · Cérebro 2</h3>
+              <div class="context-mini-grid">
+                ${contextMini("Score C2", `${c2Score}/100`)}
+                ${contextMini("Problema principal", c2Problem, "context-root-cause")}
+                ${contextMini("Atratividade", scoreValue(C2, "atratividade_visual"))}
+                ${contextMini("Título/SEO", scoreValue(C2, "titulo_seo"))}
+                ${contextMini("Comunicação", scoreValue(C2, "comunicacao_valor"))}
+                ${contextMini("Diferenciação", scoreValue(C2, "diferenciacao"))}
+              </div>
+            </div>
+          </div>
+
+          <div class="context-objective">
+            <span class="pill-red">Objetivo do Cérebro 3</span>
+            <p>
+              Validar se o mercado confirma, intensifica ou contradiz os problemas encontrados. Aqui a Nexora cruza preço, reviews, concorrentes, dominância, barreira de entrada e espaço para diferenciação antes da Síntese final.
+            </p>
+          </div>
+        </div>
       `;
     }
 
-  renderContext();
+    await carregarContextosAnteriores();
+    renderContext();
 
 document.querySelectorAll(".option-group").forEach(group => {
       group.querySelectorAll(".option-btn").forEach(btn => {
@@ -769,7 +991,7 @@ document.querySelectorAll(".option-group").forEach(group => {
     }
 
     async function gerarAnaliseMercado() {
-      const diagnosticId = getDiagnosticId();
+      const diagnosticId = getDiagnosticId() || currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
 
       if (!diagnosticId) {
         msg.textContent = "Nenhum diagnóstico ativo. Volte ao dashboard e inicie um novo diagnóstico.";
@@ -871,43 +1093,6 @@ window.irParaSintese = function () {
   window.location.href =
     `./sintese.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
 };
-window.irParaCerebro1 = function () {
-  const productId = currentProductId || localStorage.getItem("nx_product_id");
-  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
-
-  window.location.href =
-    `./diagnostico.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
-};
-
-window.irParaCerebro2 = function () {
-  const productId = currentProductId || localStorage.getItem("nx_product_id");
-  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
-
-  window.location.href =
-    `./pagina.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
-};
-
-window.irParaSintese = function () {
-  const productId = currentProductId || localStorage.getItem("nx_product_id");
-  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
-
-  window.location.href =
-    `./sintese.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
-};
-
-window.voltarParaProdutoOuDashboard = function () {
-  const productId = currentProductId || localStorage.getItem("nx_product_id");
-  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
-
-  if (productId) {
-    window.location.href =
-      `./produto.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
-    return;
-  }
-
-  window.location.href = "./dashboard.html";
-};
-    
 function limparTextoIA(texto) {
   const value = String(texto || "").trim();
 
@@ -1053,9 +1238,6 @@ ${renderCompetitiveQuadrant(result)}
         </div>
 
       <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
-  <button class="btn-secondary" onclick="voltarParaProdutoOuDashboard()">
-    Voltar ao produto
-  </button>
   <button class="btn-secondary" onclick="voltarParaProdutoOuDashboard()">
     Voltar ao produto
   </button>
@@ -1225,7 +1407,7 @@ Retorne exatamente este JSON:
         return;
       }
 
-      const diagnosticId = getDiagnosticId();
+      const diagnosticId = getDiagnosticId() || currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
 
       if (!diagnosticId) {
         msg.textContent = "Nenhum diagnóstico ativo encontrado.";
@@ -1304,7 +1486,8 @@ diagnostico_ia: limparTextoIA(
         });
 
         await updateDiagnostic(diagnosticId, {
-          status: "c3_ai_completed"
+          status: "c3_ai_completed",
+          product_id: currentProductId || null
         });
       } catch (error) {
         console.warn("IA aplicada no Cérebro 3, mas houve erro ao salvar no banco:", error);
@@ -1428,6 +1611,16 @@ diagnostico_ia: limparTextoIA(
           <div style="color:var(--text-muted);font-size:12.5px;line-height:1.65;margin-top:8px;">
             ${escapeHtml(text || "-")}
           </div>
+        </div>
+      `;
+    }
+
+
+    function contextMini(title, value, extraClass = "") {
+      return `
+        <div class="context-mini ${escapeHtml(extraClass)}">
+          <p>${escapeHtml(title)}</p>
+          <strong>${escapeHtml(value ?? "-")}</strong>
         </div>
       `;
     }
