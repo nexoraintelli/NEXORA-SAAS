@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -142,6 +143,47 @@
       margin-top: 4px;
     }
 
+
+    .product-context-card {
+      margin-top: 20px;
+      border: 1px solid rgba(179,38,38,.32);
+      background: linear-gradient(135deg, rgba(139,30,30,.16), rgba(255,255,255,.025));
+      border-radius: 18px;
+      padding: 16px;
+      display: none;
+    }
+
+    .product-context-card.active {
+      display: block;
+    }
+
+    .product-context-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .product-context-title {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: 17px;
+      margin-top: 5px;
+    }
+
+    .product-context-meta {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-top: 5px;
+    }
+
+    .context-warning {
+      border-color: rgba(240,163,58,.35);
+      background: linear-gradient(135deg, rgba(240,163,58,.10), rgba(255,255,255,.025));
+    }
+
     @media (max-width: 760px) {
       .progress {
         grid-template-columns: 1fr;
@@ -196,6 +238,8 @@
       <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
         Leitura profunda de métricas, tráfego, conversão, PPC, rentabilidade e operação para identificar a primeira causa raiz do produto.
       </p>
+
+      <div id="productContextPanel" class="product-context-card"></div>
 
       <div class="progress" id="progress"></div>
     </section>
@@ -452,6 +496,7 @@ if (diagnosticIdFromUrl) {
 
 let currentProduct = null;
 let currentProductId = productIdFromUrl || localStorage.getItem("nx_product_id");
+let productContextLoaded = false;
 
     const state = {};
     let currentStep = 0;
@@ -860,7 +905,16 @@ const subcategoriasPorCategoria = {
       window.atualizarSubcategorias();
     }
 async function carregarProdutoVinculado() {
-  if (!currentUser || !currentProductId) return;
+  if (productContextLoaded) return;
+
+  productContextLoaded = true;
+
+  if (!currentUser) return;
+
+  if (!currentProductId) {
+    renderProductContext(null);
+    return;
+  }
 
   try {
     const { data, error } = await sb
@@ -872,16 +926,66 @@ async function carregarProdutoVinculado() {
 
     if (error || !data) {
       console.warn("Produto vinculado não encontrado:", error);
+      renderProductContext(null, "Não foi possível carregar o produto vinculado. Volte ao dashboard e inicie o diagnóstico pelo card do produto.");
       return;
     }
 
     currentProduct = data;
+    currentProductId = data.id;
+
+    localStorage.setItem("nx_product_id", data.id);
     localStorage.setItem("nx_current_product", JSON.stringify(data));
 
     preencherCamposComProduto(data);
+    renderProductContext(data);
   } catch (error) {
     console.warn("Erro ao carregar produto vinculado:", error);
+    renderProductContext(null, "Erro ao carregar o produto vinculado. Tente voltar ao dashboard e abrir novamente pelo card do produto.");
   }
+}
+
+function renderProductContext(product, customMessage = "") {
+  const panel = document.getElementById("productContextPanel");
+  if (!panel) return;
+
+  if (!product) {
+    panel.className = "product-context-card active context-warning";
+    panel.innerHTML = `
+      <div class="product-context-head">
+        <div>
+          <p class="step-label" style="margin-bottom:4px;color:#f0a33a;">Produto não vinculado</p>
+          <div class="product-context-title">Este diagnóstico ainda não está conectado a um produto.</div>
+          <div class="product-context-meta">
+            ${escapeHtml(customMessage || "Para manter histórico, evolução e relatório por produto, inicie o Cérebro 1 a partir de um produto cadastrado no dashboard.")}
+          </div>
+        </div>
+        <button class="btn-secondary" type="button" onclick="location.href='./dashboard.html#productsPanel'">
+          Voltar ao dashboard
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  const name = product.product_name || product.name || product.asin || "Produto sem nome";
+  const asin = product.asin || "Sem ASIN";
+  const category = product.category || "Categoria não definida";
+  const subcategory = product.subcategory || "Subcategoria não definida";
+  const marketplace = product.marketplace || "Marketplace não definido";
+
+  panel.className = "product-context-card active";
+  panel.innerHTML = `
+    <div class="product-context-head">
+      <div>
+        <p class="step-label" style="margin-bottom:4px;">Produto em análise</p>
+        <div class="product-context-title">${escapeHtml(name)}</div>
+        <div class="product-context-meta">
+          ASIN: ${escapeHtml(asin)} · ${escapeHtml(category)} · ${escapeHtml(subcategory)} · ${escapeHtml(marketplace)}
+        </div>
+      </div>
+      <span class="pill-red">Diagnóstico vinculado</span>
+    </div>
+  `;
 }
 
 function preencherCamposComProduto(product) {
@@ -1001,9 +1105,7 @@ function setInputValue(id, value) {
 
       if (currentStep < steps.length - 1) {
         currentStep++;
-        
-      await carregarProdutoVinculado();
-renderStep();
+        renderStep();
         return;
       }
 
@@ -1074,6 +1176,12 @@ renderStep();
     }
 
     async function gerarDiagnostico() {
+      if (!currentProductId) {
+        msg.textContent = "Este diagnóstico precisa estar vinculado a um produto. Volte ao dashboard e inicie pelo card do produto.";
+        renderProductContext(null);
+        return;
+      }
+
       const diagnosticId = getDiagnosticId();
 
       if (!diagnosticId) {
@@ -1540,12 +1648,18 @@ ${result.ia_usada && result.leitura_por_pilar_ia ? `
       resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 window.irParaCerebro2 = function () {
-  const diagnosticId = getDiagnosticId();
+  const diagnosticId = getDiagnosticId() || localStorage.getItem("nx_diagnostic_id");
   const productId = currentProductId || localStorage.getItem("nx_product_id");
 
+  if (!productId || !diagnosticId) {
+    alert("Antes de avançar, gere o Cérebro 1 vinculado a um produto cadastrado.");
+    return;
+  }
+
   window.location.href =
-    `./pagina.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
+    `./pagina.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId)}`;
 };
+
     window.aprofundarResultadoComIA = async function () {
       const raw = localStorage.getItem("nx_c1");
 
@@ -1718,6 +1832,7 @@ function smallTextCard(title, text) {
         .replaceAll("'", "&#039;");
     }
 
+    await carregarProdutoVinculado();
     renderStep();
   </script>
 </body>
