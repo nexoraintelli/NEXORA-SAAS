@@ -1049,6 +1049,14 @@ if (!visibleDiagnostics.length) {
        const score = getScoreFromDiagnostic(d);
 const preferredRow = getBrainPriorityRow(d.id);
 const result = preferredRow?.result_data || {};
+        const synthRow = brainResults.find(item =>
+  item.diagnostic_id === d.id &&
+  ["synth", "sintese", "síntese", "synthesis", "final"].includes(
+    String(item.brain_code || "").toLowerCase()
+  )
+);
+
+const hasSynth = Boolean(synthRow?.result_data);
 
 const title =
   result.causa_raiz_consolidada ||
@@ -1081,13 +1089,24 @@ const summary =
             <div>
               <p>${formatDate(d.created_at)}<br>${formatTime(d.created_at)}</p>
              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+ <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
   <button class="btn-secondary" onclick="abrirDiagnosticoHistorico('${escapeHtml(d.id)}')">
     Abrir
   </button>
 
-  <button class="btn-secondary" onclick="abrirRelatorioHistorico('${escapeHtml(d.id)}')">
-    Relatório
-  </button>
+  ${
+    hasSynth
+      ? `
+        <button class="btn-secondary" onclick="abrirRelatorioHistorico('${escapeHtml(d.id)}')">
+          Relatório
+        </button>
+      `
+      : `
+        <button class="btn-secondary" onclick="abrirSinteseHistorica('${escapeHtml(d.id)}')">
+          Gerar Síntese
+        </button>
+      `
+  }
 </div>
             </div>
           </div>
@@ -1192,6 +1211,19 @@ const summary =
     alert("Não foi possível criar um novo diagnóstico para este produto.");
   }
 };
+window.abrirSinteseHistorica = function (diagnosticId) {
+  if (!diagnosticId) {
+    alert("Diagnóstico não encontrado para abrir a síntese.");
+    return;
+  }
+
+  localStorage.setItem("nx_diagnostic_id", diagnosticId);
+  localStorage.setItem("nx_product_id", currentProductId);
+
+  window.location.href =
+    `./sintese.html?product_id=${encodeURIComponent(currentProductId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId)}`;
+};
+    
 window.abrirRelatorioHistorico = function (diagnosticId) {
   localStorage.setItem("nx_diagnostic_id", diagnosticId);
   localStorage.setItem("nx_product_id", currentProductId);
