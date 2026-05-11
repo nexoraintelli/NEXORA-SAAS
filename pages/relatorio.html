@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -342,6 +343,91 @@
       background: rgba(255,255,255,.018);
     }
 
+
+
+    .systems-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+      width: 100%;
+    }
+
+    .system-card {
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      padding: 16px;
+      background: rgba(255,255,255,.03);
+      break-inside: avoid;
+      min-width: 0;
+    }
+
+    .system-card h3 {
+      margin-top: 10px;
+      line-height: 1.3;
+      font-size: 18px;
+    }
+
+    .system-score-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    .system-score {
+      font-family: Syne, sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .system-card p,
+    .system-card li {
+      color: var(--text-muted);
+      line-height: 1.65;
+      font-size: 13px;
+    }
+
+    .system-card ul {
+      margin: 10px 0 0;
+      padding-left: 18px;
+    }
+
+    .systems-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .systems-summary-card {
+      border: 1px solid rgba(179,38,38,.30);
+      border-radius: 16px;
+      padding: 16px;
+      background: rgba(139,30,30,.10);
+      break-inside: avoid;
+    }
+
+    .systems-summary-card p {
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .next-action-report {
+      border: 1px solid rgba(179,38,38,.36);
+      border-radius: 16px;
+      padding: 18px;
+      background:
+        radial-gradient(circle at top left, rgba(139,30,30,.18), transparent 30%),
+        rgba(255,255,255,.025);
+      margin-top: 16px;
+      break-inside: avoid;
+    }
+
     @media (max-width: 900px) {
       .topbar {
         align-items: flex-start;
@@ -501,6 +587,20 @@
           <div class="metrics-grid" id="metricsGrid"></div>
         </section>
 
+        <section class="report-section" id="systemsSection">
+          <h2>Diagnóstico pelos 5 Sistemas Nexora</h2>
+          <p>
+            Esta seção mostra qual sistema está mais travando a performance do produto: economia, forças de mercado, competição, algoritmo ou operação.
+          </p>
+          <div class="systems-summary" id="systemsCriticalSummary"></div>
+          <div class="systems-grid" id="systemsGrid"></div>
+        </section>
+
+        <section class="report-section" id="nextBestActionSection">
+          <h2>Próxima melhor ação</h2>
+          <div class="next-action-report" id="nextBestActionReport"></div>
+        </section>
+
         <section class="report-section">
           <h2>Leitura cruzada dos 3 Cérebros</h2>
           <div class="analysis-text" id="crossReading">-</div>
@@ -540,7 +640,7 @@
 
       <footer class="signature">
         <strong>Nexora Intelligence</strong><br>
-        Diagnóstico estratégico gerado com base em três camadas de análise: performance, página e mercado. O relatório indica hipóteses estratégicas e prioridades de ação, devendo ser acompanhado por monitoramento de métricas após a implementação.
+        Diagnóstico estratégico gerado com base nos três cérebros da Nexora e na leitura dos 5 Sistemas: Unit Economics, Market Forces, Category Competition, Amazon Algorithm e Operational Structure. O relatório indica hipóteses estratégicas e prioridades de ação, devendo ser acompanhado por monitoramento de métricas após a implementação.
       </footer>
 
     </div>
@@ -695,6 +795,8 @@ function renderProductInfo() {
       document.getElementById("clientSummary").textContent = data.resumo_cliente || "-";
 
       renderMetrics(data);
+      renderSystemsAnalysis(data);
+      renderNextBestAction(data);
       renderGaps(data);
       renderPriorities(data);
       renderActionPlan(data);
@@ -723,8 +825,137 @@ function renderProductInfo() {
       `).join("");
     }
 
-    function renderGaps(data) {
-      const gaps = data.gaps || [];
+
+    function renderSystemsAnalysis(data) {
+      const systemsAnalysis = data.systems_analysis || data.systemsAnalysis || null;
+      const systemsGrid = document.getElementById("systemsGrid");
+      const summaryGrid = document.getElementById("systemsCriticalSummary");
+      const section = document.getElementById("systemsSection");
+
+      if (!systemsGrid || !summaryGrid || !section) return;
+
+      const systemsList = normalizeSystemsList(systemsAnalysis);
+
+      if (!systemsList.length) {
+        systemsGrid.innerHTML = `<p class="muted">A análise dos 5 Sistemas Nexora não foi encontrada neste relatório. Gere novamente a Síntese Final para incluir essa camada.</p>`;
+        summaryGrid.innerHTML = "";
+        return;
+      }
+
+      const critical = systemsAnalysis?.mostCriticalSystem || systemsList[0] || null;
+      const secondary = systemsAnalysis?.secondarySystem || systemsList[1] || null;
+      const strategicReading = systemsAnalysis?.strategicReading || "A Nexora cruza performance, página e mercado para identificar qual sistema mais limita a escala do produto.";
+
+      summaryGrid.innerHTML = `
+        <div class="systems-summary-card">
+          <span class="pill pill-red">Sistema mais crítico</span>
+          <h3 style="margin-top:10px;line-height:1.3;">${escapeHtml(getSystemLabel(critical))}</h3>
+          <p>${escapeHtml(critical?.reason || "Sistema com maior prioridade de correção no diagnóstico atual.")}</p>
+        </div>
+
+        <div class="systems-summary-card">
+          <span class="pill">Sistema secundário</span>
+          <h3 style="margin-top:10px;line-height:1.3;">${escapeHtml(getSystemLabel(secondary))}</h3>
+          <p>${escapeHtml(secondary?.reason || "Sistema que influencia a leitura final, mas não é o principal bloqueio.")}</p>
+        </div>
+
+        <div class="systems-summary-card">
+          <span class="pill">Leitura estratégica</span>
+          <p>${escapeHtml(strategicReading)}</p>
+        </div>
+      `;
+
+      systemsGrid.innerHTML = systemsList.map(system => `
+        <div class="system-card">
+          <span class="pill ${system.status === "Crítico" ? "pill-red" : ""}">${escapeHtml(system.status || "-")}</span>
+          <h3>${escapeHtml(getSystemLabel(system))}</h3>
+          <p style="margin-top:8px;">${escapeHtml(system.question || "Leitura sistêmica Nexora")}</p>
+
+          <div class="system-score-row">
+            <div>
+              <div class="metric-label">Score do sistema</div>
+              <div class="system-score">${escapeHtml(system.score ?? "-")}</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="metric-label">Severidade</div>
+              <strong>${escapeHtml(system.severity || "-")}</strong>
+            </div>
+          </div>
+
+          <p style="margin-top:12px;">${escapeHtml(system.reason || "Leitura não informada.")}</p>
+
+          ${Array.isArray(system.evidences) && system.evidences.length ? `
+            <ul>
+              ${system.evidences.slice(0, 4).map(item => `<li>${escapeHtml(item)}</li>`).join("")}
+            </ul>
+          ` : ""}
+
+          <p style="margin-top:12px;"><strong>Ação:</strong> ${escapeHtml(system.action || "Ação não informada.")}</p>
+        </div>
+      `).join("");
+    }
+
+    function renderNextBestAction(data) {
+      const target = document.getElementById("nextBestActionReport");
+      if (!target) return;
+
+      const action = getNextBestAction(data);
+
+      target.innerHTML = `
+        <span class="pill pill-red">Ação prioritária</span>
+        <h3 style="margin-top:12px;line-height:1.35;">${escapeHtml(action.title)}</h3>
+        <p style="margin-top:10px;">${escapeHtml(action.detail)}</p>
+      `;
+    }
+
+    function normalizeSystemsList(systemsAnalysis) {
+      if (!systemsAnalysis) return [];
+
+      if (Array.isArray(systemsAnalysis.systemsList)) {
+        return systemsAnalysis.systemsList;
+      }
+
+      if (systemsAnalysis.systems && typeof systemsAnalysis.systems === "object") {
+        return Object.entries(systemsAnalysis.systems).map(([key, value]) => ({
+          key,
+          ...(value || {})
+        }));
+      }
+
+      return [];
+    }
+
+    function getSystemLabel(system) {
+      if (!system) return "Não identificado";
+      return system.label || system.name || system.key || "Sistema Nexora";
+    }
+
+    function getNextBestAction(data) {
+      const rawAction = data.next_best_action || data.nextBestAction || data.systems_analysis?.nextBestAction;
+
+      if (typeof rawAction === "string") {
+        return {
+          title: rawAction || "Priorizar o sistema mais crítico antes de escalar o produto",
+          detail: data.systems_analysis?.strategicReading || "A próxima ação deve corrigir o bloqueio sistêmico mais relevante antes de aumentar investimento em mídia, preço ou expansão."
+        };
+      }
+
+      if (rawAction && typeof rawAction === "object") {
+        return {
+          title: rawAction.title || rawAction.titulo || "Priorizar o sistema mais crítico antes de escalar o produto",
+          detail: rawAction.detail || rawAction.detalhe || data.systems_analysis?.strategicReading || "A próxima ação deve corrigir o bloqueio sistêmico mais relevante."
+        };
+      }
+
+      const firstPriority = Array.isArray(data.prioridades) ? data.prioridades[0] : null;
+
+      return {
+        title: firstPriority?.titulo || data.recomendacao || "Priorizar o sistema mais crítico antes de escalar o produto",
+        detail: firstPriority?.detalhe || data.resumo_cliente || "A próxima ação deve corrigir o bloqueio que mais conecta performance, página e mercado."
+      };
+    }
+
+    function renderGaps(data) {      const gaps = data.gaps || [];
 
       document.getElementById("gapsList").innerHTML = gaps.map((gap, index) => `
         <div class="item-card">
