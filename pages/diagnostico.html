@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -233,10 +232,10 @@
     <section class="card">
       <p class="step-label">Nexora Intelligence · Cérebro 1</p>
 
-      <h1>Diagnóstico de performance</h1>
+      <h1>Cérebro 1 · Performance Score</h1>
 
       <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
-        Leitura profunda de métricas, tráfego, conversão, PPC, rentabilidade e operação para identificar a primeira causa raiz do produto.
+        Leitura profunda de métricas, tráfego, conversão, PPC, rentabilidade e operação para gerar o Performance Score e identificar a primeira causa raiz do produto.
       </p>
 
       <div id="productContextPanel" class="product-context-card"></div>
@@ -1249,6 +1248,9 @@ const data = {
   diagnostic_id: diagnosticId,
   product_id: currentProductId || null,
   product_record: currentProduct || null,
+  score_label: "Performance Score",
+  score_type: "c1_performance_score",
+  score_description: "Score do Cérebro 1 que resume performance, atração, conversão, PPC, rentabilidade e operação.",
   ts: new Date().toISOString()
 };
 
@@ -1270,7 +1272,7 @@ const data = {
       await saveBrainResult({
   diagnosticId,
   brainCode: "c1",
-  brainName: "Cérebro 1 - Diagnóstico de Performance",
+  brainName: "Cérebro 1 - Performance Score",
   score: result.score_geral,
   resultData: fullResult
 });
@@ -1541,10 +1543,11 @@ Retorne exatamente este JSON:
       }
 
       const scores = result.scores || {};
+      const scoreLabel = result.score_label || "Performance Score";
 
       resultArea.innerHTML = `
         <p class="step-label">Resultado · Cérebro 1</p>
-        <h2>Diagnóstico de performance</h2>
+        <h2>Performance Score</h2>
 
         ${result.ia_usada ? `
           <div class="result-block" style="border-color:rgba(216,139,45,.35);background:rgba(216,139,45,.06);">
@@ -1579,9 +1582,9 @@ ${result.ia_usada && result.leitura_por_pilar_ia ? `
         <div class="result-block">
           <div style="display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-start;">
             <div>
-              <p style="color:var(--muted);font-size:12px;">Score geral</p>
+              <p style="color:var(--muted);font-size:12px;">${escapeHtml(scoreLabel)}</p>
               <div class="score-number">${escapeHtml(result.score_geral ?? "-")}</div>
-              <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">/100 · ${escapeHtml(result.status || "-")}</p>
+              <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">/100 · Cérebro 1 · ${escapeHtml(result.status || "-")}</p>
             </div>
 
             <div style="max-width:520px;">
@@ -1734,6 +1737,9 @@ window.irParaCerebro2 = function () {
     ? aiResult.plano_de_acao
     : fullResult.prioridades,
 
+  score_label: "Performance Score",
+  score_type: "c1_performance_score",
+
   ia_usada: true,
   ia_updated_at: new Date().toISOString()
 };
@@ -1744,7 +1750,7 @@ window.irParaCerebro2 = function () {
         await saveBrainResult({
           diagnosticId,
           brainCode: "c1",
-          brainName: "Cérebro 1 - Diagnóstico de Performance",
+          brainName: "Cérebro 1 - Performance Score",
           score: updated.score_geral,
           resultData: updated
         });
