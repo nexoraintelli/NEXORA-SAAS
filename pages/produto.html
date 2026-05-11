@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -344,6 +345,20 @@
       font-size: 12px;
       line-height: 1.55;
       margin-top: 6px;
+    }
+
+    .history-row.active {
+      border-color: rgba(179,38,38,.42);
+      background:
+        radial-gradient(circle at top left, rgba(139,30,30,.18), transparent 30%),
+        linear-gradient(135deg, rgba(255,255,255,.055), rgba(255,255,255,.022));
+    }
+
+    .history-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
     }
 
     .score-badge {
@@ -849,6 +864,15 @@ function getBrainScoreFromRow(row) {
     function getLatestDiagnostic() {
   return diagnostics.find(d => !isDraftWithoutResult(d)) || diagnostics[0] || null;
 }
+
+function getSelectedDiagnostic() {
+  if (currentDiagnosticId) {
+    const selected = diagnostics.find(d => String(d.id) === String(currentDiagnosticId));
+    if (selected) return selected;
+  }
+
+  return getLatestDiagnostic();
+}
     function getScoreFromDiagnostic(diagnostic) {
   if (!diagnostic) return null;
 
@@ -948,7 +972,7 @@ function getBrainScoreFromRow(row) {
     }
 
     function renderCurrentInsight() {
-  const latestDiagnostic = diagnostics.find(d => !isDraftWithoutResult(d)) || getLatestDiagnostic();
+  const latestDiagnostic = getSelectedDiagnostic();
 
   if (!latestDiagnostic) {
     document.getElementById("currentInsight").textContent =
@@ -975,9 +999,12 @@ function getBrainScoreFromRow(row) {
 }
 
     function renderBrainCards() {
-      const latestDiagnostic = getLatestDiagnostic();
+      const selectedDiagnostic = getSelectedDiagnostic();
 
-      if (!latestDiagnostic) return;
+      if (!selectedDiagnostic) return;
+
+      currentDiagnosticId = selectedDiagnostic.id;
+      localStorage.setItem("nx_diagnostic_id", currentDiagnosticId);
 
       setBrainCard("c1", "brainC1");
       setBrainCard("c2", "brainC2");
@@ -997,14 +1024,21 @@ function getCodesForStage(stage) {
   return map[normalized] || [normalized];
 }
 
-function getLatestBrainResultByStage(stage) {
+function getLatestBrainResultByStage(stage, diagnosticId = currentDiagnosticId) {
   const acceptedCodes = getCodesForStage(stage);
 
-  return [...brainResults]
+  const rows = [...brainResults]
     .filter(item =>
       acceptedCodes.includes(String(item.brain_code || "").toLowerCase())
     )
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0] || null;
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  if (diagnosticId) {
+    const selectedRow = rows.find(item => String(item.diagnostic_id) === String(diagnosticId));
+    if (selectedRow) return selectedRow;
+  }
+
+  return rows[0] || null;
 }
     
     function setBrainCard(code, elementId, acceptedCodes = [code]) {
@@ -1039,7 +1073,7 @@ historyCount.textContent = `${visibleDiagnostics.length} ${visibleDiagnostics.le
 if (!visibleDiagnostics.length) {
         historyList.innerHTML = `
           <div class="empty-box">
-            Nenhum diagnóstico encontrado para este produto.
+            Nenhum diagnóstico encontrado para este produto. Clique em “Novo diagnóstico deste produto” para iniciar a primeira análise e criar o histórico.
           </div>
         `;
         return;
@@ -1073,8 +1107,10 @@ const summary =
   result.diagnostico_executivo ||
   result.gap_principal ||
   "Diagnóstico salvo para este produto.";
+        const isSelected = String(d.id) === String(currentDiagnosticId || "");
+
         return `
-          <div class="history-row">
+          <div class="history-row ${isSelected ? "active" : ""}">
             <div>
               <h3>${escapeHtml(title)}</h3>
               <p>${escapeHtml(String(summary)).slice(0, 250)}${String(summary).length > 250 ? "..." : ""}</p>
@@ -1088,26 +1124,25 @@ const summary =
 
             <div>
               <p>${formatDate(d.created_at)}<br>${formatTime(d.created_at)}</p>
-             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
- <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-  <button class="btn-secondary" onclick="abrirDiagnosticoHistorico('${escapeHtml(d.id)}')">
-    Abrir
-  </button>
+              <div class="history-actions">
+                <button class="btn-secondary" onclick="abrirDiagnosticoHistorico('${escapeHtml(d.id)}')">
+                  Abrir
+                </button>
 
-  ${
-    hasSynth
-      ? `
-        <button class="btn-secondary" onclick="abrirRelatorioHistorico('${escapeHtml(d.id)}')">
-          Relatório
-        </button>
-      `
-      : `
-        <button class="btn-secondary" onclick="abrirSinteseHistorica('${escapeHtml(d.id)}')">
-          Gerar Síntese
-        </button>
-      `
-  }
-</div>
+                ${
+                  hasSynth
+                    ? `
+                      <button class="btn-secondary" onclick="abrirRelatorioHistorico('${escapeHtml(d.id)}')">
+                        Relatório
+                      </button>
+                    `
+                    : `
+                      <button class="btn-secondary" onclick="abrirSinteseHistorica('${escapeHtml(d.id)}')">
+                        Gerar Síntese
+                      </button>
+                    `
+                }
+              </div>
             </div>
           </div>
         `;
