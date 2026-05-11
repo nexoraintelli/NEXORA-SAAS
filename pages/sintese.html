@@ -865,7 +865,125 @@ Retorne exatamente este JSON:
         return null;
       }
     }
+function aplicarIANexoraLayerSobreSintese(baseResult, aiResult, systemsAnalysis) {
+  const fallbackAction = systemsAnalysis?.nextBestAction || "";
+  const mostCritical =
+    systemsAnalysis?.mostCriticalSystem?.label ||
+    systemsAnalysis?.mostCriticalSystem?.name ||
+    "";
 
+  const secondary =
+    systemsAnalysis?.secondarySystem?.label ||
+    systemsAnalysis?.secondarySystem?.name ||
+    "";
+
+  if (!aiResult || !aiResult.ok) {
+    return {
+      ...baseResult,
+      systems_analysis: systemsAnalysis,
+
+      diagnostico_ia: "",
+      leitura_cruzada_ia: "",
+      risco_ia: gerarRiscoEstrategicoFallback(baseResult, systemsAnalysis),
+      decisao_ia: fallbackAction,
+
+      recomendacao: fallbackAction || baseResult.recomendacao,
+      resumo_cliente: baseResult.resumo_cliente,
+
+      next_best_action: {
+        title: fallbackAction || "Priorizar o sistema mais crítico antes de escalar o produto",
+        detail:
+          systemsAnalysis?.strategicReading ||
+          "A próxima ação deve atacar o bloqueio que mais conecta performance, página e mercado."
+      },
+
+      ia_usada: false,
+      ia_error: true,
+      ia_error_message:
+        aiResult?.message ||
+        aiResult?.error ||
+        "A IA Nexora não respondeu neste momento."
+    };
+  }
+
+  const leituraExecutiva = cleanDisplayText(aiResult.leitura_executiva || "");
+  const riscoEstrategico = cleanDisplayText(aiResult.risco_estrategico || "");
+
+  const acaoTitulo = cleanDisplayText(
+    aiResult?.proxima_melhor_acao?.titulo ||
+    fallbackAction ||
+    ""
+  );
+
+  const acaoDetalhe = cleanDisplayText(
+    aiResult?.proxima_melhor_acao?.detalhe ||
+    systemsAnalysis?.strategicReading ||
+    ""
+  );
+
+  return {
+    ...baseResult,
+    systems_analysis: systemsAnalysis,
+
+    causa_raiz_base: baseResult.causa_raiz_consolidada,
+    diagnostico_executivo_base: baseResult.diagnostico_executivo,
+    leitura_cruzada_base: baseResult.leitura_cruzada,
+    recomendacao_base: baseResult.recomendacao,
+    resumo_cliente_base: baseResult.resumo_cliente,
+    prioridades_base: baseResult.prioridades,
+    plano_acao_base: baseResult.plano_acao,
+
+    diagnostico_ia: leituraExecutiva,
+    leitura_cruzada_ia: "",
+    risco_ia: riscoEstrategico,
+    decisao_ia: acaoTitulo,
+
+    sistema_mais_critico_ia: aiResult.sistema_mais_critico || mostCritical,
+    sistema_secundario_ia: aiResult.sistema_secundario || secondary,
+
+    recomendacao: acaoTitulo || fallbackAction || baseResult.recomendacao,
+    resumo_cliente: baseResult.resumo_cliente,
+
+    next_best_action: {
+      title: acaoTitulo || fallbackAction || "Priorizar a causa raiz consolidada",
+      detail:
+        acaoDetalhe ||
+        "A próxima ação deve atacar o sistema mais crítico identificado pela Nexora."
+    },
+
+    prioridades:
+      Array.isArray(aiResult.prioridades) && aiResult.prioridades.length
+        ? aiResult.prioridades
+        : baseResult.prioridades,
+
+    plano_acao:
+      Array.isArray(aiResult.plano_acao) && aiResult.plano_acao.length
+        ? aiResult.plano_acao
+        : baseResult.plano_acao,
+
+    ia_usada: true,
+    ia_updated_at: new Date().toISOString()
+  };
+}
+
+function gerarRiscoEstrategicoFallback(baseResult, systemsAnalysis) {
+  const critical =
+    systemsAnalysis?.mostCriticalSystem?.label ||
+    systemsAnalysis?.mostCriticalSystem?.name ||
+    "sistema mais crítico";
+
+  const secondary =
+    systemsAnalysis?.secondarySystem?.label ||
+    systemsAnalysis?.secondarySystem?.name ||
+    "sistema secundário";
+
+  const cause =
+    baseResult?.causa_raiz_consolidada ||
+    baseResult?.causa_raiz ||
+    "a causa raiz consolidada";
+
+  return `O principal risco está em continuar operando sem corrigir ${cause}. A leitura dos 5 Sistemas Nexora indica que o bloqueio mais relevante está em ${critical}, com influência secundária de ${secondary}. Se esse ponto não for corrigido antes da escala, o produto pode continuar desperdiçando tráfego, reduzindo eficiência de mídia, perdendo conversão ou competindo em desvantagem dentro da categoria.`;
+}
     function aplicarIASobreSintese(baseResult, aiResult) {
       if (!aiResult) {
         return {
