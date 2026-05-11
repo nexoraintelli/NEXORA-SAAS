@@ -884,67 +884,72 @@ input[type="file"],
     getDiagnosticId() ||
     localStorage.getItem("nx_diagnostic_id");
 
-  if (!currentUser?.id) return false;
+  if (!diagnosticId || !currentUser?.id) {
+    console.warn("C2 histórico: sem diagnosticId ou usuário.");
+    return false;
+  }
 
   try {
-    let row = null;
+    let savedResult = null;
 
-    // 1. Primeiro tenta carregar o C2 do diagnóstico atual
-    if (diagnosticId) {
-      const { data, error } = await sb
+    // 1. Tenta carregar C2 salvo diretamente em brain_results
+    const { data: c2Row, error: c2Error } = await sb
+      .from("brain_results")
+      .select("*")
+      .eq("diagnostic_id", diagnosticId)
+      .eq("brain_code", "c2")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!c2Error && c2Row?.result_data) {
+      savedResult = {
+        ...c2Row.result_data,
+        diagnostic_id: diagnosticId,
+        product_id: currentProductId || c2Row.result_data.product_id || null
+      };
+    }
+
+    // 2. Se não encontrar C2 direto, tenta carregar C2 dentro da Síntese
+    if (!savedResult) {
+      const { data: synthRow, error: synthError } = await sb
         .from("brain_results")
         .select("*")
         .eq("diagnostic_id", diagnosticId)
-        .eq("brain_code", "c2")
+        .in("brain_code", ["synth", "sintese", "síntese", "synthesis", "final"])
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      if (!error && data?.result_data) {
-        row = data;
-      }
-    }
+      if (!synthError && synthRow?.result_data) {
+        const synth = synthRow.result_data;
 
-    // 2. Se não achou C2 nesse diagnóstico, busca o último C2 do produto
-    if (!row && currentProductId) {
-      const { data: diagnosticsData, error: diagnosticsError } = await sb
-        .from("diagnostics")
-        .select("id, product_id, created_at")
-        .eq("product_id", currentProductId)
-        .eq("user_id", currentUser.id)
-        .order("created_at", { ascending: false });
+        const c2FromSynth =
+          synth?.source?.c2 ||
+          synth?.sources?.c2 ||
+          synth?.c2 ||
+          synth?.brain2 ||
+          null;
 
-      if (!diagnosticsError && Array.isArray(diagnosticsData) && diagnosticsData.length) {
-        const diagnosticIds = diagnosticsData.map(item => item.id).filter(Boolean);
-
-        const { data: c2Rows, error: c2Error } = await sb
-          .from("brain_results")
-          .select("*")
-          .in("diagnostic_id", diagnosticIds)
-          .eq("brain_code", "c2")
-          .order("created_at", { ascending: false })
-          .limit(1);
-
-        if (!c2Error && Array.isArray(c2Rows) && c2Rows[0]?.result_data) {
-          row = c2Rows[0];
+        if (c2FromSynth) {
+          savedResult = {
+            ...c2FromSynth,
+            diagnostic_id: diagnosticId,
+            product_id: currentProductId || synth.product_id || c2FromSynth.product_id || null
+          };
         }
       }
     }
 
-    if (!row?.result_data) {
+    if (!savedResult) {
+      console.warn("C2 histórico: nenhum resultado C2 encontrado para este diagnóstico.");
       return false;
     }
 
-    const savedResult = {
-      ...row.result_data,
-      diagnostic_id: row.diagnostic_id,
-      product_id: currentProductId || row.result_data.product_id || null
-    };
-
-    currentDiagnosticId = row.diagnostic_id;
+    currentDiagnosticId = diagnosticId;
 
     localStorage.setItem("nx_c2", JSON.stringify(savedResult));
-    localStorage.setItem("nx_diagnostic_id", row.diagnostic_id);
+    localStorage.setItem("nx_diagnostic_id", diagnosticId);
 
     if (savedResult.product_id) {
       localStorage.setItem("nx_product_id", savedResult.product_id);
