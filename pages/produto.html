@@ -1080,9 +1080,15 @@ const summary =
 
             <div>
               <p>${formatDate(d.created_at)}<br>${formatTime(d.created_at)}</p>
-              <button class="btn-secondary" onclick="abrirDiagnosticoHistorico('${escapeHtml(d.id)}')">
-                Abrir
-              </button>
+             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+  <button class="btn-secondary" onclick="abrirDiagnosticoHistorico('${escapeHtml(d.id)}')">
+    Abrir
+  </button>
+
+  <button class="btn-secondary" onclick="abrirRelatorioHistorico('${escapeHtml(d.id)}')">
+    Relatório
+  </button>
+</div>
             </div>
           </div>
         `;
@@ -1186,7 +1192,15 @@ const summary =
     alert("Não foi possível criar um novo diagnóstico para este produto.");
   }
 };
+window.abrirRelatorioHistorico = function (diagnosticId) {
+  localStorage.setItem("nx_diagnostic_id", diagnosticId);
+  localStorage.setItem("nx_product_id", currentProductId);
 
+  window.location.href =
+    `./relatorio.html?product_id=${encodeURIComponent(currentProductId)}&diagnostic_id=${encodeURIComponent(diagnosticId)}`;
+};
+
+    
     window.abrirDiagnosticoHistorico = function (diagnosticId) {
       localStorage.setItem("nx_diagnostic_id", diagnosticId);
       localStorage.setItem("nx_product_id", currentProductId);
