@@ -666,6 +666,8 @@ const result = aplicarIANexoraLayerSobreSintese(
   aiResult,
   systemsAnalysis
 );
+
+const fullResult = {
   ...result,
   systems_analysis: systemsAnalysis,
   next_best_action: result.next_best_action || systemsAnalysis.nextBestAction,
