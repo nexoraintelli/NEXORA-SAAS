@@ -671,26 +671,10 @@ const currentDiagnosticId =
   diagnosticIdFromUrl ||
   localStorage.getItem("nx_diagnostic_id");
 
-const synth = JSON.parse(localStorage.getItem("nx_synth") || "null");
-   let currentProduct = null;
+let synth = JSON.parse(localStorage.getItem("nx_synth") || "null");
+let currentProduct = null;
 
-   if (!synth) {
-  document.body.innerHTML = `
-    <main class="wrap">
-      <section class="card">
-        <h1>Relatório não encontrado</h1>
-        <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
-          Gere a Síntese Final antes de abrir o relatório.
-        </p>
-        <button class="btn-primary" style="margin-top:20px;" onclick="voltarParaSintese()">
-          Voltar para Síntese
-        </button>
-      </section>
-    </main>
-  `;
-} else {
-  await initReport();
-}
+   await bootstrapReport();
 window.voltarAoProduto = function () {
   const productId = currentProductId || localStorage.getItem("nx_product_id");
   const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
@@ -728,7 +712,61 @@ async function initReport() {
     renderProductInfo();
   }
 }
+async function bootstrapReport() {
+  try {
+    await requireAuth();
 
+    if (!synth && currentDiagnosticId) {
+      synth = await loadSynthFromSupabase(currentDiagnosticId);
+    }
+
+    if (synth) {
+      localStorage.setItem("nx_synth", JSON.stringify(synth));
+      await initReport();
+      return;
+    }
+
+    renderReportNotFound();
+  } catch (error) {
+    console.error("Erro ao inicializar relatório:", error);
+    renderReportNotFound();
+  }
+}
+
+async function loadSynthFromSupabase(diagnosticId) {
+  const { data, error } = await sb
+    .from("brain_results")
+    .select("*")
+    .eq("diagnostic_id", diagnosticId)
+    .in("brain_code", ["synth", "sintese", "síntese", "synthesis", "final"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("Não foi possível carregar síntese do Supabase:", error);
+    return null;
+  }
+
+  return data?.result_data || null;
+}
+
+function renderReportNotFound() {
+  document.body.innerHTML = `
+    <main class="wrap">
+      <section class="card">
+        <h1>Relatório não encontrado</h1>
+        <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
+          Não encontramos uma Síntese Final salva para este diagnóstico. Volte para a Síntese e gere o resultado final antes de abrir o relatório.
+        </p>
+        <button class="btn-primary" style="margin-top:20px;" onclick="voltarParaSintese()">
+          Voltar para Síntese
+        </button>
+      </section>
+    </main>
+  `;
+}
+   
 async function loadCurrentProduct() {
   const { data, error } = await sb
     .from("products")
