@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -883,6 +884,21 @@ input[type="file"],
   await gerarAnalisePagina();
 };
 
+function getBrainPayload(row) {
+  if (!row) return null;
+
+  return (
+    row.result_data ||
+    row.resultData ||
+    row.data ||
+    row.result_json ||
+    row.result ||
+    row.output ||
+    row.payload ||
+    null
+  );
+}
+
 function getC2FromSynthPayload(synth) {
   if (!synth) return null;
 
@@ -1073,8 +1089,6 @@ function normalizarTextoC2(value) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 }
-      await gerarAnalisePagina();
-    };
 
     window.prevStep = function () {
   if (currentStep > 0) {
@@ -1225,6 +1239,9 @@ function normalizarTextoC2(value) {
         diagnostic_id: diagnosticId,
         product_id: currentProductId || null,
         product_record: currentProduct || null,
+        score_label: "Listing Quality Score",
+        score_type: "c2_listing_quality_score",
+        score_description: "Score do Cérebro 2 para avaliar qualidade da página, força da oferta, confiança, diferenciação, CTR-readiness e CVR-readiness.",
         ts: new Date().toISOString()
       };
 
@@ -1238,7 +1255,7 @@ function normalizarTextoC2(value) {
       await saveBrainResult({
         diagnosticId,
         brainCode: "c2",
-        brainName: "Cérebro 2 - Análise de Página",
+        brainName: "Cérebro 2 - Listing Quality Score",
         score: result.score_pagina,
         resultData: fullResult
       });
@@ -1332,7 +1349,7 @@ function normalizarTextoC2(value) {
         await saveBrainResult({
           diagnosticId,
           brainCode: "c2",
-          brainName: "Cérebro 2 - Análise de Página",
+          brainName: "Cérebro 2 - Listing Quality Score",
           score: updated.score_pagina,
           resultData: updated
         });
@@ -1368,7 +1385,7 @@ function normalizarTextoC2(value) {
 
       resultArea.innerHTML = `
         <p class="step-label">Resultado · Cérebro 2</p>
-        <h2>Análise de página</h2>
+        <h2>Cérebro 2 · Listing Quality Score</h2>
 
         ${result.ia_usada ? `
           <div class="result-block" style="border-color:rgba(216,139,45,.35);background:rgba(216,139,45,.06);">
@@ -1405,7 +1422,7 @@ function normalizarTextoC2(value) {
         <div class="result-block">
           <div style="display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-start;">
             <div>
-              <p style="color:var(--muted);font-size:12px;">Score da página</p>
+              <p style="color:var(--muted);font-size:12px;">Listing Quality Score</p>
               <div class="score-number">${escapeHtml(result.score_pagina ?? "-")}</div>
               <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">/100 · ${escapeHtml(result.status || "-")}</p>
             </div>
@@ -1705,7 +1722,7 @@ const leituraComplementarIA = limparTextoIAComplementar(
     await saveBrainResult({
       diagnosticId,
       brainCode: "c2",
-      brainName: "Cérebro 2 - Análise de Página",
+      brainName: "Cérebro 2 - Listing Quality Score",
       score: updated.score_pagina,
       resultData: updated
     });
@@ -1977,7 +1994,6 @@ window.handleMultipleImageUpload = function (event, targetId, labelId) {
     reader.readAsDataURL(file);
   });
 };
-    renderStep();
     const abriuHistoricoC2 = await carregarC2SalvoDoHistorico();
 
 if (!abriuHistoricoC2) {
