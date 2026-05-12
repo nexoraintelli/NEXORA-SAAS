@@ -1428,10 +1428,13 @@ import {
   canCreateDiagnostic
 } from "../js/plans.js";
     let currentUserId = null;
-    let currentProducts = [];
-    let currentClients = [];
-    let currentProductDiagnostics = [];
-    let currentProductBrainResults = [];
+let currentProducts = [];
+let currentClients = [];
+let currentProductDiagnostics = [];
+let currentProductBrainResults = [];
+
+const dashboardUrlParams = new URLSearchParams(window.location.search);
+const activeClientId = dashboardUrlParams.get("client_id");
 
     const user = await requireAuth();
 
@@ -1696,9 +1699,62 @@ function getClientNameById(clientId) {
 
   const client = currentClients.find(item => String(item.id) === String(clientId));
 
-  return client?.name || client?.company_name || "Cliente vinculado";
+  return (
+    client?.name ||
+    client?.full_name ||
+    client?.company_name ||
+    "Cliente vinculado"
+  );
 }
+    
+function renderClientFilterHeader() {
+  if (!activeClientId) return;
 
+  const productsPanel = document.getElementById("productsPanel");
+
+  if (!productsPanel) return;
+
+  const clientName = getClientNameById(activeClientId);
+
+  const existing = document.getElementById("clientFilterBanner");
+  if (existing) existing.remove();
+
+  const banner = document.createElement("div");
+  banner.id = "clientFilterBanner";
+  banner.style.cssText = `
+    margin-bottom: 16px;
+    padding: 16px;
+    border: 1px solid rgba(179,38,38,.36);
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(139,30,30,.18), rgba(255,255,255,.025));
+  `;
+
+  banner.innerHTML = `
+    <p style="color:var(--nx-muted);font-size:12px;margin:0 0 6px;">
+      VISÃO POR CLIENTE
+    </p>
+
+    <h3 style="margin:0;font-family:Syne,sans-serif;">
+      ${escapeHtml(clientName)}
+    </h3>
+
+    <p style="color:var(--nx-muted);font-size:13px;line-height:1.6;margin-top:8px;">
+      Este dashboard está filtrado para mostrar apenas os produtos vinculados a este cliente.
+    </p>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+      <button class="btn-secondary" onclick="location.href='./dashboard.html'">
+        Ver todos os produtos
+      </button>
+
+      <button class="btn-secondary" onclick="location.href='./clientes.html'">
+        Voltar para clientes
+      </button>
+    </div>
+  `;
+
+  productsPanel.prepend(banner);
+}
     
 async function loadProducts() {
   const el = document.getElementById("productsList");
@@ -1706,8 +1762,13 @@ async function loadProducts() {
   if (!el) return;
 
   try {
-    const products = await listProducts();
-    currentProducts = products || [];
+    const allProducts = await listProducts();
+
+const products = activeClientId
+  ? (allProducts || []).filter(product => String(product.client_id || "") === String(activeClientId))
+  : (allProducts || []);
+
+currentProducts = products || [];
     
     const productAlertsMap = await loadProductAlertsSummary(currentProducts);
 
@@ -1720,12 +1781,20 @@ if (clientsProductsCount) {
 }
 
     if (!products.length) {
-      el.innerHTML = `
-        <div class="diag-row">
-          <div>
-            <div class="diag-title">Nenhum produto cadastrado ainda</div>
-            <div class="diag-meta">Clique em Adicionar produto para iniciar o acompanhamento.</div>
-          </div>
+  const emptyTitle = activeClientId
+    ? "Nenhum produto vinculado a este cliente"
+    : "Nenhum produto cadastrado ainda";
+
+  const emptyMessage = activeClientId
+    ? "Adicione um produto e escolha este cliente no campo Cliente vinculado."
+    : "Clique em Adicionar produto para iniciar o acompanhamento.";
+
+  el.innerHTML = `
+    <div class="diag-row">
+      <div>
+        <div class="diag-title">${escapeHtml(emptyTitle)}</div>
+        <div class="diag-meta">${escapeHtml(emptyMessage)}</div>
+      </div>
 
           <span class="status-pill">Vazio</span>
 
@@ -1933,6 +2002,9 @@ window.logoutUser = logout;
     try {
       const products = await listProducts();
       currentProducts = products || [];
+
+      renderClientFilterHeader();
+      
       productsCount = currentProducts.length;
     } catch (error) {
       console.warn("Não foi possível contar produtos:", error);
@@ -2088,6 +2160,11 @@ window.abrirRelatorio = function () {
     if (!currentClients.length) {
       await loadClients();
     }
+    const clientSelect = document.getElementById("modalClientId");
+
+if (clientSelect && activeClientId) {
+  clientSelect.value = activeClientId;
+}
     
     const permission = await canCreateProductByPlan();
 
