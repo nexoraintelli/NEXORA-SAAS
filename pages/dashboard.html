@@ -1620,6 +1620,8 @@ async function loadProducts() {
   try {
     const products = await listProducts();
     currentProducts = products || [];
+    
+    const productAlertsMap = await loadProductAlertsSummary(currentProducts);
 
 await loadProductDiagnosticData(currentProducts);
 
@@ -1666,6 +1668,15 @@ if (clientsProductsCount) {
       const subcategory = product.subcategory || "Subcategoria não definida";
       const marketplace = product.marketplace || "Marketplace não definido";
       const asin = product.asin || "Sem ASIN";
+      const alertSummary = productAlertsMap[String(product.id)] || {
+  total: 0,
+  critical: 0,
+  warning: 0
+};
+  const alertBadge = renderDashboardAlertBadge(alertSummary);
+  const alertLine = renderDashboardAlertLine(alertSummary);    
+
+const alertBadge = renderDashboardAlertBadge(alertSummary);
 
       const latestDiagnostic = getLatestDiagnosticForProduct(product.id);
       const diagnosticsCount = getDiagnosticsForProduct(product.id).filter(item => !isDraftDiagnostic(item)).length;
@@ -1695,17 +1706,17 @@ if (clientsProductsCount) {
         <div class="diag-row product-monitor-row">
           <div>
             <div class="diag-title">${escapeHtml(name)}</div>
-            <div class="diag-meta">
-              ${escapeHtml(asin)} · ${escapeHtml(category)} · ${escapeHtml(subcategory)} · ${escapeHtml(marketplace)}
-            </div>
+           <div class="diag-meta">
+  ${escapeHtml(asin)} · ${escapeHtml(category)} · ${escapeHtml(subcategory)} · ${escapeHtml(marketplace)}
+  <br>
+  ${alertLine}
+</div>
             <div class="diag-meta">
               ${diagnosticsCount} ${diagnosticsCount === 1 ? "diagnóstico" : "diagnósticos"} · Último: ${escapeHtml(lastDiagnosticDate)}
             </div>
           </div>
 
-          <span class="status-pill ${statusClass}">
-            ${escapeHtml(statusLabel)}
-          </span>
+          ${alertBadge}
 
           <div class="score-badge">${Number.isFinite(score) ? score : "-"}</div>
 
