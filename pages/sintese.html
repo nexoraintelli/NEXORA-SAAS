@@ -662,14 +662,6 @@ const aiResult = await analisarSinteseComIA({
   baseSynthesis: baseResult,
   product: currentProduct || {}
 });
-const nextBestAction = gerarProximaMelhorAcaoNexora({
-  c1: C1,
-  c2: C2,
-  c3: C3,
-  systemsAnalysis,
-  alerts,
-  synthesis: result
-});
 const result = aplicarIANexoraLayerSobreSintese(
   baseResult,
   aiResult,
@@ -684,6 +676,15 @@ const alerts = gerarAlertasNexora({
   synthesis: result
 });
 
+const nextBestAction = gerarProximaMelhorAcaoNexora({
+  c1: C1,
+  c2: C2,
+  c3: C3,
+  systemsAnalysis,
+  alerts,
+  synthesis: result
+});
+      
 const fullResult = {
   ...result,
   systems_analysis: systemsAnalysis,
@@ -1308,8 +1309,7 @@ window.abrirRelatorio = function () {
 
       const iaUsavel = isUsableNarrative(result.diagnostico_ia) || isUsableNarrative(result.leitura_cruzada_ia);
       const riskText = getStrategicRisk(result);
-      const nextAction = getNextBestAction(result);
-
+   
       resultArea.innerHTML = `
         <p class="step-label">Resultado · Product Health Score</p>
         <h2>Síntese · Product Health Score</h2>
@@ -1352,8 +1352,6 @@ ${result.ia_usada && isUsableNarrative(result.diagnostico_ia) ? `
         ${renderSystemsAnalysis(result.systems_analysis)}
 
 ${renderAlertsNexora(result.alerts)}
-
-${renderNextBestActionCard(result)}
 
         ${riskText ? `
           <div class="result-block">
@@ -1581,23 +1579,6 @@ function normalizeNextBestAction(action) {
     expected_result: action.expected_result || action.resultado_esperado || "Melhorar a clareza da decisão e reduzir ações dispersas."
   };
 }
-
-      const priorities = Array.isArray(result?.prioridades) ? result.prioridades : [];
-      const first = priorities[0] || {};
-
-      const title =
-        cleanDisplayText(first.titulo) ||
-        cleanDisplayText(result?.recomendacao) ||
-        "Priorizar a causa raiz consolidada antes de escalar o produto";
-
-      const detail =
-        cleanDisplayText(first.detalhe) ||
-        cleanDisplayText(result?.recomendacao) ||
-        cleanDisplayText(result?.resumo_cliente) ||
-        "Corrigir primeiro o bloqueio que mais conecta performance, página e mercado antes de aumentar investimento em mídia, preço ou expansão.";
-
-      return { title, detail };
-    }
 
     function renderIAComplementar(result) {
       const cards = [];
