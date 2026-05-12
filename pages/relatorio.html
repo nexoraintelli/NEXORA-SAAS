@@ -1109,7 +1109,7 @@ function renderProductInfo() {
       `).join("");
     }
 function renderStructuredSynthesis(data) {
-  const structured = data?.structured_synthesis;
+  const structured = data?.structured_synthesis || buildStructuredSynthesisFallback(data);
   const section = document.getElementById("structuredSynthesisSection");
   const mainGrid = document.getElementById("structuredMainGrid");
   const evidenceBlock = document.getElementById("structuredEvidenceBlock");
@@ -1118,11 +1118,11 @@ function renderStructuredSynthesis(data) {
 
   if (!section || !mainGrid || !evidenceBlock || !plan7Target || !plan30Target) return;
 
-  if (!structured) {
-    section.style.display = "none";
-    return;
-  }
-
+ if (!structured) {
+  section.style.display = "none";
+  return;
+}
+  
   section.style.display = "block";
 
   mainGrid.innerHTML = `
@@ -1187,6 +1187,101 @@ function structuredReportCard(title, text) {
       <p>${escapeHtml(text || "-")}</p>
     </div>
   `;
+}
+   function buildStructuredSynthesisFallback(data) {
+  if (!data) return null;
+
+  const firstPriority = Array.isArray(data.prioridades)
+    ? data.prioridades[0]
+    : null;
+
+  const firstGap = Array.isArray(data.gaps)
+    ? data.gaps[0]
+    : null;
+
+  const systemsAnalysis = data.systems_analysis || data.systemsAnalysis || {};
+  const mostCriticalSystem = systemsAnalysis?.mostCriticalSystem || null;
+  const secondarySystem = systemsAnalysis?.secondarySystem || null;
+
+  const alerts = Array.isArray(data.alerts) ? data.alerts : [];
+  const criticalAlerts = alerts.filter(alert => alert.level === "Crítico");
+
+  const evidencias = [];
+
+  if (data.score_final) {
+    evidencias.push({
+      origem: "Product Health Score",
+      evidencia: `Score final identificado: ${data.score_final}/100.`
+    });
+  }
+
+  if (firstGap) {
+    evidencias.push({
+      origem: firstGap.origem || "Gap consolidado",
+      evidencia: firstGap.descricao || firstGap.titulo || "Gap principal identificado pela Nexora."
+    });
+  }
+
+  if (mostCriticalSystem) {
+    evidencias.push({
+      origem: "5 Sistemas",
+      evidencia: `${mostCriticalSystem.label || mostCriticalSystem.name || "Sistema crítico"} foi identificado como sistema mais crítico. ${mostCriticalSystem.reason || ""}`
+    });
+  }
+
+  if (secondarySystem) {
+    evidencias.push({
+      origem: "Sistema secundário",
+      evidencia: `${secondarySystem.label || secondarySystem.name || "Sistema secundário"} influencia a leitura final. ${secondarySystem.reason || ""}`
+    });
+  }
+
+  criticalAlerts.slice(0, 3).forEach(alert => {
+    evidencias.push({
+      origem: alert.area || "Alerta crítico",
+      evidencia: `${alert.title || "Alerta crítico"}: ${alert.evidence || alert.impact || ""}`
+    });
+  });
+
+  const plan = Array.isArray(data.plano_acao) ? data.plano_acao : [];
+
+  return {
+    diagnostico_principal:
+      data.diagnostico_principal ||
+      data.causa_raiz_consolidada ||
+      data.recomendacao ||
+      "A Nexora identificou um bloqueio principal que precisa ser corrigido antes de ampliar mídia, preço ou expansão.",
+
+    causa_raiz:
+      data.causa_raiz_consolidada ||
+      data.causa_raiz ||
+      firstGap?.titulo ||
+      "Causa raiz consolidada não informada.",
+
+    risco_estrategico:
+      data.risco_estrategico ||
+      data.risco_ia ||
+      "Se o bloqueio principal não for corrigido, o produto pode continuar desperdiçando tráfego, margem e oportunidade competitiva.",
+
+    impacto_comercial:
+      data.impacto_comercial ||
+      firstPriority?.impacto ||
+      "O impacto comercial está na perda de eficiência entre tráfego, conversão, competitividade e rentabilidade.",
+
+    evidencias,
+
+    plano_7_dias: plan.slice(0, 2).map((item, index) => ({
+      dia: index === 0 ? "Dias 1-3" : "Dias 4-7",
+      titulo: item.titulo || item.etapa || `Ação ${index + 1}`,
+      descricao: item.descricao || item.detalhe || item.objetivo || "Executar a ação prioritária indicada pela Nexora."
+    })),
+
+    plano_30_dias: plan.slice(0, 4).map((item, index) => ({
+      periodo: `Semana ${index + 1}`,
+      titulo: item.titulo || item.etapa || `Ação ${index + 1}`,
+      descricao: item.descricao || item.detalhe || item.objetivo || "Monitorar evolução e ajustar a estratégia conforme resposta do produto."
+    }))
+  };
 }
 
     function renderSystemsAnalysis(data) {
