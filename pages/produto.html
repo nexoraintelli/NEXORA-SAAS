@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -404,7 +403,94 @@
       font-size: 13px;
       margin-top: 8px;
     }
+.alert-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
 
+.alert-summary-card {
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.025);
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.alert-summary-card p {
+  color: var(--nx-muted);
+  font-size: 12px;
+  margin: 0;
+}
+
+.alert-summary-card h3 {
+  font-family: Syne, sans-serif;
+  font-size: 30px;
+  margin: 6px 0 0;
+}
+
+.alert-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.alert-card {
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.025);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.alert-card.alert-critical {
+  border-color: rgba(239,68,68,.38);
+  background: rgba(139,30,30,.16);
+}
+
+.alert-card.alert-warning {
+  border-color: rgba(240,163,58,.34);
+  background: rgba(240,163,58,.08);
+}
+
+.alert-card strong {
+  display: block;
+  font-family: Syne, sans-serif;
+  margin-top: 8px;
+}
+
+.alert-card p {
+  color: var(--nx-muted);
+  font-size: 12.5px;
+  line-height: 1.65;
+  margin-top: 7px;
+}
+
+.alert-tag {
+  display: inline-flex;
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,255,255,.78);
+  border-radius: 999px;
+  padding: 6px 9px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.alert-tag.alert-tag-critical {
+  background: rgba(139,30,30,.28);
+  border-color: rgba(239,68,68,.42);
+  color: #fff;
+}
+
+.alert-empty {
+  border: 1px dashed rgba(255,255,255,.14);
+  color: var(--nx-muted);
+  border-radius: 16px;
+  padding: 18px;
+  margin-top: 14px;
+  line-height: 1.65;
+}
+    
     @media (max-width: 980px) {
       .product-card,
       .two-col {
@@ -525,7 +611,26 @@
         <span>Última leitura de eficiência de mídia.</span>
       </div>
     </section>
+<section class="panel" id="alertsPanel">
+  <div class="topbar" style="margin-bottom:0;">
+    <div>
+      <p class="section-label">Alertas ativos</p>
+      <h2>Alertas estratégicos do produto</h2>
+      <p style="color:var(--nx-muted);font-size:13px;margin-top:6px;">
+        Sinais críticos e pontos de atenção gerados pela engine Nexora a partir da última Síntese disponível.
+      </p>
+    </div>
 
+    <span class="pill" id="alertsCount">0 alertas</span>
+  </div>
+
+  <div id="productAlertsArea">
+    <div class="alert-empty">
+      Nenhum alerta ativo encontrado ainda. Gere uma Síntese para que a Nexora consolide os alertas do produto.
+    </div>
+  </div>
+</section>
+    
     <section class="two-col">
       <div class="panel">
         <p class="section-label">Evolução</p>
@@ -644,12 +749,13 @@ import { canCreateDiagnostic } from "../js/plans.js";
         await loadProductDiagnostics();
         await loadBrainResultsForDiagnostics();
 
-        renderProduct();
-        renderMetrics();
-        renderChart();
-        renderCurrentInsight();
-        renderBrainCards();
-        renderHistory();
+       renderProduct();
+       renderMetrics();
+      renderProductAlerts();
+      renderChart();
+      renderCurrentInsight();
+      renderBrainCards();
+      renderHistory();
 
         finishLoading();
       } catch (error) {
@@ -997,7 +1103,107 @@ function getSelectedDiagnostic() {
 
   document.getElementById("currentInsight").textContent = text;
 }
+function renderProductAlerts() {
+  const alertsArea = document.getElementById("productAlertsArea");
+  const alertsCount = document.getElementById("alertsCount");
 
+  if (!alertsArea || !alertsCount) return;
+
+  const synthRow = getActiveSynthRowForAlerts();
+  const synth = synthRow?.result_data || {};
+  const alerts = Array.isArray(synth.alerts) ? synth.alerts : [];
+
+  if (!alerts.length) {
+    alertsCount.textContent = "0 alertas";
+    alertsArea.innerHTML = `
+      <div class="alert-empty">
+        Nenhum alerta ativo encontrado para este produto. Gere ou reabra uma Síntese com alertas para que a Nexora mostre os sinais estratégicos aqui.
+      </div>
+    `;
+    return;
+  }
+
+  const criticalCount = alerts.filter(alert => alert.level === "Crítico").length;
+  const warningCount = alerts.filter(alert => alert.level === "Atenção").length;
+
+  alertsCount.textContent =
+    `${alerts.length} ${alerts.length === 1 ? "alerta" : "alertas"}`;
+
+  alertsArea.innerHTML = `
+    <div class="alert-summary-grid">
+      <div class="alert-summary-card">
+        <p>Alertas críticos</p>
+        <h3>${criticalCount}</h3>
+      </div>
+
+      <div class="alert-summary-card">
+        <p>Alertas de atenção</p>
+        <h3>${warningCount}</h3>
+      </div>
+    </div>
+
+    <div class="alert-list">
+      ${alerts.slice(0, 5).map(alert => renderProductAlertCard(alert)).join("")}
+    </div>
+
+    ${
+      alerts.length > 5
+        ? `<p style="color:var(--nx-muted);font-size:12px;margin-top:12px;">
+            Exibindo os 5 alertas mais importantes. Veja a Síntese completa para todos os sinais.
+          </p>`
+        : ""
+    }
+  `;
+}
+
+function getActiveSynthRowForAlerts() {
+  const synthCodes = ["synth", "sintese", "síntese", "synthesis", "final"];
+
+  // 1. Primeiro tenta usar o diagnóstico selecionado na URL/histórico
+  if (currentDiagnosticId) {
+    const selectedSynth = brainResults.find(item =>
+      item.diagnostic_id === currentDiagnosticId &&
+      synthCodes.includes(String(item.brain_code || "").toLowerCase()) &&
+      item.result_data
+    );
+
+    if (selectedSynth) return selectedSynth;
+  }
+
+  // 2. Se não houver síntese no diagnóstico selecionado, pega a última síntese do produto
+  return [...brainResults]
+    .filter(item =>
+      synthCodes.includes(String(item.brain_code || "").toLowerCase()) &&
+      item.result_data
+    )
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0] || null;
+}
+
+function renderProductAlertCard(alert) {
+  const isCritical = alert.level === "Crítico";
+
+  return `
+    <div class="alert-card ${isCritical ? "alert-critical" : "alert-warning"}">
+      <span class="alert-tag ${isCritical ? "alert-tag-critical" : ""}">
+        ${escapeHtml(alert.level || "Alerta")} · ${escapeHtml(alert.area || "Nexora")}
+      </span>
+
+      <strong>${escapeHtml(alert.title || "Alerta estratégico")}</strong>
+
+      <p>
+        <strong style="display:inline;color:var(--nx-text);font-family:DM Sans,sans-serif;">Evidência:</strong>
+        ${escapeHtml(alert.evidence || "-")}
+      </p>
+
+      <p>
+        <strong style="display:inline;color:var(--nx-text);font-family:DM Sans,sans-serif;">Ação:</strong>
+        ${escapeHtml(alert.action || "-")}
+      </p>
+    </div>
+  `;
+}
+
+    
     function renderBrainCards() {
       const selectedDiagnostic = getSelectedDiagnostic();
 
