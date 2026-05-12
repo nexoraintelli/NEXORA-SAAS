@@ -552,7 +552,100 @@
   gap: 12px;
   margin-top: 16px;
 }
+.comparison-report-summary {
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.035);
+  border-radius: 16px;
+  padding: 16px;
+  margin-top: 16px;
+  break-inside: avoid;
+}
 
+.comparison-report-summary h3 {
+  font-family: Syne, sans-serif;
+  line-height: 1.35;
+  margin-top: 10px;
+}
+
+.comparison-report-summary p {
+  color: var(--text-muted);
+  line-height: 1.7;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.comparison-report-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.comparison-report-card {
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+  border-radius: 16px;
+  padding: 14px;
+  break-inside: avoid;
+}
+
+.comparison-report-card.comparison-up {
+  border-color: rgba(61,220,151,.28);
+  background: rgba(61,220,151,.07);
+}
+
+.comparison-report-card.comparison-down {
+  border-color: rgba(239,68,68,.34);
+  background: rgba(139,30,30,.14);
+}
+
+.comparison-report-card.comparison-stable {
+  border-color: rgba(255,255,255,.12);
+}
+
+.comparison-report-card small {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.comparison-report-card strong {
+  display: block;
+  font-family: Syne, sans-serif;
+  font-size: 17px;
+  margin-top: 8px;
+  line-height: 1.35;
+}
+
+.comparison-report-card p {
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+
+.comparison-report-values {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.comparison-report-values span {
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 999px;
+  padding: 5px 8px;
+}
+
+@media print {
+  .comparison-report-grid {
+    grid-template-columns: 1fr;
+  }
+}
+    
 .structured-card,
 .structured-plan-card,
 .structured-evidence-block {
@@ -819,6 +912,16 @@
     </div>
   </div>
 </section>
+        <section class="report-section" id="comparisonSection">
+  <p class="section-kicker">Evolução do produto</p>
+  <h2>Comparação com diagnóstico anterior</h2>
+  <p>
+    Esta seção compara o diagnóstico atual com a última Síntese anterior salva para o mesmo produto, indicando melhora, piora ou estabilidade nos principais indicadores.
+  </p>
+
+  <div class="comparison-report-summary" id="comparisonReportSummary"></div>
+  <div class="comparison-report-grid" id="comparisonReportGrid"></div>
+</section>
 
         
         <section class="report-section" id="systemsSection">
@@ -893,6 +996,7 @@
  <script type="module">
    import { requireAuth } from "../js/auth.js";
    import { sb } from "../js/supabaseClient.js";
+   import { compararDiagnosticosNexora } from "../js/nexoraComparisonEngine.js";
    
   const urlParams = new URLSearchParams(window.location.search);
 
@@ -1078,6 +1182,7 @@ function renderProductInfo() {
 
     renderMetrics(data);
     renderStructuredSynthesis(data);
+    renderDiagnosticComparison(data);  
     renderSystemsAnalysis(data);
     renderReportAlerts(data);
     renderNextBestAction(data);
@@ -1282,6 +1387,107 @@ function structuredReportCard(title, text) {
       descricao: item.descricao || item.detalhe || item.objetivo || "Monitorar evolução e ajustar a estratégia conforme resposta do produto."
     }))
   };
+}
+   async function renderDiagnosticComparison(data) {
+  const section = document.getElementById("comparisonSection");
+  const summaryTarget = document.getElementById("comparisonReportSummary");
+  const gridTarget = document.getElementById("comparisonReportGrid");
+
+  if (!section || !summaryTarget || !gridTarget) return;
+
+  const previousSynth = await loadPreviousSynthForComparison();
+
+  if (!previousSynth) {
+    section.style.display = "none";
+    return;
+  }
+
+  section.style.display = "block";
+
+  const comparison = compararDiagnosticosNexora({
+    current: data,
+    previous: previousSynth
+  });
+
+  summaryTarget.innerHTML = `
+    <span class="pill ${comparison.status === "Piorou" ? "pill-red" : ""}">
+      ${escapeHtml(comparison.status || "Sem comparação")}
+    </span>
+
+    <h3>Evolução desde o último diagnóstico</h3>
+
+    <p>${escapeHtml(comparison.summary || "-")}</p>
+
+    <div class="comparison-report-summary" style="margin-top:12px;">
+      <strong style="font-family:Syne,sans-serif;">Recomendação Nexora</strong>
+      <p>${escapeHtml(comparison.recommendation || "-")}</p>
+    </div>
+  `;
+
+  gridTarget.innerHTML = (comparison.metrics || [])
+    .map(metric => renderComparisonReportCard(metric))
+    .join("");
+}
+
+async function loadPreviousSynthForComparison() {
+  if (!currentProductId || !currentDiagnosticId) return null;
+
+  try {
+    const { data: diagnostics, error: diagnosticsError } = await sb
+      .from("diagnostics")
+      .select("id, product_id, created_at")
+      .eq("product_id", currentProductId)
+      .neq("id", currentDiagnosticId)
+      .order("created_at", { ascending: false })
+      .limit(8);
+
+    if (diagnosticsError || !Array.isArray(diagnostics) || !diagnostics.length) {
+      return null;
+    }
+
+    const diagnosticIds = diagnostics.map(item => item.id).filter(Boolean);
+
+    const { data: synthRows, error: synthError } = await sb
+      .from("brain_results")
+      .select("diagnostic_id, brain_code, result_data, created_at")
+      .in("diagnostic_id", diagnosticIds)
+      .in("brain_code", ["synth", "sintese", "síntese", "synthesis", "final"])
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (synthError || !Array.isArray(synthRows) || !synthRows.length) {
+      return null;
+    }
+
+    return synthRows[0].result_data || null;
+  } catch (error) {
+    console.warn("Não foi possível carregar diagnóstico anterior para comparação:", error);
+    return null;
+  }
+}
+
+function renderComparisonReportCard(metric) {
+  const className =
+    metric.status === "Melhorou"
+      ? "comparison-up"
+      : metric.status === "Piorou"
+        ? "comparison-down"
+        : "comparison-stable";
+
+  return `
+    <div class="comparison-report-card ${className}">
+      <small>${escapeHtml(metric.status || "-")}</small>
+      <strong>${escapeHtml(metric.label || "-")}</strong>
+
+      <div class="comparison-report-values">
+        <span>Antes: ${escapeHtml(metric.previous || "-")}</span>
+        <span>Agora: ${escapeHtml(metric.current || "-")}</span>
+        <span>${escapeHtml(metric.delta || "-")}</span>
+      </div>
+
+      <p>${escapeHtml(metric.interpretation || "-")}</p>
+    </div>
+  `;
 }
 
     function renderSystemsAnalysis(data) {
