@@ -1162,16 +1162,26 @@ function limparTextoIA(texto) {
           </div>
         ` : ""}
 
-        ${result.ia_usada && result.hipotese_ia ? `
-          <div class="result-block" style="border-color:rgba(216,139,45,.24);">
-            <h3>Hipótese estratégica da IA Nexora</h3>
-            <p style="color:var(--text-muted);line-height:1.85;margin-top:10px;">
-              ${escapeHtml(result.hipotese_ia)}
-            </p>
-          </div>
-        ` : ""}
+        ${result.ia_usada && result.diagnostico_ia && result.ia_fallback_textual ? `
+  <div class="result-block" style="border-color:rgba(216,139,45,.24);">
+    <h3>Leitura estratégica da IA Nexora</h3>
+    <p style="color:var(--muted);font-size:13px;line-height:1.6;margin-top:6px;">
+      A IA retornou uma leitura textual, então a Nexora preservou o conteúdo como aprofundamento estratégico.
+    </p>
+    <div class="analysis-text" style="margin-top:14px;">
+      ${escapeHtml(result.diagnostico_ia)}
+    </div>
+  </div>
+` : result.ia_usada && result.hipotese_ia ? `
+  <div class="result-block" style="border-color:rgba(216,139,45,.24);">
+    <h3>Hipótese estratégica da IA Nexora</h3>
+    <p style="color:var(--text-muted);line-height:1.85;margin-top:10px;">
+      ${escapeHtml(result.hipotese_ia)}
+    </p>
+  </div>
+` : ""}
 
-        ${result.ia_usada && result.leitura_por_pilar_ia ? `
+        ${result.ia_usada && result.leitura_por_pilar_ia && !result.ia_fallback_textual ? `
           <div class="result-block">
             <h3>Leitura complementar por pilar</h3>
             <div class="context-grid" style="margin-top:14px;">
@@ -1494,6 +1504,7 @@ diagnostico_ia: limparTextoIA(
 
         ia_usada: true,
         ia_updated_at: new Date().toISOString()
+        ia_fallback_textual: !!aiResult.ia_fallback_textual,
       };
 
       localStorage.setItem("nx_c3", JSON.stringify(updated));
@@ -1610,21 +1621,14 @@ diagnostico_ia: limparTextoIA(
         }
       }
 
-      return {
-        diagnostico_executivo_aprofundado: clean,
-        hipotese_estrategica: "A IA retornou uma leitura estratégica, mas fora do formato JSON esperado. A análise foi aplicada como aprofundamento textual.",
-        risco_de_nao_corrigir: "A leitura complementar reforça a necessidade de interpretar o mercado por causa raiz, priorizando os bloqueios que impedem diferenciação, escala ou rentabilidade.",
-        leitura_por_pilar: {
-          preco: "Usar a leitura base da Nexora para avaliar preço e valor percebido.",
-          concorrencia: "Usar a leitura base da Nexora para avaliar concorrência e autoridade.",
-          barreira: "Usar a leitura base da Nexora para avaliar barreira de entrada.",
-          diferenciacao: "Usar a leitura base da Nexora para avaliar diferenciação.",
-          quadrante: "Usar o quadrante competitivo para orientar posicionamento.",
-          prioridade_sistemica: "Priorizar o problema principal indicado pela engine Nexora."
-        },
-        plano_de_acao: []
-      };
-    }
+     return {
+  diagnostico_executivo_aprofundado: clean,
+  hipotese_estrategica: "",
+  risco_de_nao_corrigir: "",
+  leitura_por_pilar: null,
+  plano_de_acao: [],
+  ia_fallback_textual: true
+};
 
     function smallTextCard(title, text) {
       return `
