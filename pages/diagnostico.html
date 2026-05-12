@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="../styles/global.css">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     :root {
@@ -182,6 +183,86 @@
       border-color: rgba(240,163,58,.35);
       background: linear-gradient(135deg, rgba(240,163,58,.10), rgba(255,255,255,.025));
     }
+    .upload-card {
+  margin-top: 22px;
+  border: 1px solid rgba(179,38,38,.32);
+  background: linear-gradient(135deg, rgba(139,30,30,.12), rgba(255,255,255,.025));
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.upload-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.upload-title {
+  font-family: Syne, sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  margin-top: 4px;
+}
+
+.upload-description {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-top: 6px;
+}
+
+.upload-preview {
+  margin-top: 16px;
+  display: none;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.035);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.upload-preview.active {
+  display: block;
+}
+
+.upload-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.upload-preview-item {
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,.18);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.upload-preview-item span {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.upload-preview-item strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.upload-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.file-input {
+  width: 100%;
+  margin-top: 12px;
+}
 
     @media (max-width: 760px) {
       .progress {
@@ -331,6 +412,31 @@
 
   </div>
 </section>
+<section class="card">
+  <div class="upload-card">
+    <div class="upload-head">
+      <div>
+        <p class="step-label" style="margin-bottom:4px;">Upload inteligente</p>
+        <div class="upload-title">Preencher métricas por planilha</div>
+        <p class="upload-description">
+          Envie um CSV ou XLSX exportado do Seller Central ou Advertising Console. A Nexora tentará mapear impressões, cliques, pedidos, vendas, sessões e investimento para preencher o Cérebro 1 automaticamente.
+        </p>
+      </div>
+
+      <span class="pill-red">Beta seguro</span>
+    </div>
+
+    <input
+      id="metricsUpload"
+      class="file-input"
+      type="file"
+      accept=".csv,.xlsx,.xls"
+    >
+
+    <div id="uploadPreview" class="upload-preview"></div>
+  </div>
+</section>
+    
     <!-- ETAPA 2 -->
     <section class="card step" data-step="1">
       <p class="step-label">Etapa 2 de 5</p>
@@ -1091,6 +1197,422 @@ function setInputValue(id, value) {
   if (value === undefined || value === null || value === "") return;
 
   el.value = value;
+}
+    let nxUploadedMetrics = null;
+
+const metricsUploadInput = document.getElementById("metricsUpload");
+
+if (metricsUploadInput) {
+  metricsUploadInput.addEventListener("change", handleMetricsUpload);
+}
+
+async function handleMetricsUpload(event) {
+  const file = event.target.files?.[0];
+
+  if (!file) return;
+
+  const preview = document.getElementById("uploadPreview");
+
+  if (preview) {
+    preview.className = "upload-preview active";
+    preview.innerHTML = `
+      <p style="color:var(--muted);font-size:13px;">Lendo planilha...</p>
+    `;
+  }
+
+  try {
+    const rows = await readSpreadsheetFile(file);
+
+    if (!rows.length) {
+      renderUploadError("Não encontrei linhas válidas na planilha.");
+      return;
+    }
+
+    const mapped = mapSpreadsheetMetrics(rows);
+
+    if (!mapped || !mapped.hasAnyUsefulMetric) {
+      renderUploadError("Não consegui identificar colunas úteis como impressões, cliques, pedidos, vendas, sessões ou investimento.");
+      return;
+    }
+
+    nxUploadedMetrics = mapped;
+
+    renderUploadPreview(mapped);
+  } catch (error) {
+    console.error("Erro ao ler planilha:", error);
+    renderUploadError("Não foi possível ler o arquivo. Tente exportar novamente em CSV ou XLSX.");
+  }
+}
+
+async function readSpreadsheetFile(file) {
+  const buffer = await file.arrayBuffer();
+
+  const workbook = XLSX.read(buffer, {
+    type: "array"
+  });
+
+  const firstSheetName = workbook.SheetNames[0];
+  const sheet = workbook.Sheets[firstSheetName];
+
+  const rows = XLSX.utils.sheet_to_json(sheet, {
+    defval: "",
+    raw: false
+  });
+
+  return Array.isArray(rows) ? rows : [];
+}
+
+function mapSpreadsheetMetrics(rows) {
+  const totals = {
+    impressions: 0,
+    clicks: 0,
+    orders: 0,
+    sessions: 0,
+    spend: 0,
+    adSales: 0,
+    totalSales: 0
+  };
+
+  const matchedColumns = {};
+
+  rows.forEach(row => {
+    Object.entries(row).forEach(([columnName, rawValue]) => {
+      const key = identifyMetricColumn(columnName);
+
+      if (!key) return;
+
+      const value = parseMetricNumber(rawValue);
+
+      if (!Number.isFinite(value)) return;
+
+      totals[key] += value;
+      matchedColumns[key] = columnName;
+    });
+  });
+
+  const impressions = totals.impressions;
+  const clicks = totals.clicks;
+  const orders = totals.orders;
+  const sessions = totals.sessions;
+  const spend = totals.spend;
+  const adSales = totals.adSales;
+  const totalSales = totals.totalSales;
+
+  const ctr = impressions > 0 && clicks > 0
+    ? (clicks / impressions) * 100
+    : null;
+
+  const cvr = clicks > 0 && orders > 0
+    ? (orders / clicks) * 100
+    : sessions > 0 && orders > 0
+      ? (orders / sessions) * 100
+      : null;
+
+  const cpc = clicks > 0 && spend > 0
+    ? spend / clicks
+    : null;
+
+  const acos = adSales > 0 && spend > 0
+    ? (spend / adSales) * 100
+    : null;
+
+  const roas = spend > 0 && adSales > 0
+    ? adSales / spend
+    : null;
+
+  const tacos = totalSales > 0 && spend > 0
+    ? (spend / totalSales) * 100
+    : null;
+
+  const hasAnyUsefulMetric =
+    impressions > 0 ||
+    clicks > 0 ||
+    orders > 0 ||
+    sessions > 0 ||
+    spend > 0 ||
+    adSales > 0 ||
+    totalSales > 0;
+
+  return {
+    totals,
+    calculated: {
+      ctr,
+      cvr,
+      cpc,
+      acos,
+      roas,
+      tacos
+    },
+    matchedColumns,
+    hasAnyUsefulMetric
+  };
+}
+
+function identifyMetricColumn(columnName) {
+  const col = normalizeColumnName(columnName);
+
+  const aliases = {
+    impressions: [
+      "impressions",
+      "impressões",
+      "impressoes",
+      "visualizações",
+      "visualizacoes"
+    ],
+    clicks: [
+      "clicks",
+      "cliques",
+      "click"
+    ],
+    orders: [
+      "orders",
+      "pedidos",
+      "total orders",
+      "7 day total orders",
+      "14 day total orders",
+      "unidades pedidas",
+      "unidades vendidas",
+      "units ordered",
+      "units sold"
+    ],
+    sessions: [
+      "sessions",
+      "sessões",
+      "sessoes",
+      "total sessions",
+      "sessões totais",
+      "sessoes totais"
+    ],
+    spend: [
+      "spend",
+      "gasto",
+      "investimento",
+      "cost",
+      "custo",
+      "despesa",
+      "valor gasto",
+      "amount spent"
+    ],
+    adSales: [
+      "sales",
+      "vendas",
+      "ad sales",
+      "advertising sales",
+      "vendas por anúncios",
+      "vendas por anuncios",
+      "7 day total sales",
+      "14 day total sales",
+      "vendas atribuídas",
+      "vendas atribuidas",
+      "attributed sales"
+    ],
+    totalSales: [
+      "ordered product sales",
+      "vendas totais",
+      "total sales",
+      "receita total",
+      "sales total",
+      "vendas do produto pedido",
+      "ordered revenue"
+    ]
+  };
+
+  for (const [metric, names] of Object.entries(aliases)) {
+    if (names.some(name => col === normalizeColumnName(name))) {
+      return metric;
+    }
+  }
+
+  for (const [metric, names] of Object.entries(aliases)) {
+    if (names.some(name => col.includes(normalizeColumnName(name)))) {
+      return metric;
+    }
+  }
+
+  return null;
+}
+
+function normalizeColumnName(value) {
+  return String(value || "")
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+function parseMetricNumber(value) {
+  if (value === null || value === undefined || value === "") return 0;
+
+  let clean = String(value)
+    .replace(/[R$\s%]/g, "")
+    .replace(/\./g, "")
+    .replace(",", ".")
+    .replace(/[^\d.-]/g, "");
+
+  const number = Number(clean);
+
+  return Number.isFinite(number) ? number : 0;
+}
+
+function renderUploadPreview(mapped) {
+  const preview = document.getElementById("uploadPreview");
+
+  if (!preview) return;
+
+  const totals = mapped.totals;
+  const calc = mapped.calculated;
+
+  preview.className = "upload-preview active";
+  preview.innerHTML = `
+    <p class="step-label" style="margin-bottom:4px;">Prévia da planilha</p>
+    <h3>Métricas identificadas</h3>
+
+    <div class="upload-preview-grid">
+      ${uploadPreviewItem("Impressões", formatNumber(totals.impressions))}
+      ${uploadPreviewItem("Cliques", formatNumber(totals.clicks))}
+      ${uploadPreviewItem("Pedidos", formatNumber(totals.orders))}
+      ${uploadPreviewItem("Sessões", formatNumber(totals.sessions))}
+      ${uploadPreviewItem("Investimento", formatMoney(totals.spend))}
+      ${uploadPreviewItem("Vendas anúncios", formatMoney(totals.adSales))}
+      ${uploadPreviewItem("Vendas totais", formatMoney(totals.totalSales))}
+      ${uploadPreviewItem("CTR", formatPercent(calc.ctr))}
+      ${uploadPreviewItem("CVR", formatPercent(calc.cvr))}
+      ${uploadPreviewItem("CPC", formatMoney(calc.cpc))}
+      ${uploadPreviewItem("ACOS", formatPercent(calc.acos))}
+      ${uploadPreviewItem("ROAS", formatDecimal(calc.roas))}
+      ${uploadPreviewItem("TACOS", formatPercent(calc.tacos))}
+    </div>
+
+    <p style="color:var(--muted);font-size:12px;line-height:1.6;margin-top:12px;">
+      Confira os números antes de aplicar. A Nexora vai preencher apenas os campos compatíveis do Cérebro 1.
+    </p>
+
+    <div class="upload-actions">
+      <button type="button" class="btn-primary" onclick="confirmarMetricasUpload()">
+        Aplicar métricas no Cérebro 1
+      </button>
+
+      <button type="button" class="btn-secondary" onclick="limparMetricasUpload()">
+        Cancelar upload
+      </button>
+    </div>
+  `;
+}
+
+function uploadPreviewItem(label, value) {
+  return `
+    <div class="upload-preview-item">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(value)}</strong>
+    </div>
+  `;
+}
+
+function renderUploadError(message) {
+  const preview = document.getElementById("uploadPreview");
+
+  if (!preview) return;
+
+  preview.className = "upload-preview active";
+  preview.innerHTML = `
+    <h3>Não foi possível mapear a planilha</h3>
+    <p style="color:var(--muted);font-size:13px;line-height:1.6;margin-top:8px;">
+      ${escapeHtml(message)}
+    </p>
+  `;
+}
+
+window.confirmarMetricasUpload = function () {
+  if (!nxUploadedMetrics) {
+    msg.textContent = "Nenhuma planilha válida foi carregada.";
+    return;
+  }
+
+  const totals = nxUploadedMetrics.totals;
+  const calc = nxUploadedMetrics.calculated;
+
+  setInputValue("impressions", roundMetric(totals.impressions));
+  setInputValue("clicks", roundMetric(totals.clicks));
+
+  if (totals.orders > 0) {
+    setInputValue("sales", roundMetric(totals.orders));
+  }
+
+  if (calc.ctr !== null) {
+    setInputValue("ctr", roundMetric(calc.ctr));
+  }
+
+  if (calc.cvr !== null) {
+    setInputValue("cvr", roundMetric(calc.cvr));
+  }
+
+  if (calc.acos !== null) {
+    setInputValue("acos", roundMetric(calc.acos));
+  }
+
+  if (calc.tacos !== null) {
+    setInputValue("tacos", roundMetric(calc.tacos));
+  }
+
+  if (calc.roas !== null) {
+    setInputValue("roas", roundMetric(calc.roas));
+  }
+
+  msg.textContent = "Métricas aplicadas ao Cérebro 1. Revise os campos antes de gerar o diagnóstico.";
+};
+
+window.limparMetricasUpload = function () {
+  nxUploadedMetrics = null;
+
+  const input = document.getElementById("metricsUpload");
+  const preview = document.getElementById("uploadPreview");
+
+  if (input) input.value = "";
+
+  if (preview) {
+    preview.className = "upload-preview";
+    preview.innerHTML = "";
+  }
+
+  msg.textContent = "Upload cancelado. Os campos manuais foram preservados.";
+};
+
+function roundMetric(value) {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) {
+    return "";
+  }
+
+  return Math.round(Number(value) * 100) / 100;
+}
+
+function formatNumber(value) {
+  if (!value) return "-";
+  return Number(value).toLocaleString("pt-BR");
+}
+
+function formatMoney(value) {
+  if (!value) return "-";
+  return Number(value).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
+}
+
+function formatPercent(value) {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) {
+    return "-";
+  }
+
+  return `${roundMetric(value).toLocaleString("pt-BR")}%`;
+}
+
+function formatDecimal(value) {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) {
+    return "-";
+  }
+
+  return roundMetric(value).toLocaleString("pt-BR");
 }
     function renderStep() {
       steps.forEach((s, i) => s.classList.toggle("active", i === currentStep));
