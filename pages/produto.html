@@ -112,6 +112,90 @@
       align-items: center;
       margin-bottom: 18px;
     }
+    .comparison-summary {
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.025);
+  border-radius: 16px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.comparison-summary p {
+  color: var(--nx-muted);
+  line-height: 1.65;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.comparison-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.comparison-card {
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.025);
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.comparison-card.comparison-up {
+  border-color: rgba(61,220,151,.28);
+  background: rgba(61,220,151,.07);
+}
+
+.comparison-card.comparison-down {
+  border-color: rgba(239,68,68,.34);
+  background: rgba(139,30,30,.14);
+}
+
+.comparison-card.comparison-stable {
+  border-color: rgba(255,255,255,.12);
+}
+
+.comparison-card small {
+  color: var(--nx-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.comparison-card strong {
+  display: block;
+  font-family: Syne, sans-serif;
+  font-size: 18px;
+  margin-top: 8px;
+}
+
+.comparison-card p {
+  color: var(--nx-muted);
+  font-size: 12px;
+  line-height: 1.55;
+  margin-top: 8px;
+}
+
+.comparison-values {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  color: var(--nx-muted);
+  font-size: 12px;
+}
+
+.comparison-values span {
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 999px;
+  padding: 5px 8px;
+}
+
+@media (max-width: 900px) {
+  .comparison-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
     .product-image {
       width: 140px;
@@ -620,6 +704,7 @@
         Sinais críticos e pontos de atenção gerados pela engine Nexora a partir da última Síntese disponível.
       </p>
     </div>
+    
 
     <span class="pill" id="alertsCount">0 alertas</span>
   </div>
@@ -630,6 +715,26 @@
     </div>
   </div>
 </section>
+<section class="panel" id="comparisonPanel">
+  <div class="topbar" style="margin-bottom:0;">
+    <div>
+      <p class="section-label">Evolução</p>
+      <h2>Comparação com diagnóstico anterior</h2>
+      <p style="color:var(--nx-muted);font-size:13px;margin-top:6px;">
+        Leitura da evolução do produto em relação ao diagnóstico anterior salvo na Nexora.
+      </p>
+    </div>
+
+    <span class="pill" id="comparisonStatus">Sem comparação</span>
+  </div>
+
+  <div id="comparisonArea">
+    <div class="alert-empty">
+      Ainda não há diagnóstico anterior suficiente para comparar este produto.
+    </div>
+  </div>
+</section>
+    
     
     <section class="two-col">
       <div class="panel">
@@ -707,10 +812,11 @@
   </main>
 
   <script type="module">
-   import { requireAuth } from "../js/auth.js";
+import { requireAuth } from "../js/auth.js";
 import { sb } from "../js/supabaseClient.js";
 import { createDiagnostic } from "../js/diagnostics.js";
 import { canCreateDiagnostic } from "../js/plans.js";
+import { compararDiagnosticosNexora } from "../js/nexoraComparisonEngine.js";
 
     const notice = document.getElementById("notice");
     const loadingText = document.getElementById("loadingText");
@@ -756,6 +862,7 @@ import { canCreateDiagnostic } from "../js/plans.js";
       renderCurrentInsight();
       renderBrainCards();
       renderHistory();
+      renderDiagnosticComparison();
 
         finishLoading();
       } catch (error) {
@@ -1153,6 +1260,109 @@ function renderProductAlerts() {
           </p>`
         : ""
     }
+  `;
+}
+    async function renderDiagnosticComparison() {
+  const area = document.getElementById("comparisonArea");
+  const statusEl = document.getElementById("comparisonStatus");
+
+  if (!area || !statusEl) return;
+
+  const pair = getComparisonSynthPair();
+
+  if (!pair.current || !pair.previous) {
+    statusEl.textContent = "Sem comparação";
+    area.innerHTML = `
+      <div class="alert-empty">
+        Ainda não há diagnóstico anterior suficiente para comparar este produto. Gere pelo menos duas Sínteses para acompanhar evolução.
+      </div>
+    `;
+    return;
+  }
+
+  const comparison = compararDiagnosticosNexora({
+    current: pair.current,
+    previous: pair.previous
+  });
+
+  statusEl.textContent = comparison.status || "Sem comparação";
+
+  area.innerHTML = `
+    <div class="comparison-summary">
+      <span class="pill">${escapeHtml(comparison.status || "Sem comparação")}</span>
+      <h3 style="margin-top:10px;">Evolução desde o último diagnóstico</h3>
+      <p>${escapeHtml(comparison.summary || "-")}</p>
+
+      <div class="comparison-summary" style="margin-top:12px;">
+        <strong style="font-family:Syne,sans-serif;">Recomendação Nexora</strong>
+        <p>${escapeHtml(comparison.recommendation || "-")}</p>
+      </div>
+    </div>
+
+    <div class="comparison-metrics-grid">
+      ${(comparison.metrics || []).map(metric => renderComparisonMetricCard(metric)).join("")}
+    </div>
+  `;
+}
+
+function getComparisonSynthPair() {
+  const synthCodes = ["synth", "sintese", "síntese", "synthesis", "final"];
+
+  const synthRows = [...brainResults]
+    .filter(item =>
+      synthCodes.includes(String(item.brain_code || "").toLowerCase()) &&
+      item.result_data
+    )
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  if (!synthRows.length) {
+    return {
+      current: null,
+      previous: null
+    };
+  }
+
+  let currentSynth = null;
+
+  if (currentDiagnosticId) {
+    currentSynth = synthRows.find(row => row.diagnostic_id === currentDiagnosticId) || null;
+  }
+
+  if (!currentSynth) {
+    currentSynth = synthRows[0];
+  }
+
+  const previousSynth = synthRows.find(row =>
+    row.diagnostic_id !== currentSynth.diagnostic_id
+  ) || null;
+
+  return {
+    current: currentSynth,
+    previous: previousSynth
+  };
+}
+
+function renderComparisonMetricCard(metric) {
+  const className =
+    metric.status === "Melhorou"
+      ? "comparison-up"
+      : metric.status === "Piorou"
+        ? "comparison-down"
+        : "comparison-stable";
+
+  return `
+    <div class="comparison-card ${className}">
+      <small>${escapeHtml(metric.status || "-")}</small>
+      <strong>${escapeHtml(metric.label || "-")}</strong>
+
+      <div class="comparison-values">
+        <span>Antes: ${escapeHtml(metric.previous || "-")}</span>
+        <span>Agora: ${escapeHtml(metric.current || "-")}</span>
+        <span>${escapeHtml(metric.delta || "-")}</span>
+      </div>
+
+      <p>${escapeHtml(metric.interpretation || "-")}</p>
+    </div>
   `;
 }
 
