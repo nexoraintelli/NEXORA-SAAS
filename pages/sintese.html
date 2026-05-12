@@ -1452,12 +1452,7 @@ ${renderNextBestActionCard(result)}
           </div>
         </div>
 
-        <div class="result-block">
-          <h3>Recomendação estratégica final</h3>
-          <p style="color:var(--text-muted);line-height:1.8;margin-top:10px;">
-            ${escapeHtml(cleanDisplayText(result.recomendacao) || nextAction.title)}
-          </p>
-        </div>
+      ${renderNextBestActionCard(result)}
 
         <div class="result-block">
           <h3>Resumo para cliente</h3>
