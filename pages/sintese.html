@@ -700,12 +700,20 @@ const structuredSynthesis = estruturarSinteseNexora({
   C3,
   result
 );   
+ const brandHealth = gerarBrandHealth(
+  C1,
+  C2,
+  C3,
+  result,
+  privateLabelIntelligence
+);     
       
       
 const fullResult = {
   ...result,
   systems_analysis: systemsAnalysis,
   private_label_intelligence: privateLabelIntelligence,
+  brand_health: brandHealth,
   alerts,
   next_best_action: nextBestAction,
   nextBestAction,
@@ -1611,6 +1619,319 @@ function renderPrivateLabelIntelligence(privateLabel) {
     </div>
   `;
 }
+function gerarBrandHealth(c1, c2, c3, synthesis = {}, privateLabel = null) {
+  const productHealthScore = Number(synthesis?.score_final || synthesis?.score || 0);
+  const performanceScore = Number(c1?.score_geral || c1?.score || 0);
+  const listingScore = Number(c2?.score_pagina || c2?.score || 0);
+  const marketScore = Number(c3?.score_mercado || c3?.score || 0);
+
+  const privateLabelScore = Number(
+    privateLabel?.score ||
+    synthesis?.private_label_intelligence?.score ||
+    0
+  );
+
+  const authorityHealth = calculateBrandAuthorityHealth(c1, c2);
+  const ppcSustainability = calculatePpcSustainabilityHealth(c1);
+
+  const score = Math.round(
+    (productHealthScore * 0.25) +
+    (performanceScore * 0.15) +
+    (listingScore * 0.15) +
+    (marketScore * 0.15) +
+    (privateLabelScore * 0.15) +
+    (authorityHealth.score * 0.10) +
+    (ppcSustainability.score * 0.05)
+  );
+
+  const pillars = [
+    {
+      key: "performance",
+      label: "Performance",
+      score: performanceScore,
+      status: classifyBrandHealthPillar(performanceScore),
+      reading: "Mede a saúde de métricas comerciais, tráfego, conversão e rentabilidade."
+    },
+    {
+      key: "listing",
+      label: "Listing",
+      score: listingScore,
+      status: classifyBrandHealthPillar(listingScore),
+      reading: "Mede a força da página, clareza da oferta, comunicação, SEO, confiança e diferenciação."
+    },
+    {
+      key: "market",
+      label: "Mercado",
+      score: marketScore,
+      status: classifyBrandHealthPillar(marketScore),
+      reading: "Mede a posição competitiva, barreira de entrada, preço, concorrência e oportunidade."
+    },
+    {
+      key: "private_label",
+      label: "Private Label",
+      score: privateLabelScore,
+      status: classifyBrandHealthPillar(privateLabelScore),
+      reading: "Mede a prontidão do produto como marca própria, considerando diferenciação, autoridade e escala."
+    },
+    {
+      key: "authority",
+      label: "Autoridade",
+      score: authorityHealth.score,
+      status: classifyBrandHealthPillar(authorityHealth.score),
+      reading: authorityHealth.reading
+    },
+    {
+      key: "ppc",
+      label: "PPC sustentável",
+      score: ppcSustainability.score,
+      status: classifyBrandHealthPillar(ppcSustainability.score),
+      reading: ppcSustainability.reading
+    }
+  ];
+
+  const weakestPillar = [...pillars].sort((a, b) => a.score - b.score)[0];
+  const strongestPillar = [...pillars].sort((a, b) => b.score - a.score)[0];
+
+  const status = classifyBrandHealthStatus(score);
+  const mainRisk = buildBrandHealthMainRisk(weakestPillar, c1, c2, c3, privateLabel);
+  const reading = buildBrandHealthReading({
+    score,
+    status,
+    weakestPillar,
+    strongestPillar,
+    privateLabel,
+    c1,
+    c2,
+    c3
+  });
+
+  return {
+    score,
+    status,
+    strongestPillar,
+    weakestPillar,
+    mainRisk,
+    reading,
+    pillars,
+    recommendations: buildBrandHealthRecommendations({
+      score,
+      status,
+      weakestPillar,
+      strongestPillar,
+      privateLabel,
+      ppcSustainability,
+      authorityHealth
+    })
+  };
+}
+
+function calculateBrandAuthorityHealth(c1, c2) {
+  const reviews = Number(c1?.reviews || c2?.reviews || 0);
+  const rating = Number(c1?.rating || c2?.rating || 0);
+
+  let reviewScore = 0;
+
+  if (reviews >= 1000) reviewScore = 100;
+  else if (reviews >= 500) reviewScore = 88;
+  else if (reviews >= 100) reviewScore = 72;
+  else if (reviews >= 30) reviewScore = 55;
+  else if (reviews >= 10) reviewScore = 38;
+  else reviewScore = 20;
+
+  let ratingScore = 0;
+
+  if (rating >= 4.6) ratingScore = 100;
+  else if (rating >= 4.3) ratingScore = 82;
+  else if (rating >= 4.0) ratingScore = 65;
+  else if (rating >= 3.7) ratingScore = 45;
+  else ratingScore = 25;
+
+  const score = Math.round((reviewScore * 0.60) + (ratingScore * 0.40));
+
+  return {
+    score,
+    reviews,
+    rating,
+    reading: `O produto possui ${reviews || 0} reviews e rating médio de ${rating || 0}. Esse pilar mede se existe prova social suficiente para sustentar conversão, confiança e defesa competitiva.`
+  };
+}
+
+function calculatePpcSustainabilityHealth(c1) {
+  const acos = Number(c1?.acos || 0);
+  const tacos = Number(c1?.tacos || 0);
+  const roas = Number(c1?.roas || 0);
+
+  let score = 100;
+
+  if (tacos >= 25) score -= 35;
+  else if (tacos >= 18) score -= 25;
+  else if (tacos >= 12) score -= 15;
+
+  if (acos >= 45) score -= 35;
+  else if (acos >= 30) score -= 24;
+  else if (acos >= 20) score -= 12;
+
+  if (roas > 0 && roas < 2) score -= 20;
+  else if (roas >= 2 && roas < 3) score -= 10;
+
+  score = Math.max(0, Math.min(100, Math.round(score)));
+
+  return {
+    score,
+    acos,
+    tacos,
+    roas,
+    reading: `A sustentabilidade de PPC considera ACOS, TACOS e ROAS. Quanto maior a dependência de mídia para gerar venda, menor a saúde de marca no longo prazo.`
+  };
+}
+
+function classifyBrandHealthPillar(score) {
+  const value = Number(score || 0);
+
+  if (value >= 80) return "Saudável";
+  if (value >= 60) return "Em atenção";
+  if (value >= 40) return "Frágil";
+  return "Crítico";
+}
+
+function classifyBrandHealthStatus(score) {
+  const value = Number(score || 0);
+
+  if (value >= 80) return "Saudável";
+  if (value >= 65) return "Em acompanhamento";
+  if (value >= 50) return "Em atenção";
+  if (value >= 35) return "Frágil";
+  return "Crítico";
+}
+
+function buildBrandHealthMainRisk(weakestPillar, c1, c2, c3, privateLabel) {
+  const label = weakestPillar?.label || "pilar crítico";
+
+  if (label === "PPC sustentável") {
+    return "A marca pode estar dependendo demais de mídia paga para sustentar vendas, o que pressiona margem e limita escala saudável.";
+  }
+
+  if (label === "Autoridade") {
+    return "A marca pode não ter prova social suficiente para competir com players mais fortes em reviews, rating e confiança percebida.";
+  }
+
+  if (label === "Listing") {
+    return "A página pode estar impedindo que o tráfego se transforme em conversão, reduzindo a eficiência de mídia e crescimento orgânico.";
+  }
+
+  if (label === "Mercado") {
+    return "O contexto competitivo pode estar pressionando preço, diferenciação e autoridade, tornando a escala mais difícil.";
+  }
+
+  if (label === "Private Label") {
+    return "O produto pode ainda não ter estrutura suficiente de marca própria para crescer com defesa competitiva e percepção de valor.";
+  }
+
+  return "A saúde geral da marca depende de corrigir o pilar mais fraco antes de ampliar investimento, sortimento ou escala.";
+}
+
+function buildBrandHealthReading(data) {
+  return `O Brand Health atual é ${data.score}/100, classificado como ${data.status}. O pilar mais forte é ${data.strongestPillar?.label || "-"}, enquanto o pilar mais fraco é ${data.weakestPillar?.label || "-"}. Essa leitura mostra a saúde consolidada do produto como ativo de marca, não apenas como diagnóstico isolado. Para acompanhamento contínuo, a Nexora deve observar se os próximos diagnósticos melhoram os pilares mais fracos, principalmente aqueles ligados a autoridade, eficiência de mídia, diferenciação e força competitiva.`;
+}
+
+function buildBrandHealthRecommendations(data) {
+  const recs = [];
+
+  if (data.weakestPillar?.label) {
+    recs.push(`Priorizar melhoria do pilar mais fraco: ${data.weakestPillar.label}.`);
+  }
+
+  if (data.ppcSustainability?.score < 60) {
+    recs.push("Monitorar ACOS, TACOS e ROAS para reduzir dependência de mídia paga.");
+  }
+
+  if (data.authorityHealth?.score < 60) {
+    recs.push("Fortalecer prova social com reviews, rating, imagens de uso e confiança na página.");
+  }
+
+  if (data.privateLabel?.score < 60) {
+    recs.push("Reforçar diferenciação e percepção de marca própria antes de escalar.");
+  }
+
+  if (data.score >= 75) {
+    recs.push("Manter acompanhamento contínuo para proteger posição, margem e autoridade.");
+  }
+
+  return recs.length ? recs : [
+    "Acompanhar evolução do Brand Health a cada novo diagnóstico.",
+    "Proteger os pilares fortes e corrigir sinais de queda antes que virem gargalos."
+  ];
+}
+
+function renderBrandHealth(brandHealth) {
+  if (!brandHealth) return "";
+
+  return `
+    <div class="result-block">
+      <p class="step-label">Brand Health</p>
+      <h3>Saúde consolidada da marca/produto</h3>
+
+      <p style="color:var(--muted);line-height:1.7;margin-top:8px;">
+        Esta métrica consolida performance, listing, mercado, PPC, autoridade e Private Label para acompanhar a saúde do produto ao longo do tempo.
+      </p>
+
+      <div class="score-hero" style="margin-top:18px;">
+        <div>
+          <p style="color:var(--muted);font-size:12px;">Brand Health Score</p>
+          <div class="score-number">${escapeHtml(brandHealth.score ?? "-")}</div>
+          <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">/100 · ${escapeHtml(brandHealth.status || "-")}</p>
+        </div>
+
+        <div>
+          <span class="pill-red">Risco principal</span>
+          <h3 style="margin-top:12px;line-height:1.35;">
+            ${escapeHtml(brandHealth.mainRisk || "-")}
+          </h3>
+          <p style="color:var(--muted);margin-top:12px;line-height:1.7;">
+            ${escapeHtml(brandHealth.reading || "-")}
+          </p>
+        </div>
+      </div>
+
+      <div class="score-grid">
+        ${(brandHealth.pillars || []).map(pillar => `
+          ${metricCard(
+            pillar.label,
+            `${pillar.status} · ${Math.round(Number(pillar.score || 0))}/100`
+          )}
+        `).join("")}
+      </div>
+
+      <div class="system-summary-grid">
+        <div class="system-summary-card">
+          <span class="tag tag-red">Pilar mais fraco</span>
+          <h3 style="margin-top:10px;">${escapeHtml(brandHealth.weakestPillar?.label || "-")}</h3>
+          <p>${escapeHtml(brandHealth.weakestPillar?.reading || "-")}</p>
+        </div>
+
+        <div class="system-summary-card">
+          <span class="tag">Pilar mais forte</span>
+          <h3 style="margin-top:10px;">${escapeHtml(brandHealth.strongestPillar?.label || "-")}</h3>
+          <p>${escapeHtml(brandHealth.strongestPillar?.reading || "-")}</p>
+        </div>
+      </div>
+
+      <div class="result-block" style="background:rgba(255,255,255,.025);margin-top:16px;">
+        <h3>Recomendações de acompanhamento</h3>
+
+        <div style="display:grid;gap:12px;margin-top:14px;">
+          ${(brandHealth.recommendations || []).map((item, index) => `
+            <div class="gap-card">
+              <span class="tag ${index === 0 ? "tag-red" : ""}">Acompanhamento ${index + 1}</span>
+              <p>${escapeHtml(item)}</p>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
     
     function renderResult(result) {
       resultArea.style.display = "block";
@@ -1705,8 +2026,18 @@ ${result.ia_usada && isUsableNarrative(result.diagnostico_ia) ? `
             </div>
           </div>
         </div>
-        ${renderStructuredSynthesis(result.structured_synthesis)}
+       ${renderStructuredSynthesis(result.structured_synthesis)}
 ${renderSystemsAnalysis(result.systems_analysis)}
+${renderBrandHealth(
+  result.brand_health ||
+  gerarBrandHealth(
+    C1,
+    C2,
+    C3,
+    result,
+    result.private_label_intelligence || gerarPrivateLabelIntelligence(C1, C2, C3, result)
+  )
+)}
 ${renderPrivateLabelIntelligence(
   result.private_label_intelligence ||
   gerarPrivateLabelIntelligence(C1, C2, C3, result)
