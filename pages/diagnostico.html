@@ -263,6 +263,50 @@
   width: 100%;
   margin-top: 12px;
 }
+   .custom-file-upload {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.035);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.btn-file-upload {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(179,38,38,.45);
+  background: linear-gradient(135deg, rgba(139,30,30,.9), rgba(179,38,38,.75));
+  color: #fff;
+  font-family: DM Sans, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.btn-file-upload:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,.22);
+  box-shadow: 0 12px 30px rgba(139,30,30,.22);
+}
+
+.file-upload-name {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+} 
 
     @media (max-width: 760px) {
       .progress {
@@ -426,12 +470,22 @@
       <span class="pill-red">Beta seguro</span>
     </div>
 
-    <input
-      id="metricsUpload"
-      class="file-input"
-      type="file"
-      accept=".csv,.xlsx,.xls"
-    >
+   <div class="custom-file-upload">
+  <input
+    id="metricsUpload"
+    class="file-input-hidden"
+    type="file"
+    accept=".csv,.xlsx,.xls"
+  >
+
+  <label for="metricsUpload" class="btn-file-upload">
+    Escolher planilha
+  </label>
+
+  <span id="metricsUploadName" class="file-upload-name">
+    Nenhum arquivo selecionado
+  </span>
+</div>
 
     <div id="uploadPreview" class="upload-preview"></div>
   </div>
@@ -1211,6 +1265,12 @@ async function handleMetricsUpload(event) {
 
   if (!file) return;
 
+  const fileNameLabel = document.getElementById("metricsUploadName");
+
+  if (fileNameLabel) {
+    fileNameLabel.textContent = file.name;
+  }
+
   const preview = document.getElementById("uploadPreview");
 
   if (preview) {
@@ -1567,9 +1627,12 @@ window.limparMetricasUpload = function () {
 
   const input = document.getElementById("metricsUpload");
   const preview = document.getElementById("uploadPreview");
+  const fileNameLabel = document.getElementById("metricsUploadName");
 
   if (input) input.value = "";
-
+  if (fileNameLabel) {
+  fileNameLabel.textContent = "Nenhum arquivo selecionado";
+}
   if (preview) {
     preview.className = "upload-preview";
     preview.innerHTML = "";
