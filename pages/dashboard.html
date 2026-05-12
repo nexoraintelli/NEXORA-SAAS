@@ -1302,6 +1302,13 @@
     </div>
 
     <div class="modal-grid">
+      <div class="modal-full">
+        <label>Cliente vinculado</label>
+          <select id="modalClientId">
+    <option value="">Sem cliente vinculado</option>
+  </select>
+</div>
+      
       <div>
         <label>Nome do produto *</label>
         <input id="modalProductName" placeholder="Ex: Organizador de ferramentas">
@@ -1422,6 +1429,7 @@ import {
 } from "../js/plans.js";
     let currentUserId = null;
     let currentProducts = [];
+    let currentClients = [];
     let currentProductDiagnostics = [];
     let currentProductBrainResults = [];
 
@@ -1438,6 +1446,7 @@ import {
 
   loadUserPlan();
   loadDiagnostics(user.id);
+  await loadClients();
   loadProducts();
 }
 
@@ -1641,7 +1650,56 @@ function isDraftDiagnostic(diagnostic) {
   const score = getDiagnosticScore(diagnostic);
   return status === "draft" && score === "-";
 }
+async function loadClients() {
+  if (!currentUserId) return;
 
+  try {
+    const { data, error } = await sb
+      .from("clients")
+      .select("*")
+      .eq("user_id", currentUserId)
+      .order("name", { ascending: true });
+
+    if (error) {
+      console.warn("Não foi possível carregar clientes no dashboard:", error);
+      currentClients = [];
+      preencherSelectClientes();
+      return;
+    }
+
+    currentClients = data || [];
+    preencherSelectClientes();
+  } catch (error) {
+    console.warn("Erro inesperado ao carregar clientes:", error);
+    currentClients = [];
+    preencherSelectClientes();
+  }
+}
+
+function preencherSelectClientes() {
+  const select = document.getElementById("modalClientId");
+
+  if (!select) return;
+
+  select.innerHTML = `
+    <option value="">Sem cliente vinculado</option>
+    ${currentClients.map(client => `
+      <option value="${escapeHtml(client.id)}">
+        ${escapeHtml(client.name || client.company_name || "Cliente sem nome")}
+      </option>
+    `).join("")}
+  `;
+}
+
+function getClientNameById(clientId) {
+  if (!clientId) return "Sem cliente";
+
+  const client = currentClients.find(item => String(item.id) === String(clientId));
+
+  return client?.name || client?.company_name || "Cliente vinculado";
+}
+
+    
 async function loadProducts() {
   const el = document.getElementById("productsList");
 
@@ -1694,6 +1752,8 @@ if (clientsProductsCount) {
         product.asin ||
         "Produto sem nome";
 
+      const clientName = getClientNameById(product.client_id);
+      
       const category = product.category || "Categoria não definida";
       const subcategory = product.subcategory || "Subcategoria não definida";
       const marketplace = product.marketplace || "Marketplace não definido";
@@ -1735,7 +1795,9 @@ if (clientsProductsCount) {
           <div>
             <div class="diag-title">${escapeHtml(name)}</div>
            <div class="diag-meta">
-  ${escapeHtml(asin)} · ${escapeHtml(category)} · ${escapeHtml(subcategory)} · ${escapeHtml(marketplace)}
+  Cliente: ${escapeHtml(clientName)}
+<br>
+${escapeHtml(asin)} · ${escapeHtml(category)} · ${escapeHtml(subcategory)} · ${escapeHtml(marketplace)}
   <br>
   ${alertLine}
 </div>
@@ -2023,6 +2085,10 @@ window.abrirRelatorio = function () {
     window.loadDiagnostics = loadDiagnostics;
    window.abrirModalProduto = async function () {
   try {
+    if (!currentClients.length) {
+      await loadClients();
+    }
+    
     const permission = await canCreateProductByPlan();
 
     if (!permission.allowed) {
@@ -2083,6 +2149,7 @@ window.salvarProdutoEIniciarDiagnostico = async function () {
   msg.textContent = "Salvando produto na Nexora...";
 
     const product = await createProduct({
+      client_id: getModalValue("modalClientId") || null,
       product_name: productName,
       name: productName,
       asin: getModalValue("modalProductAsin"),
