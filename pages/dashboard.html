@@ -983,6 +983,13 @@
 <button class="nav-item" onclick="location.href='./planos.html'">
   <span class="nav-icon">◈</span> Planos
 </button>
+          <button class="nav-item" onclick="location.href='./clientes.html'">
+  <span class="nav-icon">◎</span> Clientes
+</button>
+
+<button class="nav-item" id="adminNavItem" style="display:none;" onclick="location.href='./admin.html'">
+  <span class="nav-icon">⚙</span> Admin
+</button>
 
         </nav>
       </div>
@@ -1237,6 +1244,16 @@
 
             <div class="quick-grid">
               
+<div class="quick-card" onclick="location.href='./clientes.html'">
+  <strong>Gerenciar clientes</strong>
+  <p>Cadastre marcas, sellers e contas atendidas para organizar produtos e diagnósticos por cliente.</p>
+</div>
+
+              <div class="quick-card" id="adminQuickCard" style="display:none;" onclick="location.href='./admin.html'">
+  <strong>Painel Admin</strong>
+  <p>Acesse pedidos, planos, ativações manuais e controles internos da Nexora.</p>
+</div>
+              
               <div class="quick-card" onclick="abrirModalProduto()">
                 <strong>Adicionar produto</strong>
                 <p>Cadastre um produto para acompanhar evolução e iniciar um diagnóstico vinculado.</p>
@@ -1437,6 +1454,19 @@ async function loadUserPlan() {
     const noteEl = document.getElementById("planNote");
 
     const isUnlimited = plan.is_admin || plan.unlimited_access;
+    
+   const adminNavItem = document.getElementById("adminNavItem");
+   const adminQuickCard = document.getElementById("adminQuickCard");
+
+   const canAccessAdmin = plan.is_admin === true && plan.unlimited_access === true;
+
+if (adminNavItem) {
+  adminNavItem.style.display = canAccessAdmin ? "flex" : "none";
+}
+
+if (adminQuickCard) {
+  adminQuickCard.style.display = canAccessAdmin ? "block" : "none";
+}
 
     if (planNameEl) {
       planNameEl.textContent = formatPlanName(plan.plan_name);
