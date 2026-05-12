@@ -1353,6 +1353,8 @@ ${result.ia_usada && isUsableNarrative(result.diagnostico_ia) ? `
 
 ${renderAlertsNexora(result.alerts)}
 
+${renderNextBestActionCard(result)}
+
         ${riskText ? `
           <div class="result-block">
             <h3>Risco estratégico de não corrigir</h3>
@@ -1449,8 +1451,6 @@ ${renderAlertsNexora(result.alerts)}
             `).join("") || `<p style="color:var(--muted);">Matriz não disponível para este diagnóstico.</p>`}
           </div>
         </div>
-
-      ${renderNextBestActionCard(result)}
 
         <div class="result-block">
           <h3>Resumo para cliente</h3>
