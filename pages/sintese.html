@@ -391,6 +391,7 @@ import { gerarSinteseFinal } from "../js/synthesisEngine.js";
 import { analisarCincoSistemas } from "../js/nexoraSystemsEngine.js";
 import { analisarSinteseComIA } from "../js/nexoraAI.js";
 import { gerarAlertasNexora } from "../js/nexoraAlertsEngine.js";
+import { gerarProximaMelhorAcaoNexora } from "../js/nexoraNextActionEngine.js";  
 
     await requireAuth();
 
@@ -661,7 +662,14 @@ const aiResult = await analisarSinteseComIA({
   baseSynthesis: baseResult,
   product: currentProduct || {}
 });
-
+const nextBestAction = gerarProximaMelhorAcaoNexora({
+  c1: C1,
+  c2: C2,
+  c3: C3,
+  systemsAnalysis,
+  alerts,
+  synthesis: result
+});
 const result = aplicarIANexoraLayerSobreSintese(
   baseResult,
   aiResult,
@@ -680,7 +688,8 @@ const fullResult = {
   ...result,
   systems_analysis: systemsAnalysis,
   alerts,
-  next_best_action: result.next_best_action || systemsAnalysis.nextBestAction,
+  next_best_action: nextBestAction,
+  nextBestAction,
   diagnostic_id: diagnosticId,
   product_id: currentProductId || null,
   source: {
@@ -1280,16 +1289,20 @@ window.abrirRelatorio = function () {
           systems_analysis: analisarCincoSistemas(C1, C2, C3)
         };
       }
-      if ((!Array.isArray(result.alerts) || !result.alerts.length) && C1 && C2 && C3) {
+     if ((!result.next_best_action || typeof result.next_best_action === "string") && C1 && C2 && C3) {
+  const nextBestAction = gerarProximaMelhorAcaoNexora({
+    c1: C1,
+    c2: C2,
+    c3: C3,
+    systemsAnalysis: result.systems_analysis,
+    alerts: result.alerts || [],
+    synthesis: result
+  });
+
   result = {
     ...result,
-    alerts: gerarAlertasNexora({
-      c1: C1,
-      c2: C2,
-      c3: C3,
-      systemsAnalysis: result.systems_analysis,
-      synthesis: result
-    })
+    next_best_action: nextBestAction,
+    nextBestAction
   };
 }
 
@@ -1340,13 +1353,7 @@ ${result.ia_usada && isUsableNarrative(result.diagnostico_ia) ? `
 
 ${renderAlertsNexora(result.alerts)}
 
-<div class="result-block next-action-card">
-          <span class="pill-red">Próxima melhor ação</span>
-          <h3 style="margin-top:12px;">${escapeHtml(nextAction.title)}</h3>
-          <p style="color:var(--text-muted);line-height:1.8;margin-top:10px;">
-            ${escapeHtml(nextAction.detail)}
-          </p>
-        </div>
+${renderNextBestActionCard(result)}
 
         ${riskText ? `
           <div class="result-block">
@@ -1516,18 +1523,69 @@ ${renderAlertsNexora(result.alerts)}
       );
     }
 
-    function getNextBestAction(result) {
-      const systemsAnalysis = result?.systems_analysis || null;
+    function renderNextBestActionCard(result) {
+  const action = normalizeNextBestAction(result.next_best_action || result.nextBestAction);
 
-      if (systemsAnalysis?.nextBestAction) {
-        const critical = systemsAnalysis?.mostCriticalSystem?.label || systemsAnalysis?.mostCriticalSystem?.name || "Sistema crítico";
-        const secondary = systemsAnalysis?.secondarySystem?.label || systemsAnalysis?.secondarySystem?.name || "sistema secundário";
+  return `
+    <div class="result-block next-action-card">
+      <p class="step-label">Próxima melhor ação</p>
+      <h3>${escapeHtml(action.title)}</h3>
 
-        return {
-          title: cleanDisplayText(systemsAnalysis.nextBestAction),
-          detail: `Esta é a ação principal porque o sistema mais crítico identificado foi ${critical}, com ${secondary} como sistema secundário. Corrigir esse bloqueio vem antes de aumentar mídia, preço ou expansão, pois ele atua diretamente na causa estrutural mais relevante do diagnóstico.`
-        };
-      }
+      <div class="score-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:14px;">
+        ${metricCard("Área prioritária", action.priority_area || "-")}
+        ${metricCard("Prazo sugerido", action.timeframe || "-")}
+      </div>
+
+      <div class="gap-card" style="margin-top:14px;">
+        <span class="tag tag-red">Por que essa ação vem primeiro</span>
+        <p>${escapeHtml(action.reason || "-")}</p>
+      </div>
+
+      <div class="gap-card" style="margin-top:12px;">
+        <span class="tag">O que fazer agora</span>
+        <p>${escapeHtml(action.action || "-")}</p>
+      </div>
+
+      <div class="gap-card" style="margin-top:12px;">
+        <span class="tag">Resultado esperado</span>
+        <p>${escapeHtml(action.expected_result || "-")}</p>
+      </div>
+    </div>
+  `;
+}
+
+function normalizeNextBestAction(action) {
+  if (!action) {
+    return {
+      title: "Priorizar a causa raiz antes de escalar o produto",
+      priority_area: "Estratégia",
+      timeframe: "7 dias",
+      reason: "A Nexora identificou que o produto precisa corrigir o bloqueio principal antes de aumentar mídia, preço ou expansão.",
+      action: "Use a causa raiz consolidada, os alertas e os 5 Sistemas para corrigir o principal gargalo antes de ampliar investimento.",
+      expected_result: "Evitar ações soltas e direcionar o seller para a primeira correção com maior impacto provável."
+    };
+  }
+
+  if (typeof action === "string") {
+    return {
+      title: action,
+      priority_area: "Estratégia",
+      timeframe: "7 dias",
+      reason: "A ação foi definida a partir da leitura consolidada da Nexora.",
+      action,
+      expected_result: "Direcionar o seller para o primeiro movimento com maior impacto provável."
+    };
+  }
+
+  return {
+    title: action.title || action.titulo || "Priorizar a causa raiz antes de escalar o produto",
+    priority_area: action.priority_area || action.area || "Estratégia",
+    timeframe: action.timeframe || action.prazo || "7 dias",
+    reason: action.reason || action.motivo || action.detail || action.detalhe || "-",
+    action: action.action || action.acao || action.recommendation || action.recomendacao || "-",
+    expected_result: action.expected_result || action.resultado_esperado || "Melhorar a clareza da decisão e reduzir ações dispersas."
+  };
+}
 
       const priorities = Array.isArray(result?.prioridades) ? result.prioridades : [];
       const first = priorities[0] || {};
