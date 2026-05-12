@@ -1592,44 +1592,44 @@ diagnostico_ia: limparTextoIA(
       return null;
     }
 
-    function parseJsonSafeC3(raw) {
-      if (!raw) return null;
+   function parseJsonSafeC3(raw) {
+  if (!raw) return null;
 
-      if (typeof raw === "object") {
-        return raw;
-      }
+  if (typeof raw === "object") {
+    return raw;
+  }
 
-      let clean = String(raw)
-        .replace(/```json/gi, "")
-        .replace(/```/g, "")
-        .trim();
+  let clean = String(raw)
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
 
-      try {
-        return JSON.parse(clean);
-      } catch (e) {}
+  try {
+    return JSON.parse(clean);
+  } catch (e) {}
 
-      const firstBrace = clean.indexOf("{");
-      const lastBrace = clean.lastIndexOf("}");
+  const firstBrace = clean.indexOf("{");
+  const lastBrace = clean.lastIndexOf("}");
 
-      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-        const jsonLike = clean.slice(firstBrace, lastBrace + 1);
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    const jsonLike = clean.slice(firstBrace, lastBrace + 1);
 
-        try {
-          return JSON.parse(jsonLike);
-        } catch (e) {
-          console.warn("JSON da IA inválido no Cérebro 3, usando fallback textual:", jsonLike, e);
-        }
-      }
+    try {
+      return JSON.parse(jsonLike);
+    } catch (e) {
+      console.warn("JSON da IA inválido no Cérebro 3, usando fallback textual:", jsonLike, e);
+    }
+  }
 
-     return {
-  diagnostico_executivo_aprofundado: clean,
-  hipotese_estrategica: "",
-  risco_de_nao_corrigir: "",
-  leitura_por_pilar: null,
-  plano_de_acao: [],
-  ia_fallback_textual: true
-};
-
+  return {
+    diagnostico_executivo_aprofundado: clean,
+    hipotese_estrategica: "",
+    risco_de_nao_corrigir: "",
+    leitura_por_pilar: null,
+    plano_de_acao: [],
+    ia_fallback_textual: true
+  };
+}
     function smallTextCard(title, text) {
       return `
         <div class="metric-card">
