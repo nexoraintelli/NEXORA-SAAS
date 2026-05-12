@@ -546,6 +546,97 @@
   text-transform: uppercase;
   letter-spacing: .06em;
 }
+    .structured-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.structured-card,
+.structured-plan-card,
+.structured-evidence-block {
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+  background: rgba(255,255,255,.035);
+  padding: 16px;
+  break-inside: avoid;
+}
+
+.structured-card h3,
+.structured-plan-card h3,
+.structured-evidence-block h3 {
+  font-family: Syne, sans-serif;
+  font-size: 17px;
+  margin-bottom: 8px;
+  line-height: 1.35;
+}
+
+.structured-card p,
+.structured-plan-card p,
+.structured-evidence-block p {
+  color: var(--text-muted);
+  line-height: 1.65;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.structured-evidence-block {
+  margin-top: 16px;
+}
+
+.structured-evidence-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.structured-evidence-item {
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 14px;
+  background: rgba(255,255,255,.025);
+  padding: 14px;
+  break-inside: avoid;
+}
+
+.structured-evidence-item span {
+  display: inline-flex;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.structured-plans-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.structured-plan-step {
+  border-top: 1px solid rgba(255,255,255,.08);
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+.structured-plan-step strong {
+  display: block;
+  color: #fff;
+  font-family: Syne, sans-serif;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+@media print {
+  .structured-grid,
+  .structured-plans-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
     @media (max-width: 900px) {
       .topbar {
@@ -705,7 +796,31 @@
           <h2>Scores principais</h2>
           <div class="metrics-grid" id="metricsGrid"></div>
         </section>
+<section class="report-section" id="structuredSynthesisSection">
+  <p class="section-kicker">Síntese estruturada Nexora</p>
+  <h2>Leitura padronizada do diagnóstico</h2>
+  <p>
+    Esta seção organiza a leitura final em diagnóstico principal, causa raiz, evidências, risco, impacto comercial e planos de ação. A IA pode complementar a interpretação, mas a estrutura nasce da engine Nexora.
+  </p>
 
+  <div class="structured-grid" id="structuredMainGrid"></div>
+
+  <div class="structured-evidence-block" id="structuredEvidenceBlock"></div>
+
+  <div class="structured-plans-grid">
+    <div class="structured-plan-card">
+      <h3>Plano de 7 dias</h3>
+      <div id="structuredPlan7"></div>
+    </div>
+
+    <div class="structured-plan-card">
+      <h3>Plano de 30 dias</h3>
+      <div id="structuredPlan30"></div>
+    </div>
+  </div>
+</section>
+
+        
         <section class="report-section" id="systemsSection">
           <h2>Diagnóstico pelos 5 Sistemas Nexora</h2>
           <p>
@@ -961,14 +1076,15 @@ function renderProductInfo() {
       document.getElementById("recommendation").textContent = data.recomendacao || "-";
       document.getElementById("clientSummary").textContent = data.resumo_cliente || "-";
 
-     renderMetrics(data);
-renderSystemsAnalysis(data);
-renderReportAlerts(data);
-renderNextBestAction(data);
-renderGaps(data);
-renderPriorities(data);
-renderActionPlan(data);
-renderMatrix(data);
+    renderMetrics(data);
+    renderStructuredSynthesis(data);
+    renderSystemsAnalysis(data);
+    renderReportAlerts(data);
+    renderNextBestAction(data);
+    renderGaps(data);
+    renderPriorities(data);
+    renderActionPlan(data);
+    renderMatrix(data);
     }
 
     function renderMetrics(data) {
@@ -992,7 +1108,86 @@ renderMatrix(data);
         </div>
       `).join("");
     }
+function renderStructuredSynthesis(data) {
+  const structured = data?.structured_synthesis;
+  const section = document.getElementById("structuredSynthesisSection");
+  const mainGrid = document.getElementById("structuredMainGrid");
+  const evidenceBlock = document.getElementById("structuredEvidenceBlock");
+  const plan7Target = document.getElementById("structuredPlan7");
+  const plan30Target = document.getElementById("structuredPlan30");
 
+  if (!section || !mainGrid || !evidenceBlock || !plan7Target || !plan30Target) return;
+
+  if (!structured) {
+    section.style.display = "none";
+    return;
+  }
+
+  section.style.display = "block";
+
+  mainGrid.innerHTML = `
+    ${structuredReportCard("Diagnóstico principal", structured.diagnostico_principal)}
+    ${structuredReportCard("Causa raiz consolidada", structured.causa_raiz)}
+    ${structuredReportCard("Risco estratégico", structured.risco_estrategico)}
+    ${structuredReportCard("Impacto comercial", structured.impacto_comercial)}
+  `;
+
+  const evidences = Array.isArray(structured.evidencias)
+    ? structured.evidencias
+    : [];
+
+  evidenceBlock.innerHTML = evidences.length
+    ? `
+      <h3>Evidências principais</h3>
+      <div class="structured-evidence-list">
+        ${evidences.map((item, index) => `
+          <div class="structured-evidence-item">
+            <span>${escapeHtml(item.origem || `Evidência ${index + 1}`)}</span>
+            <p>${escapeHtml(item.evidência || item.evidencia || "-")}</p>
+          </div>
+        `).join("")}
+      </div>
+    `
+    : `
+      <h3>Evidências principais</h3>
+      <p>Nenhuma evidência estruturada foi encontrada nesta Síntese.</p>
+    `;
+
+  const plan7 = Array.isArray(structured.plano_7_dias)
+    ? structured.plano_7_dias
+    : [];
+
+  const plan30 = Array.isArray(structured.plano_30_dias)
+    ? structured.plano_30_dias
+    : [];
+
+  plan7Target.innerHTML = plan7.length
+    ? plan7.map(item => `
+      <div class="structured-plan-step">
+        <strong>${escapeHtml(item.dia || "-")} · ${escapeHtml(item.titulo || "-")}</strong>
+        <p>${escapeHtml(item.descricao || "-")}</p>
+      </div>
+    `).join("")
+    : `<p>-</p>`;
+
+  plan30Target.innerHTML = plan30.length
+    ? plan30.map(item => `
+      <div class="structured-plan-step">
+        <strong>${escapeHtml(item.periodo || "-")} · ${escapeHtml(item.titulo || "-")}</strong>
+        <p>${escapeHtml(item.descricao || "-")}</p>
+      </div>
+    `).join("")
+    : `<p>-</p>`;
+}
+
+function structuredReportCard(title, text) {
+  return `
+    <div class="structured-card">
+      <h3>${escapeHtml(title)}</h3>
+      <p>${escapeHtml(text || "-")}</p>
+    </div>
+  `;
+}
 
     function renderSystemsAnalysis(data) {
       const systemsAnalysis = data.systems_analysis || data.systemsAnalysis || null;
