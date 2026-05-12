@@ -183,7 +183,7 @@
 .competitor-head,
 .competitor-row {
   display: grid;
-  grid-template-columns: 1.5fr .8fr .8fr .7fr .7fr 44px;
+  grid-template-columns: 1.2fr .9fr .7fr .7fr .7fr 1fr 1fr 44px;
   gap: 10px;
   align-items: center;
 }
@@ -544,14 +544,16 @@
     </button>
   </div>
 
-  <div class="competitor-head">
-    <span>Concorrente / ASIN</span>
-    <span>Preço</span>
-    <span>Reviews</span>
-    <span>Rating</span>
-    <span>Posição</span>
-    <span></span>
-  </div>
+ <div class="competitor-head">
+  <span>Produto</span>
+  <span>ASIN</span>
+  <span>Preço</span>
+  <span>Reviews</span>
+  <span>Rating</span>
+  <span>Posicionamento</span>
+  <span>Diferenciação</span>
+  <span></span>
+</div>
 
   <div id="competitorsList" class="competitors-list"></div>
 </div>
@@ -970,11 +972,20 @@ document.querySelectorAll(".option-group").forEach(group => {
       }
 
       if (step === 0) {
-        if (!v("avgCategoryPrice") || !v("productPrice") || !v("mainCompetitors")) {
-          msg.textContent = "Preencha preço médio, preço do produto e concorrentes principais.";
-          return false;
-        }
-      }
+  aplicarResumoConcorrentesNoFormulario();
+
+  const competitors = getCompetitors();
+
+  if (!v("avgCategoryPrice") || !v("productPrice") || !v("mainCompetitors")) {
+    msg.textContent = "Preencha preço médio, preço do produto e concorrentes principais.";
+    return false;
+  }
+
+  if (competitors.length < 3) {
+    msg.textContent = "Cadastre pelo menos 3 concorrentes para gerar uma leitura competitiva mais objetiva.";
+    return false;
+  }
+}
 
       if (step === 1) {
         if (!state.competitionLevel || !state.marketType || !state.newCompetitors || !state.pricePressure) {
@@ -1028,9 +1039,12 @@ document.querySelectorAll(".option-group").forEach(group => {
 
       const result = analisarMercadoBase(data, C1, C2);
 
+      const competitiveIntelligence = buildCompetitiveIntelligence(data, result);
+
       const fullResult = {
   ...data,
   ...result,
+  competitiveIntelligence,
   score_label: "Market Position Score",
   score_type: "c3_market_position_score",
   score_description: "Score do Cérebro 3 que avalia posição de mercado, força competitiva, barreiras, preço, reviews, diferenciação e oportunidade de escala.",
@@ -1200,6 +1214,7 @@ function limparTextoIA(texto) {
           ${metricCard("Risco reviews", result.scores?.risco_reviews || "-")}
         </div>
         
+${renderCompetitiveIntelligence(result)}
 ${renderCompetitiveQuadrant(result)}
 
         <div class="result-block">
@@ -1727,6 +1742,41 @@ function getQuadrantExplanation(quadrant) {
 
   return explanations[quadrant] || explanations["Niche Player"];
 }
+  function renderCompetitiveIntelligence(result) {
+  const ci = result?.competitiveIntelligence;
+
+  if (!ci) return "";
+
+  return `
+    <div class="result-block">
+      <h3>Inteligência competitiva objetiva</h3>
+      <p style="color:var(--muted);line-height:1.7;margin-top:8px;">
+        Comparação automática com os concorrentes cadastrados para estimar distância competitiva, barreira de entrada, força dominante do mercado e riscos principais.
+      </p>
+
+      <div class="context-grid" style="margin-top:14px;">
+        ${metricCard("Concorrentes analisados", String(ci.competitorsCount || 0))}
+        ${metricCard("Preço médio concorrente", formatMoneyBR(ci.avgCompetitorPrice))}
+        ${metricCard("Reviews médios", Math.round(ci.avgCompetitorReviews || 0).toString())}
+        ${metricCard("Rating médio", ci.avgCompetitorRating ? ci.avgCompetitorRating.toFixed(1) : "-")}
+        ${metricCard("Distância competitiva", `${ci.competitiveDistanceLabel} · ${ci.competitiveDistanceScore}/100`)}
+        ${metricCard("Barreira de entrada", `${ci.entryBarrierLabel} · ${ci.entryBarrierScore}/100`)}
+        ${metricCard("Força dominante", ci.dominantMarketForce)}
+        ${metricCard("Gap de preço", formatPercentBR(ci.priceGap))}
+      </div>
+
+      <div style="display:grid;gap:12px;margin-top:14px;">
+        ${(ci.risks || []).map(risk => `
+          <div style="padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);">
+            <p style="color:var(--muted);font-size:12px;">${escapeHtml(risk.level)}</p>
+            <strong>${escapeHtml(risk.name)}</strong>
+            <p style="color:var(--muted);margin-top:6px;line-height:1.6;">${escapeHtml(risk.description)}</p>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}  
 
 function renderCompetitiveQuadrant(result) {
   const position = getQuadrantPosition(result);
@@ -1775,6 +1825,221 @@ function renderCompetitiveQuadrant(result) {
     </div>
   `;
 }
+function buildCompetitiveIntelligence(data, result) {
+  const competitors = Array.isArray(data.competitors) ? data.competitors : [];
+
+  const productPrice = Number(data.productPrice || 0);
+  const avgCategoryPrice = Number(data.avgCategoryPrice || 0);
+
+  const validPrices = competitors.map(c => Number(c.price || 0)).filter(v => v > 0);
+  const validReviews = competitors.map(c => Number(c.reviews || 0)).filter(v => v > 0);
+  const validRatings = competitors.map(c => Number(c.rating || 0)).filter(v => v > 0);
+
+  const avgCompetitorPrice = average(validPrices);
+  const avgCompetitorReviews = average(validReviews);
+  const avgCompetitorRating = average(validRatings);
+
+  const highReviewCompetitors = competitors.filter(c => Number(c.reviews || 0) >= 100).length;
+  const premiumCompetitors = competitors.filter(c => c.positioning === "Premium" || c.positioning === "Líder").length;
+  const lowDifferentiationCompetitors = competitors.filter(c => c.differentiation === "Baixa" || c.differentiation === "Commodity").length;
+  const strongDifferentiationCompetitors = competitors.filter(c => c.differentiation === "Alta").length;
+
+  const priceGap =
+    avgCompetitorPrice > 0 && productPrice > 0
+      ? ((productPrice - avgCompetitorPrice) / avgCompetitorPrice) * 100
+      : avgCategoryPrice > 0 && productPrice > 0
+        ? ((productPrice - avgCategoryPrice) / avgCategoryPrice) * 100
+        : 0;
+
+  const reviewBarrier =
+    avgCompetitorReviews >= 500 ? "Alta" :
+    avgCompetitorReviews >= 100 ? "Média" :
+    "Baixa";
+
+  const priceRisk =
+    priceGap >= 20 ? "Alto" :
+    priceGap >= 8 ? "Médio" :
+    "Baixo";
+
+  const differentiationRisk =
+    strongDifferentiationCompetitors >= 2 ? "Alto" :
+    lowDifferentiationCompetitors >= Math.ceil(competitors.length / 2) ? "Médio" :
+    "Baixo";
+
+  const competitiveDistanceScore = calculateCompetitiveDistanceScore({
+    priceGap,
+    avgCompetitorReviews,
+    avgCompetitorRating,
+    premiumCompetitors,
+    strongDifferentiationCompetitors,
+    competitorsCount: competitors.length
+  });
+
+  const entryBarrierScore = calculateEntryBarrierScore({
+    avgCompetitorReviews,
+    highReviewCompetitors,
+    premiumCompetitors,
+    competitorsCount: competitors.length,
+    competitionLevel: data.competitionLevel,
+    brandDominance: data.brandDominance,
+    reviewDominance: data.reviewDominance
+  });
+
+  const dominantMarketForce = classifyDominantMarketForce({
+    pricePressure: data.pricePressure,
+    brandDominance: data.brandDominance,
+    reviewDominance: data.reviewDominance,
+    differentiationSpace: data.differentiationSpace,
+    marketType: data.marketType,
+    priceGap,
+    avgCompetitorReviews
+  });
+
+  return {
+    competitorsCount: competitors.length,
+    avgCompetitorPrice,
+    avgCompetitorReviews,
+    avgCompetitorRating,
+    priceGap,
+    highReviewCompetitors,
+    premiumCompetitors,
+    lowDifferentiationCompetitors,
+    strongDifferentiationCompetitors,
+    competitiveDistanceScore,
+    competitiveDistanceLabel: classifyDistance(competitiveDistanceScore),
+    entryBarrierScore,
+    entryBarrierLabel: classifyBarrier(entryBarrierScore),
+    dominantMarketForce,
+    risks: [
+      {
+        name: "Risco por preço",
+        level: priceRisk,
+        description: priceGap > 0
+          ? `O produto está ${roundAbs(priceGap)}% acima da média dos concorrentes/preço de referência.`
+          : `O produto está ${roundAbs(priceGap)}% abaixo da média dos concorrentes/preço de referência.`
+      },
+      {
+        name: "Risco por reviews",
+        level: reviewBarrier,
+        description: `Os concorrentes possuem em média ${Math.round(avgCompetitorReviews || 0)} reviews.`
+      },
+      {
+        name: "Risco por diferenciação",
+        level: differentiationRisk,
+        description: `${strongDifferentiationCompetitors} concorrente(s) foram marcados com diferenciação alta.`
+      }
+    ]
+  };
+}
+
+function average(values) {
+  if (!Array.isArray(values) || !values.length) return 0;
+  return values.reduce((sum, value) => sum + Number(value || 0), 0) / values.length;
+}
+
+function calculateCompetitiveDistanceScore(input) {
+  let score = 30;
+
+  if (Math.abs(input.priceGap) >= 20) score += 18;
+  else if (Math.abs(input.priceGap) >= 8) score += 10;
+
+  if (input.avgCompetitorReviews >= 500) score += 22;
+  else if (input.avgCompetitorReviews >= 100) score += 14;
+  else if (input.avgCompetitorReviews >= 30) score += 8;
+
+  if (input.avgCompetitorRating >= 4.5) score += 12;
+  else if (input.avgCompetitorRating >= 4.2) score += 7;
+
+  score += Math.min(12, input.premiumCompetitors * 4);
+  score += Math.min(10, input.strongDifferentiationCompetitors * 3);
+
+  if (input.competitorsCount >= 5) score += 6;
+
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function calculateEntryBarrierScore(input) {
+  let score = 25;
+
+  if (input.competitionLevel === "Alta") score += 18;
+  if (input.competitionLevel === "Média") score += 10;
+
+  if (input.brandDominance === "Alta") score += 16;
+  if (input.brandDominance === "Média") score += 8;
+
+  if (input.reviewDominance === "Alta") score += 18;
+  if (input.reviewDominance === "Média") score += 9;
+
+  if (input.avgCompetitorReviews >= 500) score += 16;
+  else if (input.avgCompetitorReviews >= 100) score += 9;
+
+  score += Math.min(10, input.highReviewCompetitors * 3);
+  score += Math.min(8, input.premiumCompetitors * 2);
+
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function classifyDistance(score) {
+  const value = Number(score);
+  if (value >= 75) return "Alta";
+  if (value >= 50) return "Média";
+  return "Baixa";
+}
+
+function classifyBarrier(score) {
+  const value = Number(score);
+  if (value >= 75) return "Alta";
+  if (value >= 50) return "Média";
+  return "Baixa";
+}
+
+function classifyDominantMarketForce(input) {
+  if (input.reviewDominance === "Alta" || input.avgCompetitorReviews >= 300) {
+    return "Reviews / autoridade";
+  }
+
+  if (input.brandDominance === "Alta" || input.marketType === "Dominância de marca") {
+    return "Marca";
+  }
+
+  if (input.pricePressure === "Alta" || input.marketType === "Guerra de preço") {
+    return "Preço";
+  }
+
+  if (input.differentiationSpace === "Baixo" || input.marketType === "Commodity") {
+    return "Commodity";
+  }
+
+  if (input.differentiationSpace === "Alto" || input.marketType === "Diferenciação") {
+    return "Diferenciação";
+  }
+
+  return "Mercado misto";
+}
+
+function roundAbs(value) {
+  return Math.abs(Number(value || 0)).toFixed(1).replace(".", ",");
+}
+
+function formatMoneyBR(value) {
+  const number = Number(value || 0);
+
+  if (!Number.isFinite(number) || number <= 0) return "-";
+
+  return number.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
+}
+
+function formatPercentBR(value) {
+  const number = Number(value || 0);
+
+  if (!Number.isFinite(number)) return "-";
+
+  return `${number.toFixed(1).replace(".", ",")}%`;
+}
+    
     function scoreValue(result, key) {
       const value = result?.scores?.[key];
 
@@ -1823,13 +2088,28 @@ window.addCompetitor = function (item = {}) {
   row.dataset.index = competitorIndex;
 
   row.innerHTML = `
-    <input class="competitor-name" placeholder="Nome ou ASIN" value="${escapeHtml(item.name || "")}">
-    <input class="competitor-price" type="number" step="0.01" placeholder="R$" value="${escapeHtml(item.price || "")}">
-    <input class="competitor-reviews" type="number" placeholder="Reviews" value="${escapeHtml(item.reviews || "")}">
-    <input class="competitor-rating" type="number" step="0.1" min="0" max="5" placeholder="4.5" value="${escapeHtml(item.rating || "")}">
-    <input class="competitor-position" type="number" placeholder="Pos." value="${escapeHtml(item.position || "")}">
-    <button type="button" class="icon-btn" onclick="removeCompetitor(this)">×</button>
-  `;
+  <input class="competitor-name" placeholder="Nome do produto" value="${escapeHtml(item.name || "")}">
+  <input class="competitor-asin" placeholder="ASIN" value="${escapeHtml(item.asin || "")}">
+  <input class="competitor-price" type="number" step="0.01" placeholder="R$" value="${escapeHtml(item.price || "")}">
+  <input class="competitor-reviews" type="number" placeholder="Reviews" value="${escapeHtml(item.reviews || "")}">
+  <input class="competitor-rating" type="number" step="0.1" min="0" max="5" placeholder="4.5" value="${escapeHtml(item.rating || "")}">
+  <select class="competitor-positioning">
+    <option value="">Posicionamento</option>
+    <option ${item.positioning === "Premium" ? "selected" : ""}>Premium</option>
+    <option ${item.positioning === "Líder" ? "selected" : ""}>Líder</option>
+    <option ${item.positioning === "Nicho" ? "selected" : ""}>Nicho</option>
+    <option ${item.positioning === "Preço baixo" ? "selected" : ""}>Preço baixo</option>
+    <option ${item.positioning === "Genérico" ? "selected" : ""}>Genérico</option>
+  </select>
+  <select class="competitor-differentiation">
+    <option value="">Diferenciação</option>
+    <option ${item.differentiation === "Alta" ? "selected" : ""}>Alta</option>
+    <option ${item.differentiation === "Média" ? "selected" : ""}>Média</option>
+    <option ${item.differentiation === "Baixa" ? "selected" : ""}>Baixa</option>
+    <option ${item.differentiation === "Commodity" ? "selected" : ""}>Commodity</option>
+  </select>
+  <button type="button" class="icon-btn" onclick="removeCompetitor(this)">×</button>
+`;
 
   list.appendChild(row);
 };
@@ -1841,13 +2121,22 @@ window.removeCompetitor = function (button) {
 function getCompetitors() {
   return Array.from(document.querySelectorAll(".competitor-row")).map(row => ({
     name: row.querySelector(".competitor-name")?.value.trim() || "",
+    asin: row.querySelector(".competitor-asin")?.value.trim() || "",
     price: Number(row.querySelector(".competitor-price")?.value || 0),
     reviews: Number(row.querySelector(".competitor-reviews")?.value || 0),
     rating: Number(row.querySelector(".competitor-rating")?.value || 0),
-    position: Number(row.querySelector(".competitor-position")?.value || 0)
-  })).filter(c => c.name || c.price || c.reviews || c.rating || c.position);
+    positioning: row.querySelector(".competitor-positioning")?.value || "",
+    differentiation: row.querySelector(".competitor-differentiation")?.value || ""
+  })).filter(c =>
+    c.name ||
+    c.asin ||
+    c.price ||
+    c.reviews ||
+    c.rating ||
+    c.positioning ||
+    c.differentiation
+  );
 }
-
 function aplicarResumoConcorrentesNoFormulario() {
   const competitors = getCompetitors();
 
