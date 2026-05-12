@@ -426,6 +426,46 @@
       margin-top: 16px;
       break-inside: avoid;
     }
+.next-action-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.next-action-mini-card,
+.next-action-detail-card {
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 14px;
+  background: rgba(255,255,255,.035);
+  padding: 14px;
+  break-inside: avoid;
+}
+
+.next-action-mini-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.next-action-mini-card strong {
+  font-family: Syne, sans-serif;
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.next-action-detail-card {
+  margin-top: 12px;
+}
+
+.next-action-detail-card p {
+  margin-top: 10px;
+  color: var(--text-muted);
+  line-height: 1.75;
+  font-size: 13px;
+}
+    
     .alert-report-summary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1088,17 +1128,46 @@ function renderReportAlertCard(alert) {
 }
    
     function renderNextBestAction(data) {
-      const target = document.getElementById("nextBestActionReport");
-      if (!target) return;
+  const target = document.getElementById("nextBestActionReport");
+  if (!target) return;
 
-      const action = getNextBestAction(data);
+  const action = getNextBestAction(data);
 
-      target.innerHTML = `
-        <span class="pill pill-red">Ação prioritária</span>
-        <h3 style="margin-top:12px;line-height:1.35;">${escapeHtml(action.title)}</h3>
-        <p style="margin-top:10px;">${escapeHtml(action.detail)}</p>
-      `;
-    }
+  target.innerHTML = `
+    <span class="pill pill-red">Ação prioritária</span>
+
+    <h3 style="margin-top:12px;line-height:1.35;">
+      ${escapeHtml(action.title)}
+    </h3>
+
+    <div class="next-action-metrics">
+      <div class="next-action-mini-card">
+        <span>Área prioritária</span>
+        <strong>${escapeHtml(action.priority_area || "-")}</strong>
+      </div>
+
+      <div class="next-action-mini-card">
+        <span>Prazo sugerido</span>
+        <strong>${escapeHtml(action.timeframe || "-")}</strong>
+      </div>
+    </div>
+
+    <div class="next-action-detail-card">
+      <span class="pill pill-red">Por que essa ação vem primeiro</span>
+      <p>${escapeHtml(action.reason || "-")}</p>
+    </div>
+
+    <div class="next-action-detail-card">
+      <span class="pill">O que fazer agora</span>
+      <p>${escapeHtml(action.action || "-")}</p>
+    </div>
+
+    <div class="next-action-detail-card">
+      <span class="pill">Resultado esperado</span>
+      <p>${escapeHtml(action.expected_result || "-")}</p>
+    </div>
+  `;
+}
 
     function normalizeSystemsList(systemsAnalysis) {
       if (!systemsAnalysis) return [];
@@ -1122,30 +1191,106 @@ function renderReportAlertCard(alert) {
       return system.label || system.name || system.key || "Sistema Nexora";
     }
 
-    function getNextBestAction(data) {
-      const rawAction = data.next_best_action || data.nextBestAction || data.systems_analysis?.nextBestAction;
+   function getNextBestAction(data) {
+  const rawAction =
+    data.next_best_action ||
+    data.nextBestAction ||
+    data.systems_analysis?.nextBestAction;
 
-      if (typeof rawAction === "string") {
-        return {
-          title: rawAction || "Priorizar o sistema mais crítico antes de escalar o produto",
-          detail: data.systems_analysis?.strategicReading || "A próxima ação deve corrigir o bloqueio sistêmico mais relevante antes de aumentar investimento em mídia, preço ou expansão."
-        };
-      }
+  if (!rawAction) {
+    const firstPriority = Array.isArray(data.prioridades)
+      ? data.prioridades[0]
+      : null;
 
-      if (rawAction && typeof rawAction === "object") {
-        return {
-          title: rawAction.title || rawAction.titulo || "Priorizar o sistema mais crítico antes de escalar o produto",
-          detail: rawAction.detail || rawAction.detalhe || data.systems_analysis?.strategicReading || "A próxima ação deve corrigir o bloqueio sistêmico mais relevante."
-        };
-      }
+    return {
+      title:
+        firstPriority?.titulo ||
+        data.recomendacao ||
+        "Priorizar a causa raiz antes de escalar o produto",
 
-      const firstPriority = Array.isArray(data.prioridades) ? data.prioridades[0] : null;
+      priority_area:
+        firstPriority?.area ||
+        "Estratégia",
 
-      return {
-        title: firstPriority?.titulo || data.recomendacao || "Priorizar o sistema mais crítico antes de escalar o produto",
-        detail: firstPriority?.detalhe || data.resumo_cliente || "A próxima ação deve corrigir o bloqueio que mais conecta performance, página e mercado."
-      };
-    }
+      timeframe:
+        firstPriority?.prazo ||
+        "7 dias",
+
+      reason:
+        data.systems_analysis?.strategicReading ||
+        data.resumo_cliente ||
+        "A ação foi definida a partir da leitura consolidada entre performance, página, mercado, alertas e 5 Sistemas Nexora.",
+
+      action:
+        firstPriority?.detalhe ||
+        data.recomendacao ||
+        "Executar a ação prioritária indicada pela Nexora antes de aumentar investimento, mídia ou expansão.",
+
+      expected_result:
+        firstPriority?.impacto ||
+        "Melhorar a clareza da decisão, reduzir ações dispersas e atacar primeiro o bloqueio com maior impacto provável."
+    };
+  }
+
+  if (typeof rawAction === "string") {
+    return {
+      title: rawAction,
+      priority_area: "Estratégia",
+      timeframe: "7 dias",
+      reason:
+        data.systems_analysis?.strategicReading ||
+        "A ação foi definida a partir da leitura consolidada da Nexora.",
+      action:
+        rawAction ||
+        "Executar a ação prioritária indicada pela Nexora.",
+      expected_result:
+        "Direcionar o seller para o primeiro movimento com maior impacto provável."
+    };
+  }
+
+  return {
+    title:
+      rawAction.title ||
+      rawAction.titulo ||
+      "Priorizar a causa raiz antes de escalar o produto",
+
+    priority_area:
+      rawAction.priority_area ||
+      rawAction.area ||
+      "Estratégia",
+
+    timeframe:
+      rawAction.timeframe ||
+      rawAction.prazo ||
+      "7 dias",
+
+    reason:
+      rawAction.reason ||
+      rawAction.motivo ||
+      rawAction.detail ||
+      rawAction.detalhe ||
+      data.systems_analysis?.strategicReading ||
+      "A ação foi definida a partir da leitura consolidada entre performance, página, mercado, alertas e 5 Sistemas Nexora.",
+
+    action:
+      rawAction.action ||
+      rawAction.acao ||
+      rawAction.recommendation ||
+      rawAction.recomendacao ||
+      rawAction.o_que_fazer ||
+      rawAction.proxima_acao ||
+      rawAction.detail ||
+      rawAction.detalhe ||
+      rawAction.title ||
+      "Executar a ação prioritária indicada pela Nexora antes de aumentar investimento, mídia ou expansão.",
+
+    expected_result:
+      rawAction.expected_result ||
+      rawAction.resultado_esperado ||
+      rawAction.impacto ||
+      "Melhorar a clareza da decisão, reduzir ações dispersas e atacar primeiro o bloqueio com maior impacto provável."
+  };
+}
 
     function renderGaps(data) {      const gaps = data.gaps || [];
 
