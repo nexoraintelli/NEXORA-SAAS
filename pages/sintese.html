@@ -1318,6 +1318,32 @@ window.abrirRelatorio = function () {
     nextBestAction
   };
 }
+      if (!result.structured_synthesis && C1 && C2 && C3) {
+  const fallbackNextAction =
+    result.next_best_action ||
+    result.nextBestAction ||
+    gerarProximaMelhorAcaoNexora({
+      c1: C1,
+      c2: C2,
+      c3: C3,
+      systemsAnalysis: result.systems_analysis,
+      alerts: result.alerts || [],
+      synthesis: result
+    });
+
+  result = {
+    ...result,
+    structured_synthesis: estruturarSinteseNexora({
+      c1: C1,
+      c2: C2,
+      c3: C3,
+      systemsAnalysis: result.systems_analysis,
+      alerts: result.alerts || [],
+      nextBestAction: fallbackNextAction,
+      synthesis: result
+    })
+  };
+}
 
       const iaUsavel = isUsableNarrative(result.diagnostico_ia) || isUsableNarrative(result.leitura_cruzada_ia);
       const riskText = getStrategicRisk(result);
@@ -1360,12 +1386,11 @@ ${result.ia_usada && isUsableNarrative(result.diagnostico_ia) ? `
             </div>
           </div>
         </div>
-
+        
+        ${renderStructuredSynthesis(result.structured_synthesis)}
         ${renderSystemsAnalysis(result.systems_analysis)}
-
-${renderAlertsNexora(result.alerts)}
-
-${renderNextBestActionCard(result)}
+        ${renderAlertsNexora(result.alerts)}
+        ${renderNextBestActionCard(result)}
 
         ${riskText ? `
           <div class="result-block">
@@ -1889,6 +1914,92 @@ function alertCard(alert) {
     </div>
   `;
 }
+function renderStructuredSynthesis(structured) {
+  if (!structured) return "";
+
+  const evidences = Array.isArray(structured.evidencias)
+    ? structured.evidencias
+    : [];
+
+  const plan7 = Array.isArray(structured.plano_7_dias)
+    ? structured.plano_7_dias
+    : [];
+
+  const plan30 = Array.isArray(structured.plano_30_dias)
+    ? structured.plano_30_dias
+    : [];
+
+  return `
+    <div class="result-block">
+      <p class="step-label">Síntese estruturada Nexora</p>
+      <h3>Leitura padronizada do diagnóstico</h3>
+
+      <p style="color:var(--muted);line-height:1.7;margin-top:8px;">
+        Esta estrutura organiza a leitura final em diagnóstico principal, causa raiz, evidências, risco, impacto e planos de ação. A IA pode complementar a interpretação, mas a estrutura nasce da engine Nexora.
+      </p>
+
+      <div class="insight-grid">
+        <div class="insight-card">
+          <h4>Diagnóstico principal</h4>
+          <p>${escapeHtml(structured.diagnostico_principal || "-")}</p>
+        </div>
+
+        <div class="insight-card">
+          <h4>Causa raiz consolidada</h4>
+          <p>${escapeHtml(structured.causa_raiz || "-")}</p>
+        </div>
+
+        <div class="insight-card">
+          <h4>Risco estratégico</h4>
+          <p>${escapeHtml(structured.risco_estrategico || "-")}</p>
+        </div>
+
+        <div class="insight-card">
+          <h4>Impacto comercial</h4>
+          <p>${escapeHtml(structured.impacto_comercial || "-")}</p>
+        </div>
+      </div>
+
+      ${evidences.length ? `
+        <div class="result-block" style="background:rgba(255,255,255,.025);margin-top:16px;">
+          <h3>Evidências principais</h3>
+
+          <div style="display:grid;gap:12px;margin-top:14px;">
+            ${evidences.map((item, index) => `
+              <div class="gap-card">
+                <span class="tag">${escapeHtml(item.origem || `Evidência ${index + 1}`)}</span>
+                <p>${escapeHtml(item.evidência || item.evidencia || "-")}</p>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      ` : ""}
+
+      <div class="insight-grid" style="margin-top:16px;">
+        <div class="insight-card">
+          <h4>Plano de 7 dias</h4>
+          ${plan7.length ? plan7.map(item => `
+            <p>
+              <strong style="color:var(--text);">${escapeHtml(item.dia || "-")} · ${escapeHtml(item.titulo || "-")}</strong><br>
+              ${escapeHtml(item.descricao || "-")}
+            </p>
+          `).join("") : `<p>-</p>`}
+        </div>
+
+        <div class="insight-card">
+          <h4>Plano de 30 dias</h4>
+          ${plan30.length ? plan30.map(item => `
+            <p>
+              <strong style="color:var(--text);">${escapeHtml(item.periodo || "-")} · ${escapeHtml(item.titulo || "-")}</strong><br>
+              ${escapeHtml(item.descricao || "-")}
+            </p>
+          `).join("") : `<p>-</p>`}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
     
     function renderSystemsAnalysis(systemsAnalysis) {
       if (!systemsAnalysis || !Array.isArray(systemsAnalysis.systemsList)) {
