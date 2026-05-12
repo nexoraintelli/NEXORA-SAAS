@@ -1746,7 +1746,69 @@ if (clientsProductsCount) {
     `;
   }
 }
+async function loadProductAlertsSummary(products = []) {
+  const map = {};
 
+  if (!Array.isArray(products) || !products.length || !currentUser?.id) {
+    return map;
+  }
+
+  const productIds = products.map(product => product.id).filter(Boolean);
+
+  if (!productIds.length) return map;
+
+  try {
+    const { data: diagnostics, error: diagnosticsError } = await sb
+      .from("diagnostics")
+      .select("id, product_id, created_at")
+      .eq("user_id", currentUser.id)
+      .in("product_id", productIds)
+      .order("created_at", { ascending: false });
+
+    if (diagnosticsError || !Array.isArray(diagnostics) || !diagnostics.length) {
+      return map;
+    }
+
+    const diagnosticIds = diagnostics.map(item => item.id).filter(Boolean);
+
+    const { data: synthRows, error: synthError } = await sb
+      .from("brain_results")
+      .select("diagnostic_id, brain_code, result_data, created_at")
+      .in("diagnostic_id", diagnosticIds)
+      .eq("brain_code", "synth")
+      .order("created_at", { ascending: false });
+
+    if (synthError || !Array.isArray(synthRows) || !synthRows.length) {
+      return map;
+    }
+
+    diagnostics.forEach(diag => {
+      if (!diag?.product_id || map[String(diag.product_id)]) return;
+
+      const synth = synthRows.find(row =>
+        row.diagnostic_id === diag.id &&
+        row.result_data
+      );
+
+      if (!synth) return;
+
+      const alerts = Array.isArray(synth.result_data?.alerts)
+        ? synth.result_data.alerts
+        : [];
+
+      map[String(diag.product_id)] = {
+        total: alerts.length,
+        critical: alerts.filter(alert => alert.level === "Crítico").length,
+        warning: alerts.filter(alert => alert.level === "Atenção").length
+      };
+    });
+
+    return map;
+  } catch (error) {
+    console.warn("Não foi possível carregar alertas dos produtos:", error);
+    return map;
+  }
+}
 window.logoutUser = logout;
     async function canCreateProductByPlan() {
   const plan = await getCurrentUserPlan();
