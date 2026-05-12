@@ -392,6 +392,7 @@ import { analisarCincoSistemas } from "../js/nexoraSystemsEngine.js";
 import { analisarSinteseComIA } from "../js/nexoraAI.js";
 import { gerarAlertasNexora } from "../js/nexoraAlertsEngine.js";
 import { gerarProximaMelhorAcaoNexora } from "../js/nexoraNextActionEngine.js";  
+import { estruturarSinteseNexora } from "../js/nexoraSynthesisStructureEngine.js";
 
     await requireAuth();
 
@@ -684,6 +685,16 @@ const nextBestAction = gerarProximaMelhorAcaoNexora({
   alerts,
   synthesis: result
 });
+const structuredSynthesis = estruturarSinteseNexora({
+  c1: C1,
+  c2: C2,
+  c3: C3,
+  systemsAnalysis,
+  alerts,
+  nextBestAction,
+  synthesis: result
+});
+      
       
 const fullResult = {
   ...result,
@@ -691,6 +702,7 @@ const fullResult = {
   alerts,
   next_best_action: nextBestAction,
   nextBestAction,
+  structured_synthesis: structuredSynthesis,
   diagnostic_id: diagnosticId,
   product_id: currentProductId || null,
   source: {
