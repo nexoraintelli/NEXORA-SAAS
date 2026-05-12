@@ -1565,52 +1565,53 @@ function normalizeNextBestAction(action) {
       priority_area: "Estratégia",
       timeframe: "7 dias",
       reason: "A ação foi definida a partir da leitura consolidada da Nexora.",
-      action,
+      action: action,
       expected_result: "Direcionar o seller para o primeiro movimento com maior impacto provável."
     };
   }
 
   return {
-  title:
-    action.title ||
-    action.titulo ||
-    "Priorizar a causa raiz antes de escalar o produto",
+    title:
+      action.title ||
+      action.titulo ||
+      "Priorizar a causa raiz antes de escalar o produto",
 
-  priority_area:
-    action.priority_area ||
-    action.area ||
-    "Estratégia",
+    priority_area:
+      action.priority_area ||
+      action.area ||
+      "Estratégia",
 
-  timeframe:
-    action.timeframe ||
-    action.prazo ||
-    "7 dias",
+    timeframe:
+      action.timeframe ||
+      action.prazo ||
+      "7 dias",
 
-  reason:
-    action.reason ||
-    action.motivo ||
-    action.detail ||
-    action.detalhe ||
-    "A ação foi definida a partir da leitura consolidada entre performance, página, mercado, alertas e 5 Sistemas Nexora.",
+    reason:
+      action.reason ||
+      action.motivo ||
+      action.detail ||
+      action.detalhe ||
+      "A ação foi definida a partir da leitura consolidada entre performance, página, mercado, alertas e 5 Sistemas Nexora.",
 
-  action:
-    action.action ||
-    action.acao ||
-    action.recommendation ||
-    action.recomendacao ||
-    action.o_que_fazer ||
-    action.proxima_acao ||
-    action.detail ||
-    action.detalhe ||
-    action.title ||
-    "Executar a ação prioritária indicada pela Nexora antes de aumentar investimento, mídia ou expansão.",
+    action:
+      action.action ||
+      action.acao ||
+      action.recommendation ||
+      action.recomendacao ||
+      action.o_que_fazer ||
+      action.proxima_acao ||
+      action.detail ||
+      action.detalhe ||
+      action.title ||
+      "Executar a ação prioritária indicada pela Nexora antes de aumentar investimento, mídia ou expansão.",
 
-  expected_result:
-    action.expected_result ||
-    action.resultado_esperado ||
-    action.impacto ||
-    "Melhorar a clareza da decisão, reduzir ações dispersas e atacar primeiro o bloqueio com maior impacto provável."
-};
+    expected_result:
+      action.expected_result ||
+      action.resultado_esperado ||
+      action.impacto ||
+      "Melhorar a clareza da decisão, reduzir ações dispersas e atacar primeiro o bloqueio com maior impacto provável."
+  };
+}
     function renderIAComplementar(result) {
       const cards = [];
       if (isUsableNarrative(result.diagnostico_ia)) {
