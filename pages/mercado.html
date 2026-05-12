@@ -1503,9 +1503,9 @@ diagnostico_ia: limparTextoIA(
           : fullResult.prioridades,
 
         ia_usada: true,
-        ia_updated_at: new Date().toISOString()
         ia_fallback_textual: !!aiResult.ia_fallback_textual,
-      };
+        ia_updated_at: new Date().toISOString()
+        };
 
       localStorage.setItem("nx_c3", JSON.stringify(updated));
 
