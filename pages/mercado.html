@@ -1214,6 +1214,7 @@ function limparTextoIA(texto) {
           ${metricCard("Risco reviews", result.scores?.risco_reviews || "-")}
         </div>
         
+${renderCompetitorsComparison(result)}
 ${renderCompetitiveIntelligence(result)}
 ${renderCompetitiveQuadrant(result)}
 
@@ -1741,6 +1742,44 @@ function getQuadrantExplanation(quadrant) {
   };
 
   return explanations[quadrant] || explanations["Niche Player"];
+}
+    function renderCompetitorsComparison(result) {
+  const competitors = Array.isArray(result?.competitors) ? result.competitors : [];
+
+  if (!competitors.length) {
+    return "";
+  }
+
+  return `
+    <div class="result-block">
+      <h3>Comparativo dos concorrentes cadastrados</h3>
+
+      <p style="color:var(--muted);line-height:1.7;margin-top:8px;">
+        Leitura individual dos principais concorrentes usados para calcular distância competitiva, barreira de entrada e riscos de mercado.
+      </p>
+
+      <div style="display:grid;gap:12px;margin-top:14px;">
+        ${competitors.map((item, index) => `
+          <div style="padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);">
+            <p style="color:var(--muted);font-size:12px;">Concorrente ${index + 1}</p>
+
+            <strong>
+              ${escapeHtml(item.name || item.asin || "Concorrente sem nome")}
+            </strong>
+
+            <div class="context-grid" style="margin-top:12px;">
+              ${metricCard("ASIN", item.asin || "-")}
+              ${metricCard("Preço", formatMoneyBR(item.price))}
+              ${metricCard("Reviews", item.reviews ? String(item.reviews) : "-")}
+              ${metricCard("Rating", item.rating ? String(item.rating) : "-")}
+              ${metricCard("Posicionamento", item.positioning || "-")}
+              ${metricCard("Diferenciação", item.differentiation || "-")}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
 }
   function renderCompetitiveIntelligence(result) {
   const ci = result?.competitiveIntelligence;
