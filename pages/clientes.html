@@ -289,7 +289,17 @@
     import { requireAuth } from "../js/auth.js";
     import { sb } from "../js/supabaseClient.js";
 
-    const currentUser = await requireAuth();
+    const authUser = await requireAuth();
+
+const { data: userData, error: userError } = await sb.auth.getUser();
+
+const currentUser = userData?.user || authUser;
+
+if (userError || !currentUser?.id) {
+  console.error("Usuário não encontrado para salvar cliente:", userError);
+  alert("Não foi possível identificar o usuário logado. Faça login novamente.");
+  window.location.href = "./login.html";
+}
 
     const msg = document.getElementById("msg");
     const clientsArea = document.getElementById("clientsArea");
@@ -345,21 +355,33 @@
           .from("clients")
           .insert(payload);
 
-        if (error) {
-          console.error("Erro ao salvar cliente:", error);
-          msg.textContent = "Não foi possível salvar o cliente. Veja o console.";
-          return;
-        }
+       if (error) {
+  console.error("Erro ao salvar cliente:", JSON.stringify(error, null, 2));
 
+  msg.textContent =
+    error.message ||
+    error.details ||
+    error.hint ||
+    JSON.stringify(error) ||
+    "Não foi possível salvar o cliente.";
+
+  return;
+}
         msg.textContent = "Cliente salvo com sucesso.";
         fecharModalCliente();
         limparFormularioCliente();
 
         await carregarClientes();
       } catch (error) {
-        console.error("Erro inesperado ao salvar cliente:", error);
-        msg.textContent = "Erro inesperado ao salvar cliente.";
-      }
+  console.error("Erro inesperado ao salvar cliente:", error);
+
+  msg.textContent =
+    error.message ||
+    error.details ||
+    error.hint ||
+    JSON.stringify(error) ||
+    "Erro inesperado ao salvar cliente.";
+}
     };
 
     async function carregarClientes() {
