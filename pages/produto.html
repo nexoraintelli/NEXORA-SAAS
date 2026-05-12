@@ -1289,6 +1289,48 @@ window.abrirRelatorioHistorico = function (diagnosticId) {
     `${page}?product_id=${encodeURIComponent(currentProductId || "")}&diagnostic_id=${encodeURIComponent(currentDiagnosticId || "")}`;
 };
 
+function diagnosticHasStageResult(diagnosticId, stage) {
+  if (!diagnosticId) return false;
+
+  const codes = getCodesForStage(stage);
+
+  const directResult = brainResults.some(item =>
+    item.diagnostic_id === diagnosticId &&
+    codes.includes(String(item.brain_code || "").toLowerCase()) &&
+    item.result_data
+  );
+
+  if (directResult) return true;
+
+  // Se estiver tentando abrir C2/C3 a partir de um diagnóstico que já tem síntese,
+  // tenta considerar também os dados salvos dentro da síntese.
+  const synthCodes = ["synth", "sintese", "síntese", "synthesis", "final"];
+
+  const synthRow = brainResults.find(item =>
+    item.diagnostic_id === diagnosticId &&
+    synthCodes.includes(String(item.brain_code || "").toLowerCase()) &&
+    item.result_data
+  );
+
+  const synth = synthRow?.result_data;
+
+  if (!synth) return false;
+
+  if (stage === "c1") {
+    return Boolean(synth?.source?.c1 || synth?.sources?.c1 || synth?.c1);
+  }
+
+  if (stage === "c2") {
+    return Boolean(synth?.source?.c2 || synth?.sources?.c2 || synth?.c2);
+  }
+
+  if (stage === "c3") {
+    return Boolean(synth?.source?.c3 || synth?.sources?.c3 || synth?.c3);
+  }
+
+  return false;
+}
+
 window.abrirEtapaPorBrain = function (page, stage) {
   const selectedDiagnosticId =
     new URLSearchParams(window.location.search).get("diagnostic_id") ||
@@ -1296,11 +1338,19 @@ window.abrirEtapaPorBrain = function (page, stage) {
     localStorage.getItem("nx_diagnostic_id") ||
     "";
 
-  let diagnosticId = selectedDiagnosticId;
+  let diagnosticId = "";
 
+  // Primeiro tenta respeitar o diagnóstico selecionado,
+  // mas só se ele tiver resultado daquela etapa.
+  if (selectedDiagnosticId && diagnosticHasStageResult(selectedDiagnosticId, stage)) {
+    diagnosticId = selectedDiagnosticId;
+  }
+
+  // Se o diagnóstico selecionado não tem aquela etapa,
+  // busca o último resultado salvo daquela etapa no produto.
   if (!diagnosticId) {
     const row = getLatestBrainResultByStage(stage);
-    diagnosticId = row?.diagnostic_id || "";
+    diagnosticId = row?.diagnostic_id || selectedDiagnosticId || "";
   }
 
   if (diagnosticId) {
