@@ -342,14 +342,20 @@ if (userError || !currentUser?.id) {
 
       try {
         const payload = {
-          user_id: currentUser.id,
-          name,
-          company_name: v("clientCompany"),
-          contact_name: v("clientContact"),
-          email: v("clientEmail"),
-          phone: v("clientPhone"),
-          notes: v("clientNotes")
-        };
+  user_id: currentUser.id,
+
+  // Novo padrão da Nexora
+  name,
+
+  // Compatibilidade com estrutura antiga da tabela clients
+  full_name: name,
+
+  company_name: v("clientCompany"),
+  contact_name: v("clientContact"),
+  email: v("clientEmail"),
+  phone: v("clientPhone"),
+  notes: v("clientNotes")
+};
 
         const { error } = await sb
           .from("clients")
