@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -427,6 +426,86 @@
       margin-top: 16px;
       break-inside: avoid;
     }
+    .alert-report-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.alert-report-summary div {
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.035);
+  border-radius: 16px;
+  padding: 16px;
+  break-inside: avoid;
+}
+
+.alert-report-summary span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.alert-report-summary strong {
+  display: block;
+  font-family: Syne, sans-serif;
+  font-size: 30px;
+  margin-top: 6px;
+}
+
+.alert-report-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.alert-report-card {
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.035);
+  border-radius: 16px;
+  padding: 16px;
+  break-inside: avoid;
+}
+
+.alert-report-card h3 {
+  font-family: Syne, sans-serif;
+  margin: 10px 0 8px;
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.alert-report-card p {
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.alert-report-card p strong {
+  color: #fff;
+}
+
+.alert-report-critical {
+  border-color: rgba(239,68,68,.38);
+  background: rgba(139,30,30,.15);
+}
+
+.alert-report-warning {
+  border-color: rgba(240,163,58,.34);
+  background: rgba(240,163,58,.08);
+}
+
+.alert-report-tag {
+  display: inline-flex;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: rgba(255,255,255,.82);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
 
     @media (max-width: 900px) {
       .topbar {
@@ -595,7 +674,17 @@
           <div class="systems-summary" id="systemsCriticalSummary"></div>
           <div class="systems-grid" id="systemsGrid"></div>
         </section>
+        
+<section class="report-section" id="alertsSection">
+  <h2>Alertas estratégicos Nexora</h2>
+  <p>
+    Estes alertas foram gerados pela engine Nexora a partir dos três cérebros, dos benchmarks e dos 5 Sistemas. A IA pode explicar os sinais, mas os alertas são derivados de regras.
+  </p>
 
+  <div class="alert-report-summary" id="alertsSummary"></div>
+  <div class="alert-report-list" id="alertsList"></div>
+</section>
+        
         <section class="report-section" id="nextBestActionSection">
           <h2>Próxima melhor ação</h2>
           <div class="next-action-report" id="nextBestActionReport"></div>
@@ -832,13 +921,14 @@ function renderProductInfo() {
       document.getElementById("recommendation").textContent = data.recomendacao || "-";
       document.getElementById("clientSummary").textContent = data.resumo_cliente || "-";
 
-      renderMetrics(data);
-      renderSystemsAnalysis(data);
-      renderNextBestAction(data);
-      renderGaps(data);
-      renderPriorities(data);
-      renderActionPlan(data);
-      renderMatrix(data);
+     renderMetrics(data);
+renderSystemsAnalysis(data);
+renderReportAlerts(data);
+renderNextBestAction(data);
+renderGaps(data);
+renderPriorities(data);
+renderActionPlan(data);
+renderMatrix(data);
     }
 
     function renderMetrics(data) {
@@ -932,7 +1022,71 @@ function renderProductInfo() {
         </div>
       `).join("");
     }
+function renderReportAlerts(data) {
+  const alerts = Array.isArray(data?.alerts) ? data.alerts : [];
+  const summaryTarget = document.getElementById("alertsSummary");
+  const listTarget = document.getElementById("alertsList");
+  const section = document.getElementById("alertsSection");
 
+  if (!summaryTarget || !listTarget || !section) return;
+
+  if (!alerts.length) {
+    summaryTarget.innerHTML = "";
+    listTarget.innerHTML = `
+      <p class="muted">
+        Nenhum alerta ativo foi encontrado nesta Síntese. Gere novamente a Síntese para atualizar a camada de alertas automáticos.
+      </p>
+    `;
+    return;
+  }
+
+  const criticalCount = alerts.filter(alert => alert.level === "Crítico").length;
+  const warningCount = alerts.filter(alert => alert.level === "Atenção").length;
+
+  summaryTarget.innerHTML = `
+    <div>
+      <span>Alertas críticos</span>
+      <strong>${criticalCount}</strong>
+    </div>
+
+    <div>
+      <span>Alertas de atenção</span>
+      <strong>${warningCount}</strong>
+    </div>
+  `;
+
+  listTarget.innerHTML = alerts.map(alert => renderReportAlertCard(alert)).join("");
+}
+
+function renderReportAlertCard(alert) {
+  const isCritical = alert.level === "Crítico";
+
+  return `
+    <div class="alert-report-card ${isCritical ? "alert-report-critical" : "alert-report-warning"}">
+      <span class="alert-report-tag">
+        ${escapeHtml(alert.level || "Alerta")} · ${escapeHtml(alert.area || "Nexora")}
+      </span>
+
+      <h3>${escapeHtml(alert.title || "Alerta estratégico")}</h3>
+
+      <p>
+        <strong>Evidência:</strong>
+        ${escapeHtml(alert.evidence || "-")}
+      </p>
+
+      <p>
+        <strong>Impacto:</strong>
+        ${escapeHtml(alert.impact || "-")}
+      </p>
+
+      <p>
+        <strong>Ação recomendada:</strong>
+        ${escapeHtml(alert.action || "-")}
+      </p>
+    </div>
+  `;
+}
+   
     function renderNextBestAction(data) {
       const target = document.getElementById("nextBestActionReport");
       if (!target) return;
