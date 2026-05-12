@@ -17,6 +17,7 @@ export async function createProduct(payload = {}) {
 
   const cleanPayload = {
     user_id: user.id,
+    client_id: payload.client_id || null,
 
     product_name: productName,
     name: productName,
@@ -114,6 +115,7 @@ export async function updateProduct(productId, payload = {}) {
     cleanPayload.name = productName;
   }
 
+  if (payload.client_id !== undefined) cleanPayload.client_id = payload.client_id || null;
   if (payload.asin !== undefined) cleanPayload.asin = payload.asin || null;
   if (payload.sku !== undefined) cleanPayload.sku = payload.sku || null;
   if (payload.brand !== undefined) cleanPayload.brand = payload.brand || null;
