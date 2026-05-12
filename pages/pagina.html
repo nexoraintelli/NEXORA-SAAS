@@ -1,5 +1,4 @@
-
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -475,6 +474,17 @@ input[type="file"],
           <textarea id="title" placeholder="Cole o título atual do produto"></textarea>
         </div>
       </div>
+      <div class="form-grid">
+  <div>
+    <label>URL da página do produto</label>
+    <input id="pageUrl" placeholder="Cole a URL da página na Amazon">
+  </div>
+
+  <div>
+    <label>ASIN</label>
+    <input id="pageAsin" placeholder="Ex: B0XXXXXXX">
+  </div>
+</div>
 
       <div class="form-grid">
         <div>
@@ -1027,6 +1037,9 @@ async function carregarC2SalvoDoHistorico() {
 
 function preencherFormularioComC2Salvo(result) {
   if (!result) return;
+  
+  setInputValue("pageUrl", result.pageUrl);
+  setInputValue("pageAsin", result.pageAsin);
 
   setInputValue("imageNotes", result.imageNotes);
 
@@ -1194,6 +1207,9 @@ function normalizarTextoC2(value) {
       msg.textContent = "Gerando análise profunda do Cérebro 2...";
 
       const data = {
+        pageUrl: v("pageUrl"),
+        pageAsin: v("pageAsin") || currentProduct?.asin || "",
+        
         imageClarity: state.imageClarity,
         oneSecondUnderstanding: state.oneSecondUnderstanding,
         benefitVisible: state.benefitVisible,
@@ -1232,9 +1248,12 @@ function normalizarTextoC2(value) {
 
       const result = analisarPaginaBase(data, C1);
 
+      const objectiveChecklist = buildC2ObjectiveChecklist(data, result);
+
       const fullResult = {
         ...data,
         ...result,
+        objectiveChecklist,
         ia_usada: false,
         diagnostic_id: diagnosticId,
         product_id: currentProductId || null,
@@ -1416,6 +1435,7 @@ function normalizarTextoC2(value) {
               ${smallTextCard("Oferta e preço", result.leitura_por_pilar_ia.oferta_preco || result.leitura_por_pilar_ia.oferta)}
               ${smallTextCard("Prioridade sistêmica", result.leitura_por_pilar_ia.prioridade_sistemica)}
             </div>
+              ${renderObjectiveChecklist(result.objectiveChecklist)}
           </div>
         ` : ""}
 
@@ -1552,6 +1572,18 @@ REGRAS:
 - Todas as strings precisam estar em uma única linha.
 - Use no mínimo 900 caracteres em diagnostico_executivo_aprofundado.
 - Use exatamente 5 ações no plano_de_acao.
+
+CRITÉRIOS FIXOS DA NEXORA PARA O CÉREBRO 2:
+- Imagem principal: deve comunicar rapidamente o produto, benefício e atratividade no resultado de busca.
+- Título e SEO: deve conter palavra-chave principal, clareza, leitura natural e intenção de busca.
+- Bullets: devem comunicar benefícios, diferenciais, uso, objeções e motivos de compra.
+- Imagens secundárias: devem explicar uso, escala, benefício, comparação, confiança e diferenciação.
+- Descrição/A+: deve reforçar valor percebido, narrativa da marca, segurança e confiança.
+- Prova social: reviews, rating, A+, vídeo e imagens de uso aumentam confiança e reduzem risco percebido.
+- Oferta: preço, cupom e valor percebido precisam estar coerentes com a promessa da página.
+- CTR-readiness: mede se a página tem força para gerar clique.
+- CVR-readiness: mede se a página tem força para transformar visita em compra.
+- A IA deve respeitar o Listing Quality Score e os scores por pilar já calculados pela engine.
 
 CONTEXTO DO CÉREBRO 1:
 ${JSON.stringify(c1, null, 2)}
@@ -1869,7 +1901,133 @@ function smallCard(title, value, extraClass = "") {
     </div>
   `;
 }
+function buildC2ObjectiveChecklist(data, result) {
+  const scores = result?.scores || {};
 
+  return [
+    {
+      criterio: "Imagem principal e atratividade",
+      score: scores.atratividade_visual ?? null,
+      status: classifyChecklistScore(scores.atratividade_visual),
+      alerta: getChecklistAlert(
+        scores.atratividade_visual,
+        "A imagem pode não sustentar bem o clique ou não comunicar o produto rapidamente."
+      )
+    },
+    {
+      criterio: "Título e SEO",
+      score: scores.titulo_seo ?? null,
+      status: classifyChecklistScore(scores.titulo_seo),
+      alerta: getChecklistAlert(
+        scores.titulo_seo,
+        "O título pode estar fraco em clareza, palavra-chave ou estrutura de busca."
+      )
+    },
+    {
+      criterio: "Bullets e comunicação de valor",
+      score: scores.comunicacao_valor ?? null,
+      status: classifyChecklistScore(scores.comunicacao_valor),
+      alerta: getChecklistAlert(
+        scores.comunicacao_valor,
+        "A comunicação pode estar explicando características, mas não benefícios e motivos de compra."
+      )
+    },
+    {
+      criterio: "Diferenciação",
+      score: scores.diferenciacao ?? null,
+      status: classifyChecklistScore(scores.diferenciacao),
+      alerta: getChecklistAlert(
+        scores.diferenciacao,
+        "A página pode não deixar claro por que este produto é melhor ou diferente dos concorrentes."
+      )
+    },
+    {
+      criterio: "Confiança e prova social",
+      score: scores.confianca ?? null,
+      status: classifyChecklistScore(scores.confianca),
+      alerta: getChecklistAlert(
+        scores.confianca,
+        "A página pode não transmitir confiança suficiente para sustentar conversão."
+      )
+    },
+    {
+      criterio: "Oferta e preço percebido",
+      score: scores.oferta ?? null,
+      status: classifyChecklistScore(scores.oferta),
+      alerta: getChecklistAlert(
+        scores.oferta,
+        "A oferta pode estar desalinhada com o valor percebido pelo cliente."
+      )
+    },
+    {
+      criterio: "CTR-readiness",
+      score: scores.ctr_readiness ?? null,
+      status: classifyChecklistScore(scores.ctr_readiness),
+      alerta: getChecklistAlert(
+        scores.ctr_readiness,
+        "A página pode ter dificuldade para transformar impressão em clique."
+      )
+    },
+    {
+      criterio: "CVR-readiness",
+      score: scores.cvr_readiness ?? null,
+      status: classifyChecklistScore(scores.cvr_readiness),
+      alerta: getChecklistAlert(
+        scores.cvr_readiness,
+        "A página pode ter dificuldade para transformar visita em compra."
+      )
+    }
+  ];
+}
+
+function classifyChecklistScore(score) {
+  const value = Number(score);
+
+  if (!Number.isFinite(value)) return "Não avaliado";
+  if (value >= 80) return "Forte";
+  if (value >= 60) return "Atenção";
+  return "Crítico";
+}
+
+function getChecklistAlert(score, alertText) {
+  const value = Number(score);
+
+  if (!Number.isFinite(value)) return "Critério não calculado pela engine.";
+  if (value >= 80) return "Sem alerta crítico neste critério.";
+  return alertText;
+}
+
+function renderObjectiveChecklist(checklist) {
+  if (!Array.isArray(checklist) || !checklist.length) {
+    return "";
+  }
+
+  return `
+    <div class="result-block">
+      <h3>Checklist objetivo da página</h3>
+      <p style="color:var(--muted);font-size:13px;line-height:1.6;margin-top:8px;">
+        Leitura estruturada da Nexora com critérios fixos para imagem, SEO, comunicação, confiança, oferta e prontidão para clique/conversão.
+      </p>
+
+      <div class="context-grid" style="margin-top:14px;">
+        ${checklist.map(item => `
+          <div class="metric-card">
+            <p>${escapeHtml(item.criterio)}</p>
+            <h3>${escapeHtml(item.score !== null && item.score !== undefined ? item.score + "/100" : "-")}</h3>
+            <span style="display:inline-flex;margin-top:8px;color:var(--text-muted);font-size:12px;">
+              Status: ${escapeHtml(item.status)}
+            </span>
+            <div style="color:var(--muted);font-size:12px;line-height:1.6;margin-top:8px;">
+              ${escapeHtml(item.alerta)}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+    
     function scoreValue(result, key) {
       const value = result?.scores?.[key];
 
