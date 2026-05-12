@@ -1,10 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Nexora · Síntese Final</title>
+  <title>Nexora · Product Health Score</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles/global.css">
@@ -350,9 +351,9 @@
   <main class="wrap">
 
     <section class="card">
-      <p class="step-label">Nexora Intelligence · Síntese Final</p>
+      <p class="step-label">Nexora Intelligence · Product Health Score</p>
 
-      <h1>Síntese estratégica final</h1>
+      <h1>Síntese · Product Health Score</h1>
 
       <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
         Cruzamento dos três cérebros: performance, página e mercado. A síntese identifica a causa raiz consolidada, a gravidade, os gaps principais e a ordem correta de ação.
@@ -367,7 +368,7 @@
   </button>
 
   <button class="btn-primary" onclick="gerarSintese()">
-    Gerar Síntese Final com IA
+    Gerar Product Health Score com IA
   </button>
 
   <button class="btn-secondary" onclick="abrirRelatorio()">
@@ -597,9 +598,9 @@ async function carregarBrainResultsDoSupabase(diagnosticId) {
         </div>
 
         <div class="context-grid">
-          ${smallCard("Cérebro 1 · Performance", `${C1.score_geral ?? "-"} / 100`, C1.root_cause || "Performance e métricas")}
-          ${smallCard("Cérebro 2 · Página", `${C2.score_pagina ?? "-"} / 100`, C2.problema_principal || "Página e conversão")}
-          ${smallCard("Cérebro 3 · Mercado", `${C3.score_mercado ?? "-"} / 100`, C3.dinamica_mercado || "Mercado e concorrência")}
+          ${smallCard("Cérebro 1 · Performance Score", `${C1.score_geral ?? "-"} / 100`, C1.root_cause || "Performance e métricas")}
+          ${smallCard("Cérebro 2 · Listing Quality Score", `${C2.score_pagina ?? "-"} / 100`, C2.problema_principal || "Página e conversão")}
+          ${smallCard("Cérebro 3 · Market Position Score", `${C3.score_mercado ?? "-"} / 100`, C3.dinamica_mercado || "Mercado e concorrência")}
         </div>
 
         <div class="score-grid">
@@ -629,8 +630,8 @@ async function carregarBrainResultsDoSupabase(diagnosticId) {
   if (savedSynth) {
     renderResult(savedSynth);
     msg.textContent = savedSynthFromDb
-      ? "Síntese Final carregada do histórico deste diagnóstico."
-      : "Síntese Final já encontrada neste diagnóstico.";
+      ? "Product Health Score carregado do histórico deste diagnóstico."
+      : "Product Health Score já encontrado neste diagnóstico.";
   }
 } catch (e) {}
 
@@ -647,7 +648,7 @@ async function carregarBrainResultsDoSupabase(diagnosticId) {
         return;
       }
 
-      msg.textContent = "Gerando Síntese Final Nexora com IA...";
+      msg.textContent = "Gerando Product Health Score Nexora com IA...";
 
     const baseResult = gerarSinteseFinal(C1, C2, C3);
 const systemsAnalysis = analisarCincoSistemas(C1, C2, C3);
@@ -669,6 +670,9 @@ const result = aplicarIANexoraLayerSobreSintese(
 
 const fullResult = {
   ...result,
+  score_label: "Product Health Score",
+  score_type: "synth_product_health_score",
+  score_description: "Score consolidado da Síntese Nexora, cruzando Performance Score, Listing Quality Score, Market Position Score e os 5 Sistemas Nexora.",
   systems_analysis: systemsAnalysis,
   next_best_action: result.next_best_action || systemsAnalysis.nextBestAction,
   diagnostic_id: diagnosticId,
@@ -694,15 +698,15 @@ const fullResult = {
         await saveBrainResult({
           diagnosticId,
           brainCode: "synth",
-          brainName: "Síntese Estratégica Final",
+          brainName: "Síntese - Product Health Score",
           score: result.score_final,
           resultData: fullResult
         });
 
         renderResult(fullResult);
         msg.textContent = result.ia_usada
-          ? "Síntese Final com IA salva com sucesso."
-          : "Síntese Final salva com a engine Nexora. A IA não respondeu neste momento.";
+          ? "Product Health Score com IA salvo com sucesso."
+          : "Product Health Score salvo com a engine Nexora. A IA não respondeu neste momento.";
       } catch (error) {
         console.error("Erro ao salvar Síntese Final:", error);
         renderResult(fullResult);
@@ -1276,8 +1280,8 @@ window.abrirRelatorio = function () {
       const nextAction = getNextBestAction(result);
 
       resultArea.innerHTML = `
-        <p class="step-label">Resultado · Síntese Final</p>
-        <h2>Diagnóstico estratégico consolidado</h2>
+        <p class="step-label">Resultado · Product Health Score</p>
+        <h2>Síntese · Product Health Score</h2>
 ${result.ia_usada && isUsableNarrative(result.diagnostico_ia) ? `
   <div class="result-block" style="border-color:rgba(216,139,45,.35);background:rgba(216,139,45,.06);">
     <strong style="color:#f0a33a;">IA Nexora aplicada como complemento</strong>
@@ -1297,7 +1301,7 @@ ${result.ia_usada && isUsableNarrative(result.diagnostico_ia) ? `
         <div class="result-block">
           <div class="score-hero">
             <div>
-              <p style="color:var(--muted);font-size:12px;">Score final Nexora</p>
+              <p style="color:var(--muted);font-size:12px;">Product Health Score</p>
               <div class="score-number">${escapeHtml(result.score_final ?? "-")}</div>
               <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">/100 · Gravidade ${escapeHtml(result.gravidade || "-")}</p>
             </div>
@@ -1334,9 +1338,9 @@ ${result.ia_usada && isUsableNarrative(result.diagnostico_ia) ? `
         ` : ""}
 
         <div class="score-grid">
-          ${metricCard("Performance", scoreValue(result, "performance"))}
-          ${metricCard("Página", scoreValue(result, "pagina"))}
-          ${metricCard("Mercado", scoreValue(result, "mercado"))}
+          ${metricCard("Performance Score", scoreValue(result, "performance"))}
+          ${metricCard("Listing Quality Score", scoreValue(result, "pagina"))}
+          ${metricCard("Market Position Score", scoreValue(result, "mercado"))}
           ${metricCard("Conversão total", scoreValue(result, "conversao_total"))}
           ${metricCard("Diferenciação", scoreValue(result, "diferenciacao_total"))}
         </div>
@@ -1352,9 +1356,9 @@ ${result.ia_usada && isUsableNarrative(result.diagnostico_ia) ? `
         ])}
 
         ${renderInsightCards("Leitura cruzada dos 3 Cérebros", cleanDisplayText(result.leitura_cruzada), [
-          "Cérebro 1 · Performance",
-          "Cérebro 2 · Página",
-          "Cérebro 3 · Mercado",
+          "Cérebro 1 · Performance Score",
+          "Cérebro 2 · Listing Quality Score",
+          "Cérebro 3 · Market Position Score",
           "Conclusão cruzada"
         ])}
 
