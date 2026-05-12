@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -491,6 +490,10 @@
       <p class="step-label">Nexora Intelligence · Cérebro 3</p>
 
       <h1>Análise de mercado</h1>
+
+      <p style="color:var(--text-muted);margin-top:6px;font-family:Syne,sans-serif;font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:12px;">
+        Market Position Score
+      </p>
 
       <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
         Leitura do contexto competitivo: preço, concorrência, saturação, dominância, barreira de entrada e oportunidade de escala.
@@ -1028,6 +1031,9 @@ document.querySelectorAll(".option-group").forEach(group => {
       const fullResult = {
   ...data,
   ...result,
+  score_label: "Market Position Score",
+  score_type: "c3_market_position_score",
+  score_description: "Score do Cérebro 3 que avalia posição de mercado, força competitiva, barreiras, preço, reviews, diferenciação e oportunidade de escala.",
   ia_usada: false,
   diagnostic_id: diagnosticId,
   product_id: currentProductId || null,
@@ -1045,7 +1051,7 @@ document.querySelectorAll(".option-group").forEach(group => {
         await saveBrainResult({
           diagnosticId,
           brainCode: "c3",
-          brainName: "Cérebro 3 - Análise de Mercado",
+          brainName: "Cérebro 3 - Market Position Score",
           score: result.score_mercado,
           resultData: fullResult
         });
@@ -1131,7 +1137,7 @@ function limparTextoIA(texto) {
 
       resultArea.innerHTML = `
         <p class="step-label">Resultado · Cérebro 3</p>
-        <h2>Análise de mercado</h2>
+        <h2>Cérebro 3 · Market Position Score</h2>
 
         ${result.ia_usada ? `
           <div class="result-block" style="border-color:rgba(216,139,45,.35);background:rgba(216,139,45,.06);">
@@ -1168,7 +1174,7 @@ function limparTextoIA(texto) {
         <div class="result-block">
           <div style="display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-start;">
             <div>
-              <p style="color:var(--muted);font-size:12px;">Score de mercado</p>
+              <p style="color:var(--muted);font-size:12px;">Market Position Score</p>
               <div class="score-number">${escapeHtml(result.score_mercado ?? "-")}</div>
               <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">/100 · ${escapeHtml(result.status || "-")}</p>
             </div>
@@ -1480,7 +1486,7 @@ diagnostico_ia: limparTextoIA(
         await saveBrainResult({
           diagnosticId,
           brainCode: "c3",
-          brainName: "Cérebro 3 - Análise de Mercado",
+          brainName: "Cérebro 3 - Market Position Score",
           score: updated.score_mercado,
           resultData: updated
         });
