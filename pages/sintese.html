@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -391,6 +390,7 @@ import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagno
 import { gerarSinteseFinal } from "../js/synthesisEngine.js";
 import { analisarCincoSistemas } from "../js/nexoraSystemsEngine.js";
 import { analisarSinteseComIA } from "../js/nexoraAI.js";
+import { gerarAlertasNexora } from "../js/nexoraAlertsEngine.js";
 
     await requireAuth();
 
@@ -668,12 +668,18 @@ const result = aplicarIANexoraLayerSobreSintese(
   systemsAnalysis
 );
 
+const alerts = gerarAlertasNexora({
+  c1: C1,
+  c2: C2,
+  c3: C3,
+  systemsAnalysis,
+  synthesis: result
+});
+
 const fullResult = {
   ...result,
-  score_label: "Product Health Score",
-  score_type: "synth_product_health_score",
-  score_description: "Score consolidado da Síntese Nexora, cruzando Performance Score, Listing Quality Score, Market Position Score e os 5 Sistemas Nexora.",
   systems_analysis: systemsAnalysis,
+  alerts,
   next_best_action: result.next_best_action || systemsAnalysis.nextBestAction,
   diagnostic_id: diagnosticId,
   product_id: currentProductId || null,
@@ -1274,6 +1280,18 @@ window.abrirRelatorio = function () {
           systems_analysis: analisarCincoSistemas(C1, C2, C3)
         };
       }
+      if ((!Array.isArray(result.alerts) || !result.alerts.length) && C1 && C2 && C3) {
+  result = {
+    ...result,
+    alerts: gerarAlertasNexora({
+      c1: C1,
+      c2: C2,
+      c3: C3,
+      systemsAnalysis: result.systems_analysis,
+      synthesis: result
+    })
+  };
+}
 
       const iaUsavel = isUsableNarrative(result.diagnostico_ia) || isUsableNarrative(result.leitura_cruzada_ia);
       const riskText = getStrategicRisk(result);
@@ -1320,7 +1338,9 @@ ${result.ia_usada && isUsableNarrative(result.diagnostico_ia) ? `
 
         ${renderSystemsAnalysis(result.systems_analysis)}
 
-        <div class="result-block next-action-card">
+${renderAlertsNexora(result.alerts)}
+
+<div class="result-block next-action-card">
           <span class="pill-red">Próxima melhor ação</span>
           <h3 style="margin-top:12px;">${escapeHtml(nextAction.title)}</h3>
           <p style="color:var(--text-muted);line-height:1.8;margin-top:10px;">
@@ -1730,7 +1750,68 @@ ${result.ia_usada && isUsableNarrative(result.diagnostico_ia) ? `
 
       return clean.length ? clean : fallback;
     }
+function renderAlertsNexora(alerts = []) {
+  if (!Array.isArray(alerts) || !alerts.length) {
+    return "";
+  }
 
+  const criticalCount = alerts.filter(alert => alert.level === "Crítico").length;
+  const warningCount = alerts.filter(alert => alert.level === "Atenção").length;
+
+  return `
+    <div class="result-block">
+      <p class="step-label">Alertas estratégicos Nexora</p>
+      <h3>Sinais que exigem atenção neste produto</h3>
+
+      <p style="color:var(--muted);line-height:1.7;margin-top:8px;">
+        Estes alertas foram gerados por regras da engine Nexora a partir dos dados dos três cérebros, dos benchmarks e dos 5 Sistemas. A IA pode explicar os sinais, mas não inventa os alertas.
+      </p>
+
+      <div class="score-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+        ${metricCard("Alertas críticos", criticalCount)}
+        ${metricCard("Alertas de atenção", warningCount)}
+      </div>
+
+      <div style="display:grid;gap:12px;margin-top:16px;">
+        ${alerts.map(alert => alertCard(alert)).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function alertCard(alert) {
+  const isCritical = alert.level === "Crítico";
+
+  return `
+    <div class="gap-card" style="${
+      isCritical
+        ? "border-color:rgba(179,38,38,.42);background:rgba(139,30,30,.14);"
+        : "border-color:rgba(240,163,58,.30);background:rgba(240,163,58,.07);"
+    }">
+      <span class="tag ${isCritical ? "tag-red" : ""}">
+        ${escapeHtml(alert.level || "Alerta")} · ${escapeHtml(alert.area || "Nexora")}
+      </span>
+
+      <strong>${escapeHtml(alert.title || "Alerta estratégico")}</strong>
+
+      <p>
+        <strong style="color:var(--text);display:inline;">Evidência:</strong>
+        ${escapeHtml(alert.evidence || "-")}
+      </p>
+
+      <p>
+        <strong style="color:var(--text);display:inline;">Impacto:</strong>
+        ${escapeHtml(alert.impact || "-")}
+      </p>
+
+      <p>
+        <strong style="color:var(--text);display:inline;">Ação recomendada:</strong>
+        ${escapeHtml(alert.action || "-")}
+      </p>
+    </div>
+  `;
+}
+    
     function renderSystemsAnalysis(systemsAnalysis) {
       if (!systemsAnalysis || !Array.isArray(systemsAnalysis.systemsList)) {
         return "";
