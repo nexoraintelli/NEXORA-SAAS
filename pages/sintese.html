@@ -694,11 +694,18 @@ const structuredSynthesis = estruturarSinteseNexora({
   nextBestAction,
   synthesis: result
 });
+  const privateLabelIntelligence = gerarPrivateLabelIntelligence(
+  C1,
+  C2,
+  C3,
+  result
+);   
       
       
 const fullResult = {
   ...result,
   systems_analysis: systemsAnalysis,
+  private_label_intelligence: privateLabelIntelligence,
   alerts,
   next_best_action: nextBestAction,
   nextBestAction,
@@ -1293,6 +1300,318 @@ window.abrirRelatorio = function () {
     .replace(/"$/, "")
     .trim();
 }
+function gerarPrivateLabelIntelligence(c1, c2, c3, synthesis = {}) {
+  const c1Score = Number(c1?.score_geral || c1?.score || 0);
+  const c2Score = Number(c2?.score_pagina || c2?.score || 0);
+  const c3Score = Number(c3?.score_mercado || c3?.score || 0);
+
+  const acos = Number(c1?.acos || 0);
+  const tacos = Number(c1?.tacos || 0);
+  const roas = Number(c1?.roas || 0);
+  const reviews = Number(c1?.reviews || c2?.reviews || 0);
+  const rating = Number(c1?.rating || c2?.rating || 0);
+
+  const c2Scores = c2?.scores || {};
+  const c3Scores = c3?.scores || {};
+  const competitiveIntel = c3?.competitiveIntelligence || {};
+
+  const differentiationScore = Number(
+    c2Scores.diferenciacao ??
+    c3Scores.diferenciacao ??
+    0
+  );
+
+  const communicationScore = Number(c2Scores.comunicacao_valor || 0);
+  const trustScore = Number(c2Scores.confianca || 0);
+  const offerScore = Number(c2Scores.oferta || 0);
+  const marketOpportunity = Number(c3Scores.oportunidade || 0);
+  const marketBarrier = Number(c3Scores.barreira_entrada || 0);
+
+  const ppcDependencyScore = calculatePpcDependencyScore({ acos, tacos, roas });
+  const brandStrengthScore = calculateBrandStrengthScore({
+    trustScore,
+    communicationScore,
+    differentiationScore,
+    offerScore
+  });
+
+  const authorityScore = calculateAuthorityScore({ reviews, rating });
+  const competitiveRiskScore = calculateCompetitiveRiskScore({
+    marketBarrier,
+    competitiveDistanceScore: competitiveIntel.competitiveDistanceScore,
+    entryBarrierScore: competitiveIntel.entryBarrierScore
+  });
+
+  const scaleReadinessScore = Math.round(
+    (c1Score * 0.25) +
+    (c2Score * 0.25) +
+    (c3Score * 0.20) +
+    (brandStrengthScore * 0.15) +
+    (authorityScore * 0.15)
+  );
+
+  const privateLabelScore = Math.round(
+    (scaleReadinessScore * 0.30) +
+    (brandStrengthScore * 0.25) +
+    (differentiationScore * 0.20) +
+    (authorityScore * 0.15) +
+    ((100 - ppcDependencyScore) * 0.10)
+  );
+
+  const maturityStage = classifyPrivateLabelStage({
+    privateLabelScore,
+    c1Score,
+    c2Score,
+    c3Score,
+    reviews,
+    rating,
+    ppcDependencyScore,
+    competitiveRiskScore
+  });
+
+  const ppcDependencyLabel = classifyDependency(ppcDependencyScore);
+  const brandStrengthLabel = classifyStrength(brandStrengthScore);
+  const authorityLabel = classifyStrength(authorityScore);
+  const differentiationLabel = classifyStrength(differentiationScore);
+  const competitiveRiskLabel = classifyRisk(competitiveRiskScore);
+  const scaleReadinessLabel = classifyStrength(scaleReadinessScore);
+
+  return {
+    score: privateLabelScore,
+    maturityStage,
+    ppcDependencyScore,
+    ppcDependencyLabel,
+    brandStrengthScore,
+    brandStrengthLabel,
+    authorityScore,
+    authorityLabel,
+    differentiationScore,
+    differentiationLabel,
+    competitiveRiskScore,
+    competitiveRiskLabel,
+    scaleReadinessScore,
+    scaleReadinessLabel,
+    strategicReading: buildPrivateLabelReading({
+      maturityStage,
+      privateLabelScore,
+      ppcDependencyLabel,
+      brandStrengthLabel,
+      authorityLabel,
+      differentiationLabel,
+      competitiveRiskLabel,
+      scaleReadinessLabel,
+      c1,
+      c2,
+      c3,
+      synthesis
+    }),
+    recommendations: buildPrivateLabelRecommendations({
+      maturityStage,
+      ppcDependencyScore,
+      brandStrengthScore,
+      authorityScore,
+      differentiationScore,
+      competitiveRiskScore,
+      scaleReadinessScore
+    })
+  };
+}
+
+function calculatePpcDependencyScore({ acos, tacos, roas }) {
+  let score = 0;
+
+  if (tacos >= 20) score += 40;
+  else if (tacos >= 12) score += 28;
+  else if (tacos >= 8) score += 16;
+
+  if (acos >= 40) score += 35;
+  else if (acos >= 25) score += 24;
+  else if (acos >= 15) score += 12;
+
+  if (roas > 0 && roas < 2) score += 20;
+  else if (roas >= 2 && roas < 3) score += 10;
+
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function calculateBrandStrengthScore({ trustScore, communicationScore, differentiationScore, offerScore }) {
+  return Math.round(
+    (Number(trustScore || 0) * 0.30) +
+    (Number(communicationScore || 0) * 0.25) +
+    (Number(differentiationScore || 0) * 0.30) +
+    (Number(offerScore || 0) * 0.15)
+  );
+}
+
+function calculateAuthorityScore({ reviews, rating }) {
+  let reviewScore = 0;
+
+  if (reviews >= 1000) reviewScore = 100;
+  else if (reviews >= 500) reviewScore = 88;
+  else if (reviews >= 100) reviewScore = 72;
+  else if (reviews >= 30) reviewScore = 52;
+  else if (reviews >= 10) reviewScore = 35;
+  else reviewScore = 18;
+
+  let ratingScore = 0;
+
+  if (rating >= 4.6) ratingScore = 100;
+  else if (rating >= 4.3) ratingScore = 82;
+  else if (rating >= 4.0) ratingScore = 64;
+  else if (rating >= 3.7) ratingScore = 42;
+  else ratingScore = 24;
+
+  return Math.round((reviewScore * 0.60) + (ratingScore * 0.40));
+}
+
+function calculateCompetitiveRiskScore({ marketBarrier, competitiveDistanceScore, entryBarrierScore }) {
+  const distance = Number(competitiveDistanceScore || 0);
+  const entry = Number(entryBarrierScore || 0);
+  const barrier = Number(marketBarrier || 0);
+
+  return Math.round(
+    (distance * 0.35) +
+    (entry * 0.40) +
+    (barrier * 0.25)
+  );
+}
+
+function classifyPrivateLabelStage(input) {
+  if (input.privateLabelScore < 45 || input.competitiveRiskScore >= 80) {
+    return "Risco";
+  }
+
+  if (input.reviews < 10 || input.c1Score < 45) {
+    return "Lançamento";
+  }
+
+  if (input.privateLabelScore < 60) {
+    return "Validação";
+  }
+
+  if (input.privateLabelScore < 75) {
+    return "Crescimento";
+  }
+
+  if (input.privateLabelScore >= 75 && input.ppcDependencyScore < 45 && input.competitiveRiskScore < 65) {
+    return "Escala";
+  }
+
+  return "Defesa";
+}
+
+function classifyDependency(score) {
+  const value = Number(score || 0);
+  if (value >= 70) return "Alta";
+  if (value >= 45) return "Média";
+  return "Baixa";
+}
+
+function classifyStrength(score) {
+  const value = Number(score || 0);
+  if (value >= 75) return "Forte";
+  if (value >= 50) return "Média";
+  return "Baixa";
+}
+
+function classifyRisk(score) {
+  const value = Number(score || 0);
+  if (value >= 75) return "Alto";
+  if (value >= 50) return "Médio";
+  return "Baixo";
+}
+
+function buildPrivateLabelReading(data) {
+  return `O produto está no estágio de ${data.maturityStage} dentro da leitura de Private Label. A Nexora interpreta esse estágio a partir da combinação entre performance, página, autoridade, diferenciação e mercado. A dependência de PPC aparece como ${data.ppcDependencyLabel}, a força de marca está ${data.brandStrengthLabel}, a autoridade por reviews está ${data.authorityLabel}, a diferenciação está ${data.differentiationLabel} e o risco competitivo está ${data.competitiveRiskLabel}. Para uma marca própria, isso indica se o produto já pode buscar escala com segurança ou se ainda precisa fortalecer percepção de valor, prova social, comunicação e defesa competitiva antes de aumentar investimento.`;
+}
+
+function buildPrivateLabelRecommendations(data) {
+  const recs = [];
+
+  if (data.ppcDependencyScore >= 60) {
+    recs.push("Reduzir dependência de PPC antes de escalar investimento.");
+  }
+
+  if (data.brandStrengthScore < 60) {
+    recs.push("Fortalecer comunicação de marca, confiança e percepção de valor.");
+  }
+
+  if (data.authorityScore < 60) {
+    recs.push("Construir autoridade por reviews, rating e prova social.");
+  }
+
+  if (data.differentiationScore < 60) {
+    recs.push("Evidenciar diferenciais claros para evitar competição por preço.");
+  }
+
+  if (data.competitiveRiskScore >= 65) {
+    recs.push("Reposicionar oferta diante da pressão competitiva do mercado.");
+  }
+
+  if (data.scaleReadinessScore >= 75) {
+    recs.push("Produto com sinais de prontidão para escala controlada.");
+  }
+
+  return recs.length ? recs : [
+    "Manter acompanhamento contínuo de performance, página e mercado.",
+    "Proteger diferenciação e autoridade antes de ampliar escala."
+  ];
+}
+
+function renderPrivateLabelIntelligence(privateLabel) {
+  if (!privateLabel) return "";
+
+  return `
+    <div class="result-block">
+      <p class="step-label">Private Label Intelligence</p>
+      <h3>Leitura estratégica para marca própria</h3>
+
+      <p style="color:var(--muted);line-height:1.7;margin-top:8px;">
+        Esta camada interpreta o produto como marca própria, cruzando dependência de PPC, autoridade, diferenciação, força de marca, mercado e prontidão para escala.
+      </p>
+
+      <div class="score-hero" style="margin-top:18px;">
+        <div>
+          <p style="color:var(--muted);font-size:12px;">Private Label Readiness Score</p>
+          <div class="score-number">${escapeHtml(privateLabel.score ?? "-")}</div>
+          <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">/100 · ${escapeHtml(privateLabel.maturityStage || "-")}</p>
+        </div>
+
+        <div>
+          <span class="pill-red">Estágio de maturidade</span>
+          <h3 style="margin-top:12px;line-height:1.35;">
+            ${escapeHtml(privateLabel.maturityStage || "-")}
+          </h3>
+          <p style="color:var(--muted);margin-top:12px;line-height:1.7;">
+            ${escapeHtml(privateLabel.strategicReading || "-")}
+          </p>
+        </div>
+      </div>
+
+      <div class="score-grid">
+        ${metricCard("Dependência de PPC", `${privateLabel.ppcDependencyLabel} · ${privateLabel.ppcDependencyScore}/100`)}
+        ${metricCard("Força de marca", `${privateLabel.brandStrengthLabel} · ${privateLabel.brandStrengthScore}/100`)}
+        ${metricCard("Autoridade reviews", `${privateLabel.authorityLabel} · ${privateLabel.authorityScore}/100`)}
+        ${metricCard("Diferenciação", `${privateLabel.differentiationLabel} · ${privateLabel.differentiationScore}/100`)}
+        ${metricCard("Risco competitivo", `${privateLabel.competitiveRiskLabel} · ${privateLabel.competitiveRiskScore}/100`)}
+      </div>
+
+      <div class="result-block" style="background:rgba(255,255,255,.025);margin-top:16px;">
+        <h3>Recomendações Private Label</h3>
+
+        <div style="display:grid;gap:12px;margin-top:14px;">
+          ${(privateLabel.recommendations || []).map((item, index) => `
+            <div class="gap-card">
+              <span class="tag ${index === 0 ? "tag-red" : ""}">Ação ${index + 1}</span>
+              <p>${escapeHtml(item)}</p>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+    
     function renderResult(result) {
       resultArea.style.display = "block";
 
@@ -1386,11 +1705,14 @@ ${result.ia_usada && isUsableNarrative(result.diagnostico_ia) ? `
             </div>
           </div>
         </div>
-        
         ${renderStructuredSynthesis(result.structured_synthesis)}
-        ${renderSystemsAnalysis(result.systems_analysis)}
-        ${renderAlertsNexora(result.alerts)}
-        ${renderNextBestActionCard(result)}
+${renderSystemsAnalysis(result.systems_analysis)}
+${renderPrivateLabelIntelligence(
+  result.private_label_intelligence ||
+  gerarPrivateLabelIntelligence(C1, C2, C3, result)
+)}
+${renderAlertsNexora(result.alerts)}
+${renderNextBestActionCard(result)}
 
         ${riskText ? `
           <div class="result-block">
