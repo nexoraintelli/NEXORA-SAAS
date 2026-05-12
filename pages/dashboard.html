@@ -1676,8 +1676,6 @@ if (clientsProductsCount) {
   const alertBadge = renderDashboardAlertBadge(alertSummary);
   const alertLine = renderDashboardAlertLine(alertSummary);    
 
-const alertBadge = renderDashboardAlertBadge(alertSummary);
-
       const latestDiagnostic = getLatestDiagnosticForProduct(product.id);
       const diagnosticsCount = getDiagnosticsForProduct(product.id).filter(item => !isDraftDiagnostic(item)).length;
       const score = getProductScore(product.id);
