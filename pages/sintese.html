@@ -653,6 +653,7 @@ import { analisarSinteseComIA } from "../js/nexoraAI.js";
 import { gerarAlertasNexora } from "../js/nexoraAlertsEngine.js";
 import { gerarProximaMelhorAcaoNexora } from "../js/nexoraNextActionEngine.js";  
 import { estruturarSinteseNexora } from "../js/nexoraSynthesisStructureEngine.js";
+import { trackEvent, trackPageView } from "../js/analytics.js";
 
     await requireAuth();
 
@@ -677,6 +678,12 @@ const currentDiagnosticId =
   diagnosticIdFromUrl ||
   localStorage.getItem("nx_diagnostic_id");
 
+trackPageView("Síntese");
+trackEvent("opened_synthesis", {
+  product_id: currentProductId || null,
+  diagnostic_id: currentDiagnosticId || null
+});
+
 const msg = document.getElementById("msg");
     const contextArea = document.getElementById("contextArea");
     const resultArea = document.getElementById("resultArea");
@@ -688,6 +695,15 @@ let currentProduct = null;
 let savedSynthFromDb = null;
 
 await carregarContextoDoDiagnostico();
+
+trackEvent("loaded_brains_for_synthesis", {
+  product_id: currentProductId || null,
+  diagnostic_id: currentDiagnosticId || null,
+  has_c1: !!C1,
+  has_c2: !!C2,
+  has_c3: !!C3,
+  has_saved_synthesis: !!savedSynthFromDb
+});
 
 async function carregarContextoDoDiagnostico() {
   carregarContextoLocalStorage();
@@ -785,6 +801,14 @@ async function carregarBrainResultsDoSupabase(diagnosticId) {
       const marketplace = currentProduct?.marketplace || "-";
 
       if (!C1 || !C2 || !C3) {
+        trackEvent("synthesis_missing_required_brains", {
+          product_id: currentProductId || null,
+          diagnostic_id: currentDiagnosticId || null,
+          has_c1: !!C1,
+          has_c2: !!C2,
+          has_c3: !!C3
+        });
+
         contextArea.innerHTML = `
           <p class="step-label">Contexto obrigatório</p>
           <h2>Cérebros anteriores não encontrados</h2>
@@ -890,6 +914,12 @@ async function carregarBrainResultsDoSupabase(diagnosticId) {
     JSON.parse(localStorage.getItem("nx_synth") || "null");
 
   if (savedSynth) {
+    trackEvent("loaded_historical_synthesis", {
+      product_id: currentProductId || null,
+      diagnostic_id: currentDiagnosticId || null,
+      source: savedSynthFromDb ? "supabase" : "localStorage"
+    });
+
     renderResult(savedSynth);
     msg.textContent = savedSynthFromDb
       ? "Product Health Score carregado do histórico deste diagnóstico."
@@ -898,7 +928,20 @@ async function carregarBrainResultsDoSupabase(diagnosticId) {
 } catch (e) {}
 
     window.gerarSintese = async function () {
+      trackEvent("clicked_generate_synthesis", {
+        product_id: currentProductId || null,
+        diagnostic_id: currentDiagnosticId || null
+      });
+
       if (!C1 || !C2 || !C3) {
+        trackEvent("generate_synthesis_blocked_missing_brains", {
+          product_id: currentProductId || null,
+          diagnostic_id: currentDiagnosticId || null,
+          has_c1: !!C1,
+          has_c2: !!C2,
+          has_c3: !!C3
+        });
+
         msg.textContent = "Execute os três cérebros antes de gerar a síntese.";
         return;
       }
@@ -906,9 +949,18 @@ async function carregarBrainResultsDoSupabase(diagnosticId) {
      const diagnosticId = currentDiagnosticId || getDiagnosticId();
 
       if (!diagnosticId) {
+        trackEvent("generate_synthesis_blocked_missing_diagnostic", {
+          product_id: currentProductId || null
+        });
+
         msg.textContent = "Nenhum diagnóstico ativo. Volte ao dashboard e inicie um novo diagnóstico.";
         return;
       }
+
+      trackEvent("started_synthesis_generation", {
+        product_id: currentProductId || null,
+        diagnostic_id: diagnosticId
+      });
 
       msg.textContent = "Gerando Product Health Score Nexora com IA...";
 
@@ -923,6 +975,14 @@ const aiResult = await analisarSinteseComIA({
   baseSynthesis: baseResult,
   product: currentProduct || {}
 });
+
+trackEvent(aiResult?.ok ? "completed_ai_synthesis" : "failed_ai_synthesis", {
+  product_id: currentProductId || null,
+  diagnostic_id: diagnosticId,
+  ok: !!aiResult?.ok,
+  message: aiResult?.message || aiResult?.error || null
+});
+
 const result = aplicarIANexoraLayerSobreSintese(
   baseResult,
   aiResult,
@@ -990,6 +1050,14 @@ const fullResult = {
 
       localStorage.setItem("nx_synth", JSON.stringify(fullResult));
 
+      trackEvent("generated_synthesis", {
+        product_id: currentProductId || null,
+        diagnostic_id: diagnosticId,
+        score: fullResult.score_final ?? null,
+        ia_usada: !!fullResult.ia_usada,
+        gravidade: fullResult.gravidade || null
+      });
+
       try {
         await updateDiagnostic(diagnosticId, {
   status: result.ia_usada ? "synthesis_ai_completed" : "synthesis_completed",
@@ -1006,12 +1074,25 @@ const fullResult = {
           resultData: fullResult
         });
 
+        trackEvent("saved_synthesis", {
+          product_id: currentProductId || null,
+          diagnostic_id: diagnosticId,
+          score: result.score_final ?? null,
+          ia_usada: !!result.ia_usada
+        });
+
         renderResult(fullResult);
         msg.textContent = result.ia_usada
           ? "Product Health Score com IA salvo com sucesso."
           : "Product Health Score salvo com a engine Nexora. A IA não respondeu neste momento.";
       } catch (error) {
         console.error("Erro ao salvar Síntese Final:", error);
+        trackEvent("save_synthesis_failed", {
+          product_id: currentProductId || null,
+          diagnostic_id: diagnosticId,
+          error: String(error?.message || error || "")
+        });
+
         renderResult(fullResult);
         msg.textContent = "A síntese foi gerada, mas não foi salva no banco. Veja o console.";
       }
@@ -1448,6 +1529,11 @@ function gerarRiscoEstrategicoFallback(baseResult, systemsAnalysis) {
   const productId = currentProductId || localStorage.getItem("nx_product_id");
   const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
 
+  trackEvent("went_back_to_brain_1_from_synthesis", {
+    product_id: productId || null,
+    diagnostic_id: diagnosticId || null
+  });
+
   window.location.href =
     `./diagnostico.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
 };
@@ -1455,6 +1541,11 @@ function gerarRiscoEstrategicoFallback(baseResult, systemsAnalysis) {
 window.irParaCerebro2 = function () {
   const productId = currentProductId || localStorage.getItem("nx_product_id");
   const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
+
+  trackEvent("went_back_to_brain_2_from_synthesis", {
+    product_id: productId || null,
+    diagnostic_id: diagnosticId || null
+  });
 
   window.location.href =
     `./pagina.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
@@ -1464,6 +1555,11 @@ window.irParaCerebro3 = function () {
   const productId = currentProductId || localStorage.getItem("nx_product_id");
   const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
 
+  trackEvent("went_back_to_brain_3_from_synthesis", {
+    product_id: productId || null,
+    diagnostic_id: diagnosticId || null
+  });
+
   window.location.href =
     `./mercado.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
 };
@@ -1471,6 +1567,11 @@ window.irParaCerebro3 = function () {
 window.voltarParaProdutoOuDashboard = function () {
   const productId = currentProductId || localStorage.getItem("nx_product_id");
   const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
+
+  trackEvent(productId ? "clicked_back_product_from_synthesis" : "clicked_back_dashboard_from_synthesis", {
+    product_id: productId || null,
+    diagnostic_id: diagnosticId || null
+  });
 
   if (productId) {
     window.location.href =
@@ -1508,13 +1609,23 @@ window.voltarParaProdutoOuDashboard = function () {
 window.abrirRelatorio = function () {
   const synth = localStorage.getItem("nx_synth");
 
+  const productId = currentProductId || localStorage.getItem("nx_product_id");
+  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
+
   if (!synth) {
+    trackEvent("open_report_blocked_missing_synthesis", {
+      product_id: productId || null,
+      diagnostic_id: diagnosticId || null
+    });
+
     msg.textContent = "Gere a Síntese Final antes de abrir o relatório.";
     return;
   }
 
-  const productId = currentProductId || localStorage.getItem("nx_product_id");
-  const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
+  trackEvent("went_to_report_from_synthesis", {
+    product_id: productId || null,
+    diagnostic_id: diagnosticId || null
+  });
 
   location.href =
     `./relatorio.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
