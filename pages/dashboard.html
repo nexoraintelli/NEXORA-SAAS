@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1427,6 +1428,7 @@ import {
   formatPlanName,
   canCreateDiagnostic
 } from "../js/plans.js";
+import { trackEvent, trackPageView } from "../js/analytics.js";
     let currentUserId = null;
 let currentProducts = [];
 let currentClients = [];
@@ -1446,6 +1448,11 @@ const activeClientId = dashboardUrlParams.get("client_id");
   if (settingsEmail) {
     settingsEmail.textContent = user.email || "-";
   }
+
+  await trackPageView("dashboard");
+  await trackEvent("opened_dashboard", {
+    active_client_id: activeClientId || null
+  });
 
   loadUserPlan();
   loadDiagnostics(user.id);
@@ -2044,6 +2051,9 @@ window.scrollToProducts = function () {
 
     window.novoDiagnostico = async function () {
   try {
+    await trackEvent("clicked_new_diagnostic", {
+      source: "dashboard"
+    });
     if (!currentProducts.length) {
       try {
         currentProducts = await listProducts() || [];
@@ -2105,6 +2115,12 @@ window.iniciarDiagnosticoProduto = async function (productId) {
       productId
     });
 
+    await trackEvent("started_diagnostic", {
+      product_id: productId,
+      diagnostic_id: diagnostic.id,
+      source: "dashboard_product_list"
+    });
+
     localStorage.setItem("nx_diagnostic_id", diagnostic.id);
 
     window.location.href =
@@ -2137,6 +2153,12 @@ window.abrirRelatorio = function () {
   const productId = localStorage.getItem("nx_product_id");
   const diagnosticId = localStorage.getItem("nx_diagnostic_id");
   const synth = localStorage.getItem("nx_synth");
+
+  trackEvent("clicked_report_shortcut", {
+    product_id: productId || null,
+    diagnostic_id: diagnosticId || null,
+    source: "dashboard"
+  });
 
   if (!diagnosticId) {
     alert("Nenhum diagnóstico ativo encontrado. Abra um produto ou escolha um diagnóstico no histórico.");
@@ -2179,6 +2201,10 @@ if (clientSelect && activeClientId) {
 
     const modal = document.getElementById("productModal");
     const msg = document.getElementById("productModalMsg");
+
+    await trackEvent("opened_product_modal", {
+      active_client_id: activeClientId || null
+    });
 
     if (msg) msg.textContent = "";
     if (modal) modal.style.display = "grid";
@@ -2245,6 +2271,12 @@ window.salvarProdutoEIniciarDiagnostico = async function () {
       image_url: getModalValue("modalImageUrl")
     });
 
+    await trackEvent("created_product", {
+      product_id: product.id,
+      client_id: product.client_id || getModalValue("modalClientId") || null,
+      source: "dashboard_modal"
+    });
+
     localStorage.setItem("nx_product_id", product.id);
     localStorage.setItem("nx_current_product", JSON.stringify(product));
 
@@ -2252,6 +2284,12 @@ window.salvarProdutoEIniciarDiagnostico = async function () {
 
     const diagnostic = await createDiagnostic({
       productId: product.id
+    });
+
+    await trackEvent("started_diagnostic", {
+      product_id: product.id,
+      diagnostic_id: diagnostic.id,
+      source: "dashboard_product_modal"
     });
 
     localStorage.setItem("nx_diagnostic_id", diagnostic.id);
@@ -2318,6 +2356,11 @@ window.abrirProdutoPorId = function (productId) {
     localStorage.setItem("nx_current_product", JSON.stringify(selectedProduct));
   }
 
+  trackEvent("opened_product_detail", {
+    product_id: productId,
+    source: "dashboard"
+  });
+
   window.location.href =
     `./produto.html?product_id=${encodeURIComponent(productId)}`;
 };
@@ -2331,6 +2374,11 @@ window.abrirRelatorioProduto = function (productId, diagnosticId) {
   localStorage.setItem("nx_product_id", productId);
   localStorage.setItem("nx_diagnostic_id", diagnosticId);
 
+  trackEvent("opened_report_from_dashboard", {
+    product_id: productId,
+    diagnostic_id: diagnosticId
+  });
+
   window.location.href =
     `./relatorio.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId)}`;
 };
@@ -2343,6 +2391,11 @@ window.abrirSinteseProduto = function (productId, diagnosticId) {
 
   localStorage.setItem("nx_product_id", productId);
   localStorage.setItem("nx_diagnostic_id", diagnosticId);
+
+  trackEvent("opened_synthesis_from_dashboard", {
+    product_id: productId,
+    diagnostic_id: diagnosticId
+  });
 
   window.location.href =
     `./sintese.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId)}`;
