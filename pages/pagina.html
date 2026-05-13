@@ -954,8 +954,15 @@ textarea {
     import { sb } from "../js/supabaseClient.js";
     import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
     import { analisarPaginaBase } from "../js/cerebro2Engine.js";
+    import { trackEvent, trackPageView } from "../js/analytics.js";
 
     const currentUser = await requireAuth();
+
+    trackPageView("Cérebro 2 · Página");
+    trackEvent("opened_brain_2", {
+      product_id: localStorage.getItem("nx_product_id") || null,
+      diagnostic_id: localStorage.getItem("nx_diagnostic_id") || null
+    });
 
     const urlParams = new URLSearchParams(window.location.search);
     const productIdFromUrl = urlParams.get("product_id");
@@ -1118,12 +1125,25 @@ textarea {
     await loadInitialContext();
     renderContext();
 
+    trackEvent("loaded_c1_context_for_c2", {
+      product_id: currentProductId || null,
+      diagnostic_id: currentDiagnosticId || null,
+      has_c1: Boolean(C1),
+      has_product: Boolean(currentProduct)
+    });
+
     document.querySelectorAll(".option-group").forEach(group => {
       group.querySelectorAll(".option-btn").forEach(btn => {
         btn.addEventListener("click", () => {
           group.querySelectorAll(".option-btn").forEach(b => b.classList.remove("active"));
           btn.classList.add("active");
           state[group.dataset.group] = btn.dataset.value;
+          trackEvent("started_c2_form", {
+            product_id: currentProductId || null,
+            diagnostic_id: currentDiagnosticId || null,
+            group: group.dataset.group,
+            value: btn.dataset.value
+          });
         });
       });
     });
@@ -1150,7 +1170,14 @@ textarea {
   if (!validarEtapa(currentStep)) return;
 
   if (currentStep < steps.length - 1) {
+    const fromStep = currentStep;
     currentStep++;
+    trackEvent("advanced_c2_step", {
+      product_id: currentProductId || null,
+      diagnostic_id: currentDiagnosticId || null,
+      from_step: fromStep + 1,
+      to_step: currentStep + 1
+    });
     renderStep();
     return;
   }
@@ -1292,6 +1319,12 @@ async function carregarC2SalvoDoHistorico() {
     }
 
     msg.textContent = "Resultado histórico do Cérebro 2 carregado.";
+
+    trackEvent("loaded_historical_c2", {
+      product_id: currentProductId || null,
+      diagnostic_id: diagnosticId || null
+    });
+
     return true;
   } catch (error) {
     console.warn("Não foi possível carregar o Cérebro 2 salvo:", error);
@@ -1369,7 +1402,14 @@ function normalizarTextoC2(value) {
 
     window.prevStep = function () {
   if (currentStep > 0) {
+    const fromStep = currentStep;
     currentStep--;
+    trackEvent("went_back_c2_step", {
+      product_id: currentProductId || null,
+      diagnostic_id: currentDiagnosticId || null,
+      from_step: fromStep + 1,
+      to_step: currentStep + 1
+    });
     renderStep();
     return;
   }
@@ -1383,11 +1423,19 @@ function normalizarTextoC2(value) {
     localStorage.getItem("nx_diagnostic_id");
 
   if (productId) {
+    trackEvent("clicked_back_product_from_c2", {
+      product_id: productId || null,
+      diagnostic_id: diagnosticId || null
+    });
     window.location.href =
       `./produto.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
     return;
   }
 
+  trackEvent("clicked_back_dashboard_from_c2", {
+    product_id: currentProductId || null,
+    diagnostic_id: currentDiagnosticId || null
+  });
   window.location.href = "./dashboard.html";
 };
 
@@ -1470,6 +1518,11 @@ function normalizarTextoC2(value) {
 
       msg.textContent = "Gerando análise profunda do Cérebro 2...";
 
+      trackEvent("attempted_generate_c2", {
+        product_id: currentProductId || null,
+        diagnostic_id: diagnosticId || null
+      });
+
       const data = {
         pageUrl: v("pageUrl"),
         pageAsin: v("pageAsin") || currentProduct?.asin || "",
@@ -1544,6 +1597,14 @@ function normalizarTextoC2(value) {
       });
 
       renderResult(fullResult);
+
+      trackEvent("completed_c2", {
+        product_id: currentProductId || null,
+        diagnostic_id: diagnosticId || null,
+        score: result.score_pagina || null,
+        status: result.status || null
+      });
+
       msg.textContent = "Análise do Cérebro 2 salva com sucesso.";
     }
 
@@ -1651,7 +1712,13 @@ function normalizarTextoC2(value) {
         aiBtn.textContent = "Aprofundar com IA";
       }
 
-      msg.textContent = "Análise de página aprofundada com IA aplicada.";
+      trackEvent("completed_ai_c2", {
+    product_id: currentProductId || null,
+    diagnostic_id: diagnosticId || null,
+    score: updated.score_pagina || null
+  });
+
+  msg.textContent = "Análise de página aprofundada com IA aplicada.";
     };
 
     function renderResult(result) {
@@ -1795,6 +1862,10 @@ function normalizarTextoC2(value) {
     }
 
 window.irParaCerebro1 = function () {
+  trackEvent("went_back_to_brain_1_from_c2", {
+    product_id: currentProductId || null,
+    diagnostic_id: currentDiagnosticId || null
+  });
   window.location.href = getFlowUrl("diagnostico.html");
 };
 
@@ -1812,6 +1883,11 @@ window.irParaCerebro3 = function () {
 
   localStorage.setItem("nx_diagnostic_id", diagnosticId);
   localStorage.setItem("nx_product_id", productId);
+
+  trackEvent("went_to_brain_3", {
+    product_id: productId || null,
+    diagnostic_id: diagnosticId || null
+  });
 
   window.location.href = getFlowUrl("mercado.html");
 };
@@ -1955,6 +2031,11 @@ window.aprofundarResultadoC2ComIA = async function () {
 
   msg.textContent = "Aprofundando análise de página com IA Nexora...";
 
+  trackEvent("clicked_ai_c2", {
+    product_id: currentProductId || null,
+    diagnostic_id: diagnosticId || null
+  });
+
   if (aiBtn) {
     aiBtn.disabled = true;
     aiBtn.textContent = "IA analisando...";
@@ -1967,6 +2048,11 @@ window.aprofundarResultadoC2ComIA = async function () {
       aiBtn.disabled = false;
       aiBtn.textContent = "Tentar IA novamente";
     }
+
+    trackEvent("failed_ai_c2", {
+      product_id: currentProductId || null,
+      diagnostic_id: diagnosticId || null
+    });
 
     msg.textContent = "A IA não respondeu neste momento. A análise base do Cérebro 2 continua válida.";
     return;
@@ -2036,6 +2122,12 @@ const leituraComplementarIA = limparTextoIAComplementar(
     aiBtn.disabled = false;
     aiBtn.textContent = "Aprofundar novamente com IA";
   }
+
+  trackEvent("completed_ai_c2", {
+    product_id: currentProductId || null,
+    diagnostic_id: diagnosticId || null,
+    score: updated.score_pagina || null
+  });
 
   msg.textContent = "Análise de página aprofundada com IA aplicada.";
 };
@@ -2377,6 +2469,13 @@ window.handleSingleImageUpload = function (event, targetId, labelId) {
 
   if (!file || !target) return;
 
+  trackEvent("uploaded_main_image_c2", {
+    product_id: currentProductId || null,
+    diagnostic_id: currentDiagnosticId || null,
+    file_name: file.name,
+    file_type: file.type || null
+  });
+
   if (label) {
     label.textContent = file.name;
   }
@@ -2396,6 +2495,12 @@ window.handleMultipleImageUpload = function (event, targetId, labelId) {
   const label = document.getElementById(labelId);
 
   if (!files.length || !target) return;
+
+  trackEvent("uploaded_secondary_images_c2", {
+    product_id: currentProductId || null,
+    diagnostic_id: currentDiagnosticId || null,
+    file_count: files.length
+  });
 
   if (label) {
     label.textContent = `${files.length} imagem(ns) selecionada(s)`;
