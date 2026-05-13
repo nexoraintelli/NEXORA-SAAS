@@ -509,7 +509,120 @@
     grid-template-columns: 1fr;
   }
 }
+/* =========================================================
+   NEXORA · CÉREBRO 1 MAIS AMPLO / SAAS VIEW
+   ========================================================= */
 
+body {
+  padding: 0 !important;
+}
+
+.wrap {
+  width: min(1560px, calc(100vw - 72px)) !important;
+  max-width: 1560px !important;
+  margin: 32px auto 56px !important;
+}
+
+.card {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 30px !important;
+  border-radius: 24px !important;
+}
+
+/* Hero do Cérebro 1 mais largo e mais presente */
+.card:first-of-type {
+  padding: 32px !important;
+}
+
+/* Fluxo geral mais horizontal */
+.diagnosis-flow {
+  padding: 20px !important;
+  margin-top: 28px !important;
+}
+
+.diagnosis-flow-steps {
+  grid-template-columns: repeat(5, minmax(170px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.flow-step {
+  min-height: 92px !important;
+  padding: 14px !important;
+}
+
+/* Etapa 1 ocupando melhor a tela */
+.context-layout {
+  display: grid !important;
+  grid-template-columns: minmax(430px, 0.9fr) minmax(620px, 1.35fr) !important;
+  gap: 64px !important;
+  align-items: start !important;
+  margin-top: 32px !important;
+}
+
+.context-column {
+  gap: 22px !important;
+}
+
+.option-block {
+  gap: 12px !important;
+}
+
+.option-group {
+  gap: 12px !important;
+}
+
+.option-btn {
+  min-width: 150px !important;
+  padding: 12px 18px !important;
+}
+
+/* Inputs mais robustos */
+input,
+select,
+textarea {
+  min-height: 48px !important;
+}
+
+/* Upload mais largo */
+.upload-card {
+  padding: 26px !important;
+}
+
+.custom-file-upload {
+  padding: 16px !important;
+}
+
+.btn-file-upload {
+  min-height: 46px !important;
+}
+
+/* Barra inferior mais dashboard */
+.nav-actions {
+  min-height: 72px !important;
+  align-items: center !important;
+}
+
+/* Resultado também mais largo */
+#resultArea {
+  width: 100% !important;
+}
+
+/* Responsivo */
+@media (max-width: 1200px) {
+  .wrap {
+    width: min(100% - 40px, 100%) !important;
+  }
+
+  .context-layout {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+  }
+
+  .diagnosis-flow-steps {
+    grid-template-columns: 1fr !important;
+  }
+}
     
   </style>
 </head>
