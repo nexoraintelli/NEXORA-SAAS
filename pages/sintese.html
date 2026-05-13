@@ -343,6 +343,225 @@
         font-size: 58px;
       }
     }
+/* =========================================================
+   NEXORA · SÍNTESE MAIS AMPLA / SAAS VIEW
+   ========================================================= */
+
+body {
+  padding: 0 !important;
+}
+
+.wrap {
+  width: min(1560px, calc(100vw - 72px)) !important;
+  max-width: 1560px !important;
+  margin: 32px auto 56px !important;
+}
+
+.card {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 30px !important;
+  border-radius: 24px !important;
+}
+
+/* Barra geral do fluxo Nexora */
+.diagnosis-flow {
+  margin-top: 28px !important;
+  border: 1px solid rgba(255,255,255,.10);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+  border-radius: 18px;
+  padding: 20px !important;
+}
+
+.diagnosis-flow-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.diagnosis-flow-title {
+  font-family: Syne, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.diagnosis-flow-status {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.diagnosis-flow-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(170px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.flow-step {
+  position: relative;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.025);
+  border-radius: 14px;
+  padding: 14px !important;
+  min-height: 92px !important;
+  overflow: hidden;
+}
+
+.flow-step::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  height: 3px;
+  border-radius: 999px 999px 0 0;
+  background: rgba(255,255,255,.08);
+}
+
+.flow-step.done::before,
+.flow-step.active::before {
+  background: linear-gradient(135deg, var(--nexora-red), var(--nexora-red-2));
+}
+
+.flow-step.done {
+  border-color: rgba(179,38,38,.25);
+  background:
+    radial-gradient(circle at top left, rgba(139,30,30,.14), transparent 44%),
+    rgba(255,255,255,.025);
+}
+
+.flow-step.active {
+  border-color: rgba(179,38,38,.48);
+  background:
+    radial-gradient(circle at top left, rgba(139,30,30,.28), transparent 46%),
+    rgba(255,255,255,.035);
+}
+
+.flow-step-number {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.flow-step strong {
+  display: block;
+  font-family: Syne, sans-serif;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.flow-step span:last-child {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 5px;
+  line-height: 1.4;
+}
+
+/* Síntese com mais presença */
+#contextArea {
+  padding: 30px !important;
+}
+
+#resultArea {
+  width: 100% !important;
+}
+
+.context-grid {
+  grid-template-columns: repeat(3, minmax(260px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.score-grid {
+  grid-template-columns: repeat(5, minmax(180px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.product-context-hero {
+  grid-template-columns: minmax(0, 1.25fr) minmax(360px, .85fr) !important;
+  gap: 22px !important;
+}
+
+.context-section,
+.context-focus {
+  padding: 22px !important;
+  border-radius: 18px !important;
+}
+
+.score-hero {
+  grid-template-columns: 310px minmax(0, 1fr) !important;
+  gap: 34px !important;
+  align-items: center !important;
+}
+
+.score-number {
+  font-size: 86px !important;
+}
+
+.result-block {
+  padding: 24px !important;
+  border-radius: 20px !important;
+}
+
+.metric-card,
+.priority-card,
+.gap-card,
+.plan-card,
+.matrix-card,
+.insight-card,
+.system-card,
+.system-summary-card {
+  padding: 18px !important;
+}
+
+.systems-grid {
+  grid-template-columns: repeat(5, minmax(180px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.system-card {
+  min-height: 190px !important;
+}
+
+.insight-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.actions-row {
+  margin-top: 28px !important;
+  gap: 14px !important;
+}
+
+/* Responsivo */
+@media (max-width: 1200px) {
+  .wrap {
+    width: min(100% - 40px, 100%) !important;
+  }
+
+  .diagnosis-flow-steps,
+  .context-grid,
+  .score-grid,
+  .score-hero,
+  .product-context-hero,
+  .systems-grid,
+  .system-summary-grid,
+  .insight-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .score-number {
+    font-size: 64px !important;
+  }
+}
+
   </style>
 </head>
 
@@ -357,23 +576,64 @@
       <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
         Cruzamento dos três cérebros: performance, página e mercado. A síntese identifica a causa raiz consolidada, a gravidade, os gaps principais e a ordem correta de ação.
       </p>
-<div class="actions-row">
-  <button class="btn-secondary" onclick="voltarParaProdutoOuDashboard()">
-    Voltar ao produto
-  </button>
 
-  <button class="btn-secondary" onclick="irParaCerebro3()">
-    Voltar ao Cérebro 3
-  </button>
+      <div class="diagnosis-flow">
+        <div class="diagnosis-flow-header">
+          <div class="diagnosis-flow-title">Fluxo do diagnóstico Nexora</div>
+          <div class="diagnosis-flow-status">Etapa atual: Síntese</div>
+        </div>
 
-  <button class="btn-primary" onclick="gerarSintese()">
-    Gerar Product Health Score com IA
-  </button>
+        <div class="diagnosis-flow-steps">
+          <div class="flow-step done">
+            <span class="flow-step-number">01</span>
+            <strong>Performance</strong>
+            <span>Métricas, PPC e operação</span>
+          </div>
 
-  <button class="btn-secondary" onclick="abrirRelatorio()">
-    Ir para Relatório
-  </button>
-</div>
+          <div class="flow-step done">
+            <span class="flow-step-number">02</span>
+            <strong>Página</strong>
+            <span>Listing, SEO e conversão</span>
+          </div>
+
+          <div class="flow-step done">
+            <span class="flow-step-number">03</span>
+            <strong>Mercado</strong>
+            <span>Concorrência e barreira</span>
+          </div>
+
+          <div class="flow-step active">
+            <span class="flow-step-number">04</span>
+            <strong>Síntese</strong>
+            <span>Causa raiz consolidada</span>
+          </div>
+
+          <div class="flow-step">
+            <span class="flow-step-number">05</span>
+            <strong>Relatório</strong>
+            <span>Entrega final</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button class="btn-secondary" onclick="voltarParaProdutoOuDashboard()">
+          Voltar ao produto
+        </button>
+
+        <button class="btn-secondary" onclick="irParaCerebro3()">
+          Voltar ao Cérebro 3
+        </button>
+
+        <button class="btn-primary" onclick="gerarSintese()">
+          Gerar Product Health Score com IA
+        </button>
+
+        <button class="btn-secondary" onclick="abrirRelatorio()">
+          Ir para Relatório
+        </button>
+      </div>
+
       <p id="msg" style="color:var(--muted);font-size:13px;margin-top:16px;"></p>
     </section>
 
