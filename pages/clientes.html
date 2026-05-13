@@ -427,6 +427,127 @@
       margin-top: 8px;
     }
 
+
+    .client-onboarding-panel {
+      border: 1px solid rgba(188, 116, 30, 0.24);
+      border-radius: 20px;
+      padding: 22px;
+      margin-bottom: 24px;
+      background:
+        radial-gradient(circle at 8% 0%, rgba(188,116,30,.12), transparent 28%),
+        linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+      box-shadow: 0 18px 50px rgba(0,0,0,.18);
+    }
+
+    .client-onboarding-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .client-onboarding-head h2 {
+      margin: 0;
+      font-size: 23px;
+      line-height: 1.2;
+    }
+
+    .client-onboarding-head p {
+      color: var(--nx-muted);
+      margin-top: 8px;
+      line-height: 1.65;
+      max-width: 720px;
+      font-size: 13px;
+    }
+
+    .client-onboarding-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .client-onboarding-step {
+      border: 1px solid rgba(255,255,255,.09);
+      background: rgba(255,255,255,.025);
+      border-radius: 16px;
+      padding: 14px;
+      min-height: 124px;
+    }
+
+    .client-onboarding-step span {
+      display: inline-flex;
+      color: #f0a33a;
+      font-family: Syne, sans-serif;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      margin-bottom: 10px;
+    }
+
+    .client-onboarding-step strong {
+      display: block;
+      font-family: Syne, sans-serif;
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .client-onboarding-step p {
+      color: var(--nx-muted);
+      font-size: 12px;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .empty-state-strong {
+      border-color: rgba(179,38,38,.32);
+      background:
+        radial-gradient(circle at top left, rgba(139,30,30,.20), transparent 36%),
+        rgba(255,255,255,.025);
+    }
+
+    .empty-state h3 {
+      font-family: Syne, sans-serif;
+      font-size: 22px;
+      line-height: 1.25;
+    }
+
+    .empty-benefits {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .empty-benefit-card {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: rgba(255,255,255,.025);
+      padding: 12px;
+    }
+
+    .empty-benefit-card strong {
+      display: block;
+      font-family: Syne, sans-serif;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .empty-benefit-card p {
+      font-size: 12px;
+      line-height: 1.5;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 1100px) {
+      .client-onboarding-grid,
+      .empty-benefits {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .tag {
       display: inline-flex;
       border: 1px solid rgba(255,255,255,.12);
@@ -581,6 +702,49 @@
         </div>
       </section>
 
+      <section class="client-onboarding-panel" id="clientOnboardingPanel">
+        <div class="client-onboarding-head">
+          <div>
+            <p class="step-label">Como usar esta área</p>
+            <h2>Organize a operação por cliente antes de escalar diagnósticos</h2>
+            <p>
+              Esta tela existe para transformar a Nexora em uma plataforma multi-clientes: primeiro você cadastra a marca ou seller, depois vincula produtos e acompanha diagnósticos, histórico e relatórios por conta atendida.
+            </p>
+          </div>
+
+          <button class="btn-primary" onclick="abrirModalCliente()">
+            + Cadastrar primeiro cliente
+          </button>
+        </div>
+
+        <div class="client-onboarding-grid">
+          <div class="client-onboarding-step">
+            <span>01</span>
+            <strong>Cadastre o cliente</strong>
+            <p>Use o nome da marca, seller ou conta atendida para separar a operação.</p>
+          </div>
+
+          <div class="client-onboarding-step">
+            <span>02</span>
+            <strong>Vincule produtos</strong>
+            <p>Depois, adicione produtos a esse cliente para manter histórico organizado.</p>
+          </div>
+
+          <div class="client-onboarding-step">
+            <span>03</span>
+            <strong>Rode diagnósticos</strong>
+            <p>Execute C1, C2, C3, Síntese e Relatório para cada produto vinculado.</p>
+          </div>
+
+          <div class="client-onboarding-step">
+            <span>04</span>
+            <strong>Acompanhe evolução</strong>
+            <p>Use histórico, Product Health Score e relatórios para mostrar progresso ao cliente.</p>
+          </div>
+        </div>
+      </section>
+
+
       <section class="kpi-grid">
         <div class="kpi-card">
           <p>Clientes cadastrados</p>
@@ -636,7 +800,7 @@
           <p class="step-label">Novo cliente</p>
           <h2>Cadastrar cliente</h2>
           <p style="color:#9ca3c7;margin-top:8px;line-height:1.7;">
-            Cadastre uma marca, seller ou conta atendida pela sua operação.
+            Cadastre uma marca, seller ou conta atendida. Depois você poderá vincular produtos e acompanhar diagnósticos por cliente.
           </p>
         </div>
 
@@ -880,6 +1044,11 @@
     function renderClientes(items) {
       clientsCount.textContent = `${items.length} cliente${items.length === 1 ? "" : "s"}`;
 
+      const onboardingPanel = document.getElementById("clientOnboardingPanel");
+      if (onboardingPanel) {
+        onboardingPanel.style.display = items.length ? "none" : "block";
+      }
+
       const kpiClients = document.getElementById("kpiClients");
       const kpiClientsContact = document.getElementById("kpiClientsContact");
 
@@ -899,16 +1068,37 @@
 
       if (!items.length) {
         clientsArea.innerHTML = `
-          <div class="empty-state">
+          <div class="empty-state empty-state-strong">
             <span class="tag tag-red">Comece por aqui</span>
-            <h3 style="margin-top:10px;">Nenhum cliente cadastrado</h3>
+            <h3 style="margin-top:10px;">Nenhum cliente cadastrado ainda</h3>
             <p>
-              Cadastre o primeiro cliente para começar a organizar produtos, diagnósticos e relatórios por marca ou conta atendida.
+              Cadastre o primeiro cliente para organizar marcas, sellers ou contas atendidas. Depois disso, você poderá vincular produtos, rodar diagnósticos completos e manter relatórios separados por cliente.
             </p>
+
+            <div class="empty-benefits">
+              <div class="empty-benefit-card">
+                <strong>Organização comercial</strong>
+                <p>Separe cada marca ou seller em uma carteira própria.</p>
+              </div>
+
+              <div class="empty-benefit-card">
+                <strong>Histórico por conta</strong>
+                <p>Acompanhe produtos, diagnósticos e relatórios sem misturar clientes.</p>
+              </div>
+
+              <div class="empty-benefit-card">
+                <strong>Uso para agências</strong>
+                <p>Mostre evolução e entregas estratégicas de forma mais profissional.</p>
+              </div>
+            </div>
 
             <div class="actions-row">
               <button class="btn-primary" onclick="abrirModalCliente()">
-                + Novo cliente
+                + Cadastrar cliente
+              </button>
+
+              <button class="btn-secondary" onclick="voltarDashboard()">
+                Voltar ao Dashboard
               </button>
             </div>
           </div>
