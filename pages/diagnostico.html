@@ -20,12 +20,22 @@
     }
 
     body {
+/* Expande a área útil do Cérebro 1 */
+.wrap {
+  width: min(1280px, calc(100% - 64px));
+  max-width: 1280px;
+  margin: 0 auto;
+}
+      
       background:
         radial-gradient(circle at 15% 20%, rgba(128,0,0,.45) 0%, transparent 30%),
         radial-gradient(circle at 75% 25%, rgba(111,29,29,.40) 0%, transparent 28%),
         radial-gradient(circle at 60% 80%, rgba(214,31,31,.22) 0%, transparent 22%),
         linear-gradient(135deg, #0b0b0c 0%, #121212 35%, #1a0000 100%);
     }
+    .card {
+  width: 100%;
+}
 
     .step {
       display: none;
@@ -413,12 +423,12 @@
         grid-template-columns: 1fr;
       }
     }
-    .context-layout {
+   .context-layout {
   display: grid;
-  grid-template-columns: minmax(280px, 0.9fr) minmax(360px, 1.3fr);
-  gap: 34px;
+  grid-template-columns: minmax(360px, 0.95fr) minmax(520px, 1.35fr);
+  gap: 44px;
   align-items: start;
-  margin-top: 24px;
+  margin-top: 28px;
 }
 
 .context-column {
@@ -442,12 +452,65 @@
   justify-content: center;
   text-align: center;
 }
+    .diagnosis-flow {
+  padding: 18px;
+}
+
+.flow-step {
+  min-height: 86px;
+}
 
 @media (max-width: 900px) {
   .context-layout {
     grid-template-columns: 1fr;
   }
 }
+/* Ajuste de largura e presença visual do Cérebro 1 */
+.wrap {
+  width: min(1280px, calc(100% - 64px));
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.card {
+  width: 100%;
+}
+
+.context-layout {
+  display: grid;
+  grid-template-columns: minmax(360px, 0.95fr) minmax(520px, 1.35fr);
+  gap: 44px;
+  align-items: start;
+  margin-top: 28px;
+}
+
+.diagnosis-flow {
+  padding: 18px;
+}
+
+.flow-step {
+  min-height: 86px;
+}
+
+.upload-card {
+  padding: 22px;
+}
+
+.nav-actions {
+  padding: 4px 0;
+}
+
+@media (max-width: 900px) {
+  .wrap {
+    width: min(100% - 32px, 100%);
+  }
+
+  .context-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+    
   </style>
 </head>
 
