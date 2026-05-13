@@ -1017,11 +1017,11 @@
     Voltar para Síntese
   </button>
 
-  <button class="btn-secondary" onclick="location.href='./dashboard.html'">
+  <button class="btn-secondary" onclick="voltarParaDashboard()">
     Voltar para Dashboard
   </button>
 
-  <button class="btn-primary" onclick="window.print()">
+  <button class="btn-primary" onclick="gerarPDFRelatorio()">
     Gerar PDF
   </button>
 </div>
@@ -1236,6 +1236,7 @@
    import { requireAuth } from "../js/auth.js";
    import { sb } from "../js/supabaseClient.js";
    import { compararDiagnosticosNexora } from "../js/nexoraComparisonEngine.js";
+   import { trackEvent, trackPageView } from "../js/analytics.js";
    
   const urlParams = new URLSearchParams(window.location.search);
 
@@ -1258,13 +1259,25 @@ const currentDiagnosticId =
   diagnosticIdFromUrl ||
   localStorage.getItem("nx_diagnostic_id");
 
+await trackPageView("relatorio");
+await trackEvent("opened_report", {
+  product_id: currentProductId || null,
+  diagnostic_id: currentDiagnosticId || null,
+  has_local_synthesis: !!localStorage.getItem("nx_synth")
+});
+
 let synth = JSON.parse(localStorage.getItem("nx_synth") || "null");
 let currentProduct = null;
 
    await bootstrapReport();
-window.voltarAoProduto = function () {
+window.voltarAoProduto = async function () {
   const productId = currentProductId || localStorage.getItem("nx_product_id");
   const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
+
+  await trackEvent("clicked_back_product_from_report", {
+    product_id: productId || null,
+    diagnostic_id: diagnosticId || null
+  });
 
   if (productId) {
     window.location.href =
@@ -1272,15 +1285,44 @@ window.voltarAoProduto = function () {
     return;
   }
 
+  await trackEvent("clicked_back_dashboard_from_report", {
+    reason: "report_without_product_id"
+  });
+
   window.location.href = "./dashboard.html";
 };
 
-window.voltarParaSintese = function () {
+window.voltarParaSintese = async function () {
   const productId = currentProductId || localStorage.getItem("nx_product_id");
   const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
 
+  await trackEvent("clicked_back_synthesis_from_report", {
+    product_id: productId || null,
+    diagnostic_id: diagnosticId || null
+  });
+
   window.location.href =
     `./sintese.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
+};
+
+window.voltarParaDashboard = async function () {
+  await trackEvent("clicked_back_dashboard_from_report", {
+    product_id: currentProductId || null,
+    diagnostic_id: currentDiagnosticId || null
+  });
+
+  window.location.href = "./dashboard.html";
+};
+
+window.gerarPDFRelatorio = async function () {
+  await trackEvent("generated_pdf", {
+    product_id: currentProductId || null,
+    diagnostic_id: currentDiagnosticId || null,
+    score_final: synth?.score_final || null,
+    gravidade: synth?.gravidade || null
+  });
+
+  window.print();
 };
 async function initReport() {
   try {
@@ -1304,18 +1346,43 @@ async function bootstrapReport() {
     await requireAuth();
 
     if (!synth && currentDiagnosticId) {
+      await trackEvent("loading_report_data_from_supabase", {
+        product_id: currentProductId || null,
+        diagnostic_id: currentDiagnosticId || null
+      });
+
       synth = await loadSynthFromSupabase(currentDiagnosticId);
     }
 
     if (synth) {
       localStorage.setItem("nx_synth", JSON.stringify(synth));
+
+      await trackEvent("loaded_report_data", {
+        product_id: currentProductId || synth.product_id || null,
+        diagnostic_id: currentDiagnosticId || synth.diagnostic_id || null,
+        score_final: synth.score_final || null,
+        gravidade: synth.gravidade || null
+      });
+
       await initReport();
       return;
     }
 
+    await trackEvent("report_data_not_found", {
+      product_id: currentProductId || null,
+      diagnostic_id: currentDiagnosticId || null
+    });
+
     renderReportNotFound();
   } catch (error) {
     console.error("Erro ao inicializar relatório:", error);
+
+    await trackEvent("report_initialization_failed", {
+      product_id: currentProductId || null,
+      diagnostic_id: currentDiagnosticId || null,
+      error: error?.message || String(error)
+    });
+
     renderReportNotFound();
   }
 }
@@ -1332,10 +1399,23 @@ async function loadSynthFromSupabase(diagnosticId) {
 
   if (error) {
     console.warn("Não foi possível carregar síntese do Supabase:", error);
+
+    await trackEvent("load_report_data_failed", {
+      diagnostic_id: diagnosticId || null,
+      error: error?.message || String(error)
+    });
+
     return null;
   }
 
-  return data?.result_data || null;
+  const result = data?.result_data || null;
+
+  await trackEvent(result ? "loaded_report_data_from_supabase" : "report_synthesis_not_found_in_supabase", {
+    diagnostic_id: diagnosticId || null,
+    has_result: !!result
+  });
+
+  return result;
 }
 
 function renderReportNotFound() {
@@ -1363,10 +1443,23 @@ async function loadCurrentProduct() {
 
   if (error) {
     console.warn("Não foi possível carregar produto do relatório:", error);
+
+    await trackEvent("load_report_product_failed", {
+      product_id: currentProductId || null,
+      diagnostic_id: currentDiagnosticId || null,
+      error: error?.message || String(error)
+    });
+
     return;
   }
 
   currentProduct = data || null;
+
+  await trackEvent("loaded_report_product", {
+    product_id: currentProductId || null,
+    diagnostic_id: currentDiagnosticId || null,
+    product_name: currentProduct?.product_name || currentProduct?.name || null
+  });
 }
 
 function renderProductInfo() {
@@ -1408,6 +1501,13 @@ function renderProductInfo() {
 }
    
     function renderReport(data) {
+      trackEvent("rendered_report", {
+        product_id: currentProductId || data?.product_id || null,
+        diagnostic_id: currentDiagnosticId || data?.diagnostic_id || null,
+        score_final: data?.score_final || null,
+        gravidade: data?.gravidade || null
+      });
+
       document.getElementById("scoreFinal").textContent = data.score_final ?? "-";
       document.getElementById("gravityText").textContent = `Gravidade: ${data.gravidade || "-"}`;
       document.getElementById("rootCause").textContent = data.causa_raiz_consolidada || "-";
@@ -1638,10 +1738,21 @@ function structuredReportCard(title, text) {
 
   if (!previousSynth) {
     section.style.display = "none";
+
+    await trackEvent("report_comparison_unavailable", {
+      product_id: currentProductId || null,
+      diagnostic_id: currentDiagnosticId || null
+    });
+
     return;
   }
 
   section.style.display = "block";
+
+  await trackEvent("loaded_report_comparison", {
+    product_id: currentProductId || null,
+    diagnostic_id: currentDiagnosticId || null
+  });
 
   const comparison = compararDiagnosticosNexora({
     current: data,
@@ -1701,6 +1812,13 @@ async function loadPreviousSynthForComparison() {
     return synthRows[0].result_data || null;
   } catch (error) {
     console.warn("Não foi possível carregar diagnóstico anterior para comparação:", error);
+
+    await trackEvent("load_report_comparison_failed", {
+      product_id: currentProductId || null,
+      diagnostic_id: currentDiagnosticId || null,
+      error: error?.message || String(error)
+    });
+
     return null;
   }
 }
@@ -2089,6 +2207,14 @@ function renderReportAlertCard(alert) {
         </div>
       `).join("") || `<p class="muted">Matriz de decisão não encontrada.</p>`;
     }
+
+
+window.addEventListener("beforeprint", () => {
+  trackEvent("browser_print_opened_report", {
+    product_id: currentProductId || null,
+    diagnostic_id: currentDiagnosticId || null
+  });
+});
 
     function escapeHtml(value) {
       return String(value ?? "")
