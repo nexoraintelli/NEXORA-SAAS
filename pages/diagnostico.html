@@ -975,12 +975,19 @@ import { sb } from "../js/supabaseClient.js";
 import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
 import { gerarDiagnosticoBaseC1 } from "../js/cerebro1Engine.js";
 import { incrementDiagnosticUsage } from "../js/plans.js";
+import { trackEvent, trackPageView } from "../js/analytics.js";
 
 const currentUser = await requireAuth();
 
 const urlParams = new URLSearchParams(window.location.search);
 const productIdFromUrl = urlParams.get("product_id");
 const diagnosticIdFromUrl = urlParams.get("diagnostic_id");
+
+trackPageView("Cérebro 1 - Performance");
+trackEvent("opened_brain_1", {
+  product_id: productIdFromUrl || localStorage.getItem("nx_product_id") || null,
+  diagnostic_id: diagnosticIdFromUrl || localStorage.getItem("nx_diagnostic_id") || null
+});
 
 if (productIdFromUrl) {
   localStorage.setItem("nx_product_id", productIdFromUrl);
@@ -1004,6 +1011,23 @@ let productContextLoaded = false;
     const aiBtn = document.getElementById("aiBtn");
     const categorySelect = document.getElementById("category");
     const subcategorySelect = document.getElementById("subcategory");
+    let c1FormStartedTracked = false;
+
+    function trackC1FormStarted(trigger = "interaction") {
+      if (c1FormStartedTracked) return;
+      c1FormStartedTracked = true;
+
+      trackEvent("started_c1_form", {
+        trigger,
+        product_id: currentProductId || localStorage.getItem("nx_product_id") || null,
+        diagnostic_id: getDiagnosticId() || localStorage.getItem("nx_diagnostic_id") || null
+      });
+    }
+
+    document.querySelectorAll("input, select, textarea").forEach(field => {
+      field.addEventListener("change", () => trackC1FormStarted("field_change"), { once: true });
+      field.addEventListener("input", () => trackC1FormStarted("field_input"), { once: true });
+    });
 
     document.querySelectorAll(".option-group").forEach(group => {
       group.querySelectorAll(".option-btn").forEach(btn => {
@@ -1011,6 +1035,7 @@ let productContextLoaded = false;
           group.querySelectorAll(".option-btn").forEach(b => b.classList.remove("active"));
           btn.classList.add("active");
           state[group.dataset.group] = btn.dataset.value;
+          trackC1FormStarted("option_click");
         });
       });
     });
@@ -1429,6 +1454,12 @@ async function carregarProdutoVinculado() {
     currentProduct = data;
     currentProductId = data.id;
 
+    trackEvent("loaded_product_context_c1", {
+      product_id: data.id,
+      diagnostic_id: getDiagnosticId() || localStorage.getItem("nx_diagnostic_id") || null,
+      product_name: data.product_name || data.name || data.asin || null
+    });
+
     localStorage.setItem("nx_product_id", data.id);
     localStorage.setItem("nx_current_product", JSON.stringify(data));
 
@@ -1602,6 +1633,14 @@ async function handleMetricsUpload(event) {
 
   if (!file) return;
 
+  trackEvent("uploaded_metrics_file_c1", {
+    file_name: file.name,
+    file_type: file.type || null,
+    file_size: file.size || null,
+    product_id: currentProductId || localStorage.getItem("nx_product_id") || null,
+    diagnostic_id: getDiagnosticId() || localStorage.getItem("nx_diagnostic_id") || null
+  });
+
   const fileNameLabel = document.getElementById("metricsUploadName");
 
   if (fileNameLabel) {
@@ -1633,6 +1672,13 @@ async function handleMetricsUpload(event) {
     }
 
     nxUploadedMetrics = mapped;
+
+    trackEvent("mapped_metrics_file_c1", {
+      matched_columns: mapped.matchedColumns || {},
+      has_any_useful_metric: Boolean(mapped.hasAnyUsefulMetric),
+      product_id: currentProductId || localStorage.getItem("nx_product_id") || null,
+      diagnostic_id: getDiagnosticId() || localStorage.getItem("nx_diagnostic_id") || null
+    });
 
     renderUploadPreview(mapped);
   } catch (error) {
@@ -1907,6 +1953,12 @@ function uploadPreviewItem(label, value) {
 }
 
 function renderUploadError(message) {
+  trackEvent("metrics_file_mapping_failed_c1", {
+    reason: message || null,
+    product_id: currentProductId || localStorage.getItem("nx_product_id") || null,
+    diagnostic_id: getDiagnosticId() || localStorage.getItem("nx_diagnostic_id") || null
+  });
+
   const preview = document.getElementById("uploadPreview");
 
   if (!preview) return;
@@ -1956,6 +2008,11 @@ window.confirmarMetricasUpload = function () {
     setInputValue("roas", roundMetric(calc.roas));
   }
 
+  trackEvent("applied_metrics_upload_c1", {
+    product_id: currentProductId || localStorage.getItem("nx_product_id") || null,
+    diagnostic_id: getDiagnosticId() || localStorage.getItem("nx_diagnostic_id") || null
+  });
+
   msg.textContent = "Métricas aplicadas ao Cérebro 1. Revise os campos antes de gerar o diagnóstico.";
 };
 
@@ -1974,6 +2031,11 @@ window.limparMetricasUpload = function () {
     preview.className = "upload-preview";
     preview.innerHTML = "";
   }
+
+  trackEvent("cancelled_metrics_upload_c1", {
+    product_id: currentProductId || localStorage.getItem("nx_product_id") || null,
+    diagnostic_id: getDiagnosticId() || localStorage.getItem("nx_diagnostic_id") || null
+  });
 
   msg.textContent = "Upload cancelado. Os campos manuais foram preservados.";
 };
@@ -2025,6 +2087,13 @@ function formatDecimal(value) {
       if (!validarEtapa(currentStep)) return;
 
       if (currentStep < steps.length - 1) {
+        trackEvent("advanced_c1_step", {
+          from_step: currentStep + 1,
+          to_step: currentStep + 2,
+          product_id: currentProductId || localStorage.getItem("nx_product_id") || null,
+          diagnostic_id: getDiagnosticId() || localStorage.getItem("nx_diagnostic_id") || null
+        });
+
         currentStep++;
         renderStep();
         return;
@@ -2033,8 +2102,15 @@ function formatDecimal(value) {
       await gerarDiagnostico();
     };
 
-    window.prevStep = function () {
+    window.prevStep = async function () {
   if (currentStep > 0) {
+    trackEvent("went_back_c1_step", {
+      from_step: currentStep + 1,
+      to_step: currentStep,
+      product_id: currentProductId || localStorage.getItem("nx_product_id") || null,
+      diagnostic_id: getDiagnosticId() || localStorage.getItem("nx_diagnostic_id") || null
+    });
+
     currentStep--;
     renderStep();
     return;
@@ -2044,10 +2120,20 @@ function formatDecimal(value) {
   const diagnosticId = getDiagnosticId() || localStorage.getItem("nx_diagnostic_id");
 
   if (productId) {
+    await trackEvent("clicked_back_product_from_c1", {
+      product_id: productId,
+      diagnostic_id: diagnosticId || null
+    });
+
     window.location.href =
       `./produto.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
     return;
   }
+
+  await trackEvent("clicked_back_dashboard_from_c1", {
+    product_id: productId || null,
+    diagnostic_id: diagnosticId || null
+  });
 
   window.location.href = "./dashboard.html";
 };
@@ -2097,7 +2183,16 @@ function formatDecimal(value) {
     }
 
     async function gerarDiagnostico() {
+      trackEvent("attempted_generate_c1", {
+        product_id: currentProductId || localStorage.getItem("nx_product_id") || null,
+        diagnostic_id: getDiagnosticId() || localStorage.getItem("nx_diagnostic_id") || null
+      });
+
       if (!currentProductId) {
+        trackEvent("c1_generation_blocked_no_product", {
+          diagnostic_id: getDiagnosticId() || localStorage.getItem("nx_diagnostic_id") || null
+        });
+
         msg.textContent = "Este diagnóstico precisa estar vinculado a um produto. Volte ao dashboard e inicie pelo card do produto.";
         renderProductContext(null);
         return;
@@ -2106,6 +2201,10 @@ function formatDecimal(value) {
       const diagnosticId = getDiagnosticId();
 
       if (!diagnosticId) {
+        trackEvent("c1_generation_blocked_no_diagnostic", {
+          product_id: currentProductId || null
+        });
+
         msg.textContent = "Nenhum diagnóstico ativo. Volte ao dashboard e clique em Novo diagnóstico.";
         return;
       }
@@ -2202,6 +2301,15 @@ const data = {
 if (!jaTinhaC1) {
   await incrementDiagnosticUsage();
 }
+
+await trackEvent("completed_c1", {
+  product_id: currentProductId || null,
+  diagnostic_id: diagnosticId,
+  score: result.score_geral ?? null,
+  status: result.status || null,
+  root_cause: result.root_cause || null,
+  consumed_credit: !jaTinhaC1
+});
 
 renderResult(fullResult);
 
@@ -2572,20 +2680,36 @@ ${result.ia_usada && result.leitura_por_pilar_ia ? `
 
       resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-window.irParaCerebro2 = function () {
+window.irParaCerebro2 = async function () {
   const diagnosticId = getDiagnosticId() || localStorage.getItem("nx_diagnostic_id");
   const productId = currentProductId || localStorage.getItem("nx_product_id");
 
   if (!productId || !diagnosticId) {
+    trackEvent("went_to_brain_2_blocked", {
+      product_id: productId || null,
+      diagnostic_id: diagnosticId || null,
+      reason: "missing_product_or_diagnostic"
+    });
+
     alert("Antes de avançar, gere o Cérebro 1 vinculado a um produto cadastrado.");
     return;
   }
+
+  await trackEvent("went_to_brain_2", {
+    product_id: productId,
+    diagnostic_id: diagnosticId
+  });
 
   window.location.href =
     `./pagina.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId)}`;
 };
 
     window.aprofundarResultadoComIA = async function () {
+      trackEvent("clicked_ai_c1", {
+        product_id: currentProductId || localStorage.getItem("nx_product_id") || null,
+        diagnostic_id: getDiagnosticId() || localStorage.getItem("nx_diagnostic_id") || null
+      });
+
       const raw = localStorage.getItem("nx_c1");
 
       if (!raw) {
@@ -2623,6 +2747,11 @@ window.irParaCerebro2 = function () {
       );
 
       if (!aiResult) {
+        trackEvent("failed_ai_c1", {
+          product_id: currentProductId || localStorage.getItem("nx_product_id") || null,
+          diagnostic_id: diagnosticId || null
+        });
+
         if (aiBtn) {
           aiBtn.disabled = false;
           aiBtn.textContent = "Tentar IA novamente";
@@ -2685,6 +2814,12 @@ window.irParaCerebro2 = function () {
       } catch (error) {
         console.warn("IA aplicada, mas houve erro ao salvar no banco:", error);
       }
+
+      await trackEvent("completed_ai_c1", {
+        product_id: currentProductId || localStorage.getItem("nx_product_id") || null,
+        diagnostic_id: diagnosticId,
+        score: updated.score_geral ?? null
+      });
 
       renderResult(updated);
 
@@ -2796,6 +2931,13 @@ async function carregarC1SalvoDoHistorico() {
 
     preencherFormularioComC1Salvo(savedResult);
     renderResult(savedResult);
+
+    trackEvent("loaded_historical_c1", {
+      product_id: savedResult.product_id || currentProductId || null,
+      diagnostic_id: diagnosticId,
+      score: savedResult.score_geral ?? savedResult.score_final ?? null,
+      ia_usada: Boolean(savedResult.ia_usada)
+    });
 
     msg.textContent = "Resultado histórico do Cérebro 1 carregado.";
   } catch (error) {
