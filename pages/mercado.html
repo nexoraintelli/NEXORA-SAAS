@@ -989,8 +989,16 @@ textarea {
     import { sb } from "../js/supabaseClient.js";
     import { getDiagnosticId, saveBrainResult, updateDiagnostic } from "../js/diagnostics.js";
     import { analisarMercadoBase } from "../js/cerebro3Engine.js";
+    import { trackEvent, trackPageView } from "../js/analytics.js";
 
    const currentUser = await requireAuth();
+
+await trackPageView("Cérebro 3 · Mercado");
+await trackEvent("opened_brain_3", {
+  brain: "c3",
+  product_id: new URLSearchParams(window.location.search).get("product_id") || localStorage.getItem("nx_product_id") || null,
+  diagnostic_id: new URLSearchParams(window.location.search).get("diagnostic_id") || localStorage.getItem("nx_diagnostic_id") || null
+});
 
 const urlParams = new URLSearchParams(window.location.search);
 
@@ -1212,6 +1220,15 @@ let currentStep = 0;
     await carregarContextosAnteriores();
     renderContext();
 
+await trackEvent("loaded_context_for_c3", {
+  brain: "c3",
+  product_id: currentProductId || null,
+  diagnostic_id: currentDiagnosticId || getDiagnosticId() || null,
+  has_c1: Boolean(C1),
+  has_c2: Boolean(C2),
+  has_product: Boolean(currentProduct)
+});
+
 document.querySelectorAll(".option-group").forEach(group => {
       group.querySelectorAll(".option-btn").forEach(btn => {
         btn.addEventListener("click", () => {
@@ -1248,7 +1265,15 @@ document.querySelectorAll(".option-group").forEach(group => {
   if (!validarEtapa(currentStep)) return;
 
       if (currentStep < steps.length - 1) {
+        const fromStep = currentStep;
         currentStep++;
+        trackEvent("advanced_c3_step", {
+          brain: "c3",
+          from_step: fromStep + 1,
+          to_step: currentStep + 1,
+          product_id: currentProductId || null,
+          diagnostic_id: currentDiagnosticId || getDiagnosticId() || null
+        });
         renderStep();
         return;
       }
@@ -1258,10 +1283,24 @@ document.querySelectorAll(".option-group").forEach(group => {
 
    window.prevStep = function () {
   if (currentStep > 0) {
+    const fromStep = currentStep;
     currentStep--;
+    trackEvent("went_back_c3_step", {
+      brain: "c3",
+      from_step: fromStep + 1,
+      to_step: currentStep + 1,
+      product_id: currentProductId || null,
+      diagnostic_id: currentDiagnosticId || getDiagnosticId() || null
+    });
     renderStep();
     return;
   }
+
+  trackEvent("went_back_to_brain_2_from_c3", {
+    brain: "c3",
+    product_id: currentProductId || null,
+    diagnostic_id: currentDiagnosticId || getDiagnosticId() || null
+  });
 
   irParaCerebro2();
 };
@@ -1314,6 +1353,13 @@ document.querySelectorAll(".option-group").forEach(group => {
       }
 
       msg.textContent = "Gerando análise profunda do Cérebro 3...";
+
+      await trackEvent("attempted_generate_c3", {
+        brain: "c3",
+        product_id: currentProductId || null,
+        diagnostic_id: diagnosticId || null,
+        competitors_count: getCompetitors().length
+      });
 
       const data = {
         category: C1.category || C1.cat || "",
@@ -1371,10 +1417,24 @@ document.querySelectorAll(".option-group").forEach(group => {
           resultData: fullResult
         });
 
+        await trackEvent("completed_c3", {
+          brain: "c3",
+          product_id: currentProductId || null,
+          diagnostic_id: diagnosticId || null,
+          score: result.score_mercado ?? null,
+          competitors_count: Array.isArray(fullResult.competitors) ? fullResult.competitors.length : 0
+        });
+
         renderResult(fullResult);
         msg.textContent = "Análise do Cérebro 3 salva com sucesso.";
       } catch (error) {
         console.error("Erro ao salvar Cérebro 3:", error);
+        await trackEvent("save_c3_failed", {
+          brain: "c3",
+          product_id: currentProductId || null,
+          diagnostic_id: diagnosticId || null,
+          error: error?.message || String(error)
+        });
         renderResult(fullResult);
         msg.textContent = "A análise foi gerada, mas não foi salva no banco. Veja o console.";
       }
@@ -1384,17 +1444,32 @@ window.voltarParaProdutoOuDashboard = function () {
   const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
 
   if (productId) {
+    trackEvent("clicked_back_product_from_c3", {
+      brain: "c3",
+      product_id: productId,
+      diagnostic_id: diagnosticId || null
+    });
     window.location.href =
       `./produto.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
     return;
   }
 
+  trackEvent("clicked_back_dashboard_from_c3", {
+    brain: "c3",
+    diagnostic_id: diagnosticId || null
+  });
   window.location.href = "./dashboard.html";
 };
 
 window.irParaCerebro2 = function () {
   const productId = currentProductId || localStorage.getItem("nx_product_id");
   const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
+
+  trackEvent("went_back_to_brain_2_from_c3", {
+    brain: "c3",
+    product_id: productId || null,
+    diagnostic_id: diagnosticId || null
+  });
 
   window.location.href =
     `./pagina.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
@@ -1403,6 +1478,12 @@ window.irParaCerebro2 = function () {
   const productId = currentProductId || localStorage.getItem("nx_product_id");
   const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
 
+  trackEvent("went_back_to_brain_1_from_c3", {
+    brain: "c3",
+    product_id: productId || null,
+    diagnostic_id: diagnosticId || null
+  });
+
   window.location.href =
     `./diagnostico.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
 };
@@ -1410,6 +1491,12 @@ window.irParaCerebro2 = function () {
 window.irParaSintese = function () {
   const productId = currentProductId || localStorage.getItem("nx_product_id");
   const diagnosticId = currentDiagnosticId || localStorage.getItem("nx_diagnostic_id");
+
+  trackEvent("went_to_synthesis", {
+    brain: "c3",
+    product_id: productId || null,
+    diagnostic_id: diagnosticId || null
+  });
 
   window.location.href =
     `./sintese.html?product_id=${encodeURIComponent(productId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId || "")}`;
@@ -1758,6 +1845,13 @@ Retorne exatamente este JSON:
 
       msg.textContent = "Aprofundando análise de mercado com IA Nexora... isso pode levar alguns segundos.";
 
+      await trackEvent("clicked_ai_c3", {
+        brain: "c3",
+        product_id: currentProductId || null,
+        diagnostic_id: diagnosticId || null,
+        score: fullResult?.score_mercado ?? null
+      });
+
       if (aiBtn) {
         aiBtn.disabled = true;
         aiBtn.textContent = "IA analisando...";
@@ -1772,6 +1866,13 @@ Retorne exatamente este JSON:
         }
 
         msg.textContent = "A IA não respondeu neste momento. A análise da engine Nexora continua válida.";
+
+        await trackEvent("failed_ai_c3", {
+          brain: "c3",
+          product_id: currentProductId || null,
+          diagnostic_id: diagnosticId || null,
+          reason: "no_ai_response"
+        });
         return;
       }
 
@@ -1823,8 +1924,23 @@ diagnostico_ia: limparTextoIA(
           status: "c3_ai_completed",
           product_id: currentProductId || null
         });
+
+        await trackEvent("completed_ai_c3", {
+          brain: "c3",
+          product_id: currentProductId || null,
+          diagnostic_id: diagnosticId || null,
+          score: updated.score_mercado ?? null,
+          fallback_textual: Boolean(updated.ia_fallback_textual)
+        });
       } catch (error) {
         console.warn("IA aplicada no Cérebro 3, mas houve erro ao salvar no banco:", error);
+        await trackEvent("completed_ai_c3", {
+          brain: "c3",
+          product_id: currentProductId || null,
+          diagnostic_id: diagnosticId || null,
+          score: updated.score_mercado ?? null,
+          save_warning: error?.message || String(error)
+        });
       }
 
       renderResult(updated);
@@ -2456,10 +2572,26 @@ window.addCompetitor = function (item = {}) {
 `;
 
   list.appendChild(row);
+
+  if (!item.__silent) {
+    trackEvent("added_competitor_c3", {
+      brain: "c3",
+      product_id: currentProductId || null,
+      diagnostic_id: currentDiagnosticId || getDiagnosticId() || null,
+      competitor_index: competitorIndex,
+      is_prefilled: Boolean(item && Object.keys(item).length)
+    });
+  }
 };
 
 window.removeCompetitor = function (button) {
   button.closest(".competitor-row")?.remove();
+
+  trackEvent("removed_competitor_c3", {
+    brain: "c3",
+    product_id: currentProductId || null,
+    diagnostic_id: currentDiagnosticId || getDiagnosticId() || null
+  });
 };
 
 function getCompetitors() {
@@ -2516,9 +2648,9 @@ function aplicarResumoConcorrentesNoFormulario() {
   }
 }
 
-addCompetitor();
-addCompetitor();
-addCompetitor();
+addCompetitor({ __silent: true });
+addCompetitor({ __silent: true });
+addCompetitor({ __silent: true });
 
 renderStep();
   </script>
