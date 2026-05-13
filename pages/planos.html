@@ -534,11 +534,11 @@
         </div>
 
         <div class="actions">
-          <button class="btn-secondary" onclick="location.href='./dashboard.html'">
+          <button class="btn-secondary" onclick="voltarDashboardPlanos()">
             Voltar ao Dashboard
           </button>
 
-         <button class="btn-primary" onclick="window.open('https://wa.me/5511971545949?text=Olá!%20Gostaria%20de%20falar%20sobre%20os%20planos%20da%20Nexora%20Intelligence.', '_blank')">
+         <button class="btn-primary" onclick="abrirAjudaPlanos()">
   Preciso de ajuda
 </button>
         </div>
@@ -968,7 +968,14 @@ import {
   formatCurrencyBRL
 } from "../js/billing.js";
 
+import { trackEvent, trackPageView } from "../js/analytics.js";
+
     const user = await requireAuth();
+
+    trackPageView("Planos");
+    trackEvent("opened_plans", {
+      source: new URLSearchParams(window.location.search).get("reason") ? "limit_redirect" : "direct"
+    });
 
     await carregarPlano();
     await carregarPedidosRecentes();
@@ -999,6 +1006,10 @@ if (paymentStatus) {
 
   const current = messages[paymentStatus] || messages.pending;
 
+  trackEvent("payment_status_return", {
+    payment_status: paymentStatus
+  });
+
   const panel = document.createElement("section");
   panel.className = "panel";
   panel.innerHTML = `
@@ -1024,6 +1035,10 @@ if (paymentStatus) {
 }
 
 if (reason) {
+  trackEvent("opened_plans_due_to_limit", {
+    reason
+  });
+
   const panel = document.createElement("section");
   panel.className = "panel";
   panel.innerHTML = `
@@ -1062,7 +1077,20 @@ if (reason) {
         document.getElementById("planNote").textContent = isUnlimited
           ? "Sua conta possui acesso ilimitado para desenvolvimento e administração da Nexora."
           : "Cada diagnóstico completo consome 1 crédito quando o Cérebro 1 é gerado com sucesso.";
+
+        trackEvent("loaded_current_plan", {
+          plan_name: plan.plan_name || null,
+          plan_status: plan.plan_status || null,
+          diagnostics_used: plan.diagnostics_used || 0,
+          diagnostic_limit: plan.diagnostic_limit || 0,
+          product_limit: plan.product_limit || 0,
+          remaining_diagnostics: isUnlimited ? "unlimited" : remaining,
+          is_unlimited: Boolean(isUnlimited)
+        });
       } catch (error) {
+        trackEvent("load_current_plan_failed", {
+          error: error?.message || String(error)
+        });
         console.error("Erro ao carregar plano:", error);
         document.getElementById("planNote").textContent = "Não foi possível carregar seu plano.";
       }
@@ -1077,6 +1105,10 @@ if (reason) {
     const orders = await listPaymentOrders(6);
 
     if (!orders.length) {
+      trackEvent("loaded_payment_orders", {
+        orders_count: 0
+      });
+
       ordersList.innerHTML = `
         <div class="credit-card">
           <h3>Nenhum pedido criado ainda</h3>
@@ -1087,6 +1119,11 @@ if (reason) {
       `;
       return;
     }
+
+    trackEvent("loaded_payment_orders", {
+      orders_count: orders.length,
+      latest_status: orders[0]?.status || null
+    });
 
     ordersList.innerHTML = orders.map(order => {
       return `
@@ -1120,6 +1157,10 @@ if (reason) {
     }).join("");
 
   } catch (error) {
+    trackEvent("load_payment_orders_failed", {
+      error: error?.message || String(error)
+    });
+
     console.error("Erro ao carregar pedidos recentes:", error);
 
     ordersList.innerHTML = `
@@ -1134,10 +1175,30 @@ if (reason) {
 }
 
   window.solicitarUpgrade = async function (planKey) {
+  const isExtraCredits = String(planKey || "").startsWith("extra_");
+
+  trackEvent(isExtraCredits ? "clicked_buy_extra_credits" : "clicked_plan_cta", {
+    plan_key: planKey
+  });
+
   try {
     const order = await createPaymentOrder(planKey);
 
+    trackEvent("created_payment_order", {
+      plan_key: planKey,
+      order_id: order?.id || null,
+      order_label: order?.plan_label || null,
+      order_status: order?.status || null,
+      order_type: order?.order_type || null,
+      amount: order?.amount || null
+    });
+
     if (planKey === "teste") {
+      trackEvent("requested_trial_plan", {
+        plan_key: planKey,
+        order_id: order?.id || null
+      });
+
       alert(
         `Acesso de teste solicitado com sucesso!\n\n` +
         `Plano/Pacote: ${order.plan_label}\n` +
@@ -1167,6 +1228,13 @@ if (reason) {
     const data = await response.json().catch(() => null);
 
     if (!response.ok || !data?.checkout_url) {
+      trackEvent("payment_checkout_failed", {
+        plan_key: planKey,
+        order_id: order?.id || null,
+        status: response.status,
+        error: data?.error || data?.message || null
+      });
+
       console.error("Erro ao criar checkout:", data);
 
       alert(
@@ -1178,13 +1246,41 @@ if (reason) {
       return;
     }
 
+    trackEvent("payment_checkout_started", {
+      plan_key: planKey,
+      order_id: order?.id || null,
+      checkout_url_created: true
+    });
+
     window.location.href = data.checkout_url;
 
   } catch (error) {
+    trackEvent("payment_order_failed", {
+      plan_key: planKey,
+      error: error?.message || String(error)
+    });
+
     console.error("Erro ao criar pedido/pagamento:", error);
     alert("Não foi possível iniciar o pagamento. Tente novamente.");
   }
 };
+
+window.voltarDashboardPlanos = function () {
+  trackEvent("clicked_back_dashboard_from_plans");
+  window.location.href = "./dashboard.html";
+};
+
+window.abrirAjudaPlanos = function () {
+  trackEvent("clicked_help_from_plans", {
+    channel: "whatsapp"
+  });
+
+  window.open(
+    "https://wa.me/5511971545949?text=Olá!%20Gostaria%20de%20falar%20sobre%20os%20planos%20da%20Nexora%20Intelligence.",
+    "_blank"
+  );
+};
+
 function formatOrderType(type) {
   const map = {
     subscription: "Assinatura",
