@@ -307,7 +307,107 @@
   font-size: 13px;
   line-height: 1.4;
 } 
+/* Barra geral do fluxo Nexora */
+.diagnosis-flow {
+  margin-top: 24px;
+  border: 1px solid rgba(255,255,255,.10);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+  border-radius: 18px;
+  padding: 16px;
+}
 
+.diagnosis-flow-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.diagnosis-flow-title {
+  font-family: Syne, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.diagnosis-flow-status {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.diagnosis-flow-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.flow-step {
+  position: relative;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.025);
+  border-radius: 14px;
+  padding: 12px;
+  min-height: 76px;
+  overflow: hidden;
+}
+
+.flow-step::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  height: 3px;
+  border-radius: 999px 999px 0 0;
+  background: rgba(255,255,255,.08);
+}
+
+.flow-step.done::before,
+.flow-step.active::before {
+  background: linear-gradient(135deg, var(--nexora-red), var(--nexora-red-2));
+}
+
+.flow-step.active {
+  border-color: rgba(179,38,38,.48);
+  background:
+    radial-gradient(circle at top left, rgba(139,30,30,.28), transparent 46%),
+    rgba(255,255,255,.035);
+}
+
+.flow-step-number {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.flow-step strong {
+  display: block;
+  font-family: Syne, sans-serif;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.flow-step span:last-child {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 5px;
+  line-height: 1.4;
+}
+
+@media (max-width: 900px) {
+  .diagnosis-flow-steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+    
     @media (max-width: 760px) {
       .progress {
         grid-template-columns: 1fr;
@@ -354,19 +454,58 @@
 <body>
   <main class="wrap">
 
-    <section class="card">
-      <p class="step-label">Nexora Intelligence · Cérebro 1</p>
+   <section class="card">
+  <p class="step-label">Nexora Intelligence · Cérebro 1</p>
 
-      <h1>Cérebro 1 · Performance Score</h1>
+  <h1>Cérebro 1 · Performance Score</h1>
 
-      <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
-        Leitura profunda de métricas, tráfego, conversão, PPC, rentabilidade e operação para gerar o Performance Score e identificar a primeira causa raiz do produto.
-      </p>
+  <p style="color:var(--muted);margin-top:8px;line-height:1.7;">
+    Leitura profunda de métricas, tráfego, conversão, PPC, rentabilidade e operação para gerar o Performance Score e identificar a primeira causa raiz do produto.
+  </p>
 
-      <div id="productContextPanel" class="product-context-card"></div>
+  <div class="diagnosis-flow">
+    <div class="diagnosis-flow-header">
+      <div class="diagnosis-flow-title">Fluxo do diagnóstico Nexora</div>
+      <div class="diagnosis-flow-status">Etapa atual: Performance</div>
+    </div>
 
-      <div class="progress" id="progress"></div>
-    </section>
+    <div class="diagnosis-flow-steps">
+      <div class="flow-step active">
+        <span class="flow-step-number">01</span>
+        <strong>Performance</strong>
+        <span>Métricas, PPC e operação</span>
+      </div>
+
+      <div class="flow-step">
+        <span class="flow-step-number">02</span>
+        <strong>Página</strong>
+        <span>Listing, SEO e conversão</span>
+      </div>
+
+      <div class="flow-step">
+        <span class="flow-step-number">03</span>
+        <strong>Mercado</strong>
+        <span>Concorrência e barreira</span>
+      </div>
+
+      <div class="flow-step">
+        <span class="flow-step-number">04</span>
+        <strong>Síntese</strong>
+        <span>Causa raiz consolidada</span>
+      </div>
+
+      <div class="flow-step">
+        <span class="flow-step-number">05</span>
+        <strong>Relatório</strong>
+        <span>Entrega final</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="productContextPanel" class="product-context-card"></div>
+
+  <div class="progress" id="progress"></div>
+</section>
 
     <!-- ETAPA 1 -->
 <section class="card step active" data-step="0">
