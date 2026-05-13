@@ -575,6 +575,171 @@
   line-height: 1.65;
 }
     
+
+
+    /* =========================================================
+       NEXORA · PRODUTO COMO CENTRO DE CONTROLE
+       ========================================================= */
+
+    .product-shell {
+      width: min(1560px, calc(100vw - 72px));
+      max-width: 1560px;
+      padding: 32px 0 56px;
+    }
+
+    .product-card {
+      grid-template-columns: 160px minmax(0, 1fr) 260px;
+      padding: 26px;
+    }
+
+    .product-image {
+      width: 160px;
+      height: 160px;
+    }
+
+    .control-grid {
+      display: grid;
+      grid-template-columns: minmax(0, .85fr) minmax(0, .85fr) minmax(360px, 1.3fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .control-card {
+      border: 1px solid var(--nx-border);
+      background:
+        radial-gradient(circle at top left, rgba(139,30,30,.16), transparent 42%),
+        linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+      border-radius: 22px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.22);
+      padding: 20px;
+      min-height: 210px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .control-card.control-card-highlight {
+      border-color: rgba(179,38,38,.42);
+      background:
+        radial-gradient(circle at top left, rgba(139,30,30,.26), transparent 36%),
+        linear-gradient(135deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
+    }
+
+    .control-score {
+      font-family: Syne, sans-serif;
+      font-size: 48px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -.05em;
+      margin-top: 8px;
+    }
+
+    .control-card p {
+      color: var(--nx-muted);
+      font-size: 13px;
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    .control-card h3 {
+      font-family: Syne, sans-serif;
+      line-height: 1.3;
+      margin: 8px 0 0;
+    }
+
+    .control-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .control-mini {
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255,255,255,.025);
+      min-width: 0;
+    }
+
+    .control-mini span {
+      display: block;
+      color: var(--nx-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 5px;
+    }
+
+    .control-mini strong {
+      display: block;
+      font-family: Syne, sans-serif;
+      font-size: 15px;
+      line-height: 1.35;
+      overflow-wrap: break-word;
+    }
+
+    .root-action-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .root-action-card {
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.025);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.18);
+    }
+
+    .root-action-card.root-main {
+      border-color: rgba(179,38,38,.34);
+      background:
+        radial-gradient(circle at top left, rgba(139,30,30,.20), transparent 40%),
+        rgba(255,255,255,.025);
+    }
+
+    .root-action-card h3 {
+      font-family: Syne, sans-serif;
+      line-height: 1.35;
+      margin-top: 8px;
+    }
+
+    .root-action-card p {
+      color: var(--nx-muted);
+      line-height: 1.7;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .diagnostic-timeline-note {
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.025);
+      border-radius: 16px;
+      padding: 14px;
+      color: var(--nx-muted);
+      line-height: 1.65;
+      font-size: 13px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 1200px) {
+      .product-shell {
+        width: min(100% - 40px, 100%);
+      }
+
+      .control-grid,
+      .root-action-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .product-card {
+        grid-template-columns: 1fr;
+      }
+    }
     @media (max-width: 980px) {
       .product-card,
       .two-col {
@@ -626,6 +791,10 @@
         <div class="actions">
           <button class="btn-secondary" onclick="location.href='./dashboard.html'">
             Voltar ao Dashboard
+          </button>
+
+          <button class="btn-secondary" id="clientBackBtn" style="display:none;" onclick="voltarAoCliente()">
+            Voltar ao Cliente
           </button>
 
           <button class="btn-primary" onclick="novoDiagnosticoProduto()">
@@ -693,6 +862,92 @@
         <p>ACOS atual</p>
         <h3 id="metricAcos">—</h3>
         <span>Última leitura de eficiência de mídia.</span>
+      </div>
+    </section>
+
+    <section class="control-grid" id="strategicSnapshotPanel">
+      <div class="control-card">
+        <div>
+          <p class="section-label">Brand Health</p>
+          <div class="control-score" id="brandHealthScore">—</div>
+          <span class="status-pill status-warning" id="brandHealthStatus">Sem síntese</span>
+        </div>
+
+        <div class="control-mini-grid">
+          <div class="control-mini">
+            <span>Pilar mais fraco</span>
+            <strong id="brandHealthWeakest">—</strong>
+          </div>
+
+          <div class="control-mini">
+            <span>Pilar mais forte</span>
+            <strong id="brandHealthStrongest">—</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-card">
+        <div>
+          <p class="section-label">Private Label</p>
+          <div class="control-score" id="privateLabelScore">—</div>
+          <span class="status-pill status-warning" id="privateLabelStage">Sem leitura</span>
+        </div>
+
+        <div class="control-mini-grid">
+          <div class="control-mini">
+            <span>Dependência PPC</span>
+            <strong id="privateLabelPpc">—</strong>
+          </div>
+
+          <div class="control-mini">
+            <span>Risco competitivo</span>
+            <strong id="privateLabelRisk">—</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-card control-card-highlight">
+        <div>
+          <p class="section-label">Próxima melhor ação</p>
+          <h3 id="nextActionTitle">Gere uma Síntese para definir a próxima ação.</h3>
+          <p id="nextActionReason">A Nexora vai consolidar performance, página e mercado para indicar o primeiro movimento com maior impacto provável.</p>
+        </div>
+
+        <div class="control-mini-grid">
+          <div class="control-mini">
+            <span>Área</span>
+            <strong id="nextActionArea">—</strong>
+          </div>
+
+          <div class="control-mini">
+            <span>Prazo</span>
+            <strong id="nextActionTimeframe">—</strong>
+          </div>
+        </div>
+
+        <div class="actions" style="justify-content:flex-start;">
+          <button class="btn-secondary" id="latestReportAction" style="display:none;" onclick="abrirRelatorioAtual()">
+            Abrir relatório atual
+          </button>
+
+          <button class="btn-primary" onclick="novoDiagnosticoProduto()">
+            Novo diagnóstico
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="root-action-panel">
+      <div class="root-action-card root-main">
+        <p class="section-label">Causa raiz atual</p>
+        <h3 id="rootCauseSnapshot">Ainda não há causa raiz consolidada.</h3>
+        <p id="rootCauseSummary">Gere uma Síntese para transformar os dados dos três cérebros em uma leitura executiva consolidada.</p>
+      </div>
+
+      <div class="root-action-card">
+        <p class="section-label">Acompanhamento contínuo</p>
+        <h3 id="trackingStatusTitle">Histórico do produto</h3>
+        <p id="trackingStatusText">A cada novo diagnóstico, esta página passa a mostrar evolução de score, alertas, comparação e relatório por produto.</p>
       </div>
     </section>
 <section class="panel" id="alertsPanel">
@@ -857,6 +1112,7 @@ import { compararDiagnosticosNexora } from "../js/nexoraComparisonEngine.js";
 
        renderProduct();
        renderMetrics();
+      renderProductStrategicSnapshot();
       renderProductAlerts();
       renderChart();
       renderCurrentInsight();
@@ -966,6 +1222,11 @@ import { compararDiagnosticosNexora } from "../js/nexoraComparisonEngine.js";
 } else {
   imageBox.textContent = "Sem imagem";
 }
+
+      const clientBackBtn = document.getElementById("clientBackBtn");
+      if (clientBackBtn && product.client_id) {
+        clientBackBtn.style.display = "inline-flex";
+      }
     }
 
     function buildProductDescription(p) {
@@ -1210,6 +1471,143 @@ function getSelectedDiagnostic() {
 
   document.getElementById("currentInsight").textContent = text;
 }
+function renderProductStrategicSnapshot() {
+  const synthRow = getActiveSynthRowForAlerts();
+  const synth = synthRow?.result_data || {};
+
+  const brandHealth = synth.brand_health || null;
+  const privateLabel = synth.private_label_intelligence || null;
+  const action = normalizeNextBestAction(synth.next_best_action || synth.nextBestAction);
+
+  if (brandHealth) {
+    setText("brandHealthScore", brandHealth.score ?? "—");
+    setText("brandHealthStatus", brandHealth.status || "Sem status");
+    setText("brandHealthWeakest", brandHealth.weakestPillar?.label || "—");
+    setText("brandHealthStrongest", brandHealth.strongestPillar?.label || "—");
+    setStatusClass("brandHealthStatus", Number(brandHealth.score));
+  }
+
+  if (privateLabel) {
+    setText("privateLabelScore", privateLabel.score ?? "—");
+    setText("privateLabelStage", privateLabel.maturityStage || "Sem estágio");
+    setText("privateLabelPpc", privateLabel.ppcDependencyLabel ? `${privateLabel.ppcDependencyLabel} · ${privateLabel.ppcDependencyScore}/100` : "—");
+    setText("privateLabelRisk", privateLabel.competitiveRiskLabel ? `${privateLabel.competitiveRiskLabel} · ${privateLabel.competitiveRiskScore}/100` : "—");
+    setStatusClass("privateLabelStage", Number(privateLabel.score));
+  }
+
+  if (synthRow?.diagnostic_id) {
+    const latestReportAction = document.getElementById("latestReportAction");
+    if (latestReportAction) latestReportAction.style.display = "inline-flex";
+  }
+
+  if (synth && Object.keys(synth).length) {
+    setText("nextActionTitle", action.title || "Priorizar a causa raiz antes de escalar o produto");
+    setText("nextActionReason", action.reason || action.action || "A ação foi definida a partir da leitura consolidada da Nexora.");
+    setText("nextActionArea", action.priority_area || "Estratégia");
+    setText("nextActionTimeframe", action.timeframe || "7 dias");
+
+    const root =
+      synth.causa_raiz_consolidada ||
+      synth.causa_raiz ||
+      synth.structured_synthesis?.causa_raiz ||
+      "Causa raiz consolidada não encontrada.";
+
+    const summary =
+      synth.resumo_cliente ||
+      synth.structured_synthesis?.diagnostico_principal ||
+      synth.diagnostico_executivo ||
+      "A Síntese foi gerada, mas não trouxe um resumo executivo estruturado.";
+
+    setText("rootCauseSnapshot", root);
+    setText("rootCauseSummary", summary);
+
+    setText("trackingStatusTitle", getTrackingTitle());
+    setText("trackingStatusText", getTrackingText());
+    return;
+  }
+
+  setText("trackingStatusTitle", "Aguardando primeira Síntese");
+  setText("trackingStatusText", "Este produto já pode receber diagnósticos. Depois da Síntese, esta área passa a mostrar Brand Health, Private Label, causa raiz e próxima melhor ação.");
+}
+
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value ?? "—";
+}
+
+function setStatusClass(id, score) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  if (!Number.isFinite(score)) {
+    el.className = "status-pill status-warning";
+    return;
+  }
+
+  if (score >= 75) {
+    el.className = "status-pill status-good";
+    return;
+  }
+
+  if (score >= 50) {
+    el.className = "status-pill status-warning";
+    return;
+  }
+
+  el.className = "status-pill status-danger";
+}
+
+function getTrackingTitle() {
+  const completed = diagnostics.filter(d => !isDraftWithoutResult(d)).length;
+
+  if (completed <= 1) return "Primeira leitura registrada";
+  return `${completed} diagnósticos no histórico`;
+}
+
+function getTrackingText() {
+  const evolution = calculateScoreEvolution();
+  const completed = diagnostics.filter(d => !isDraftWithoutResult(d)).length;
+
+  if (completed <= 1) {
+    return "Gere novos diagnósticos ao longo do tempo para comparar evolução, queda, estabilidade e impacto das ações executadas.";
+  }
+
+  return `Este produto já possui histórico comparável. Evolução acumulada de score: ${evolution}. Use a comparação e os relatórios anteriores para acompanhar a resposta do produto às ações tomadas.`;
+}
+
+function normalizeNextBestAction(action) {
+  if (!action) {
+    return {
+      title: "Gere uma Síntese para definir a próxima melhor ação",
+      priority_area: "Estratégia",
+      timeframe: "7 dias",
+      reason: "A próxima ação será calculada a partir dos três cérebros e dos alertas estratégicos.",
+      action: "Gerar a Síntese do diagnóstico atual.",
+      expected_result: "Transformar dados soltos em uma decisão acionável."
+    };
+  }
+
+  if (typeof action === "string") {
+    return {
+      title: action,
+      priority_area: "Estratégia",
+      timeframe: "7 dias",
+      reason: "A ação foi definida pela leitura consolidada da Nexora.",
+      action,
+      expected_result: "Direcionar o próximo movimento do produto."
+    };
+  }
+
+  return {
+    title: action.title || action.titulo || "Priorizar a causa raiz antes de escalar o produto",
+    priority_area: action.priority_area || action.area || "Estratégia",
+    timeframe: action.timeframe || action.prazo || "7 dias",
+    reason: action.reason || action.motivo || action.detail || action.detalhe || "A ação foi definida a partir da leitura consolidada entre performance, página, mercado e alertas Nexora.",
+    action: action.action || action.acao || action.recommendation || action.recomendacao || action.o_que_fazer || action.proxima_acao || action.detail || action.detalhe || action.title || "Executar a ação prioritária indicada pela Nexora.",
+    expected_result: action.expected_result || action.resultado_esperado || action.impacto || "Melhorar a clareza da decisão e atacar primeiro o bloqueio com maior impacto provável."
+  };
+}
+
 function renderProductAlerts() {
   const alertsArea = document.getElementById("productAlertsArea");
   const alertsCount = document.getElementById("alertsCount");
@@ -1662,6 +2060,33 @@ const summary =
     alert("Não foi possível criar um novo diagnóstico para este produto.");
   }
 };
+window.voltarAoCliente = function () {
+  const clientId = product?.client_id;
+
+  if (clientId) {
+    window.location.href = `./cliente.html?client_id=${encodeURIComponent(clientId)}`;
+    return;
+  }
+
+  window.location.href = "./clientes.html";
+};
+
+window.abrirRelatorioAtual = function () {
+  const synthRow = getActiveSynthRowForAlerts();
+  const diagnosticId = synthRow?.diagnostic_id || currentDiagnosticId;
+
+  if (!diagnosticId) {
+    alert("Nenhuma Síntese encontrada para abrir relatório.");
+    return;
+  }
+
+  localStorage.setItem("nx_diagnostic_id", diagnosticId);
+  localStorage.setItem("nx_product_id", currentProductId);
+
+  window.location.href =
+    `./relatorio.html?product_id=${encodeURIComponent(currentProductId || "")}&diagnostic_id=${encodeURIComponent(diagnosticId)}`;
+};
+
 window.abrirSinteseHistorica = function (diagnosticId) {
   if (!diagnosticId) {
     alert("Diagnóstico não encontrado para abrir a síntese.");
