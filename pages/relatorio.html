@@ -731,6 +731,204 @@
   }
 }
 
+
+
+/* =========================================================
+   NEXORA · RELATÓRIO MAIS AMPLO / FINAL DELIVERY VIEW
+   ========================================================= */
+
+.report-wrap {
+  width: min(1560px, calc(100vw - 72px)) !important;
+  max-width: 1560px !important;
+  padding: 0 !important;
+}
+
+.report {
+  border-radius: 26px !important;
+}
+
+.report-cover {
+  padding: 56px 42px !important;
+}
+
+.report-content {
+  padding: 34px !important;
+  gap: 24px !important;
+}
+
+.report-section {
+  padding: 28px !important;
+  border-radius: 20px !important;
+}
+
+.cover-grid {
+  grid-template-columns: minmax(360px, .9fr) minmax(520px, 1.1fr) !important;
+  gap: 26px !important;
+}
+
+.metrics-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.product-info-grid {
+  grid-template-columns: repeat(4, minmax(190px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.systems-grid {
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)) !important;
+}
+
+.structured-grid,
+.comparison-report-grid,
+.structured-plans-grid,
+.next-action-metrics,
+.alert-report-summary {
+  grid-template-columns: repeat(2, minmax(260px, 1fr)) !important;
+}
+
+.section-kicker {
+  font-family: Syne, sans-serif;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-bottom: 10px;
+}
+
+/* Barra geral do fluxo Nexora no relatório */
+.app-flow {
+  border-bottom: 1px solid var(--border);
+  background:
+    radial-gradient(circle at 10% 50%, rgba(139,30,30,.18), transparent 26%),
+    rgba(255,255,255,.018);
+  padding: 20px 24px 22px;
+}
+
+.diagnosis-flow {
+  border: 1px solid rgba(255,255,255,.10);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+  border-radius: 18px;
+  padding: 20px;
+}
+
+.diagnosis-flow-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.diagnosis-flow-title {
+  font-family: Syne, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.diagnosis-flow-status {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.diagnosis-flow-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(170px, 1fr));
+  gap: 14px;
+}
+
+.flow-step {
+  position: relative;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.025);
+  border-radius: 14px;
+  padding: 14px;
+  min-height: 92px;
+  overflow: hidden;
+}
+
+.flow-step::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  height: 3px;
+  border-radius: 999px 999px 0 0;
+  background: rgba(255,255,255,.08);
+}
+
+.flow-step.done::before,
+.flow-step.active::before {
+  background: linear-gradient(135deg, var(--nexora-red), var(--nexora-red-2));
+}
+
+.flow-step.done {
+  border-color: rgba(179,38,38,.25);
+  background:
+    radial-gradient(circle at top left, rgba(139,30,30,.14), transparent 44%),
+    rgba(255,255,255,.025);
+}
+
+.flow-step.active {
+  border-color: rgba(179,38,38,.48);
+  background:
+    radial-gradient(circle at top left, rgba(139,30,30,.28), transparent 46%),
+    rgba(255,255,255,.035);
+}
+
+.flow-step-number {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.flow-step strong {
+  display: block;
+  font-family: Syne, sans-serif;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.flow-step span:last-child {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 5px;
+  line-height: 1.4;
+}
+
+@media (max-width: 1200px) {
+  .report-wrap {
+    width: min(100% - 40px, 100%) !important;
+  }
+
+  .diagnosis-flow-steps,
+  .cover-grid,
+  .product-info-grid,
+  .structured-grid,
+  .comparison-report-grid,
+  .structured-plans-grid,
+  .next-action-metrics,
+  .alert-report-summary {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media print {
+  .app-flow {
+    display: none !important;
+  }
+}
+
+
     @media (max-width: 900px) {
       .topbar {
         align-items: flex-start;
@@ -827,6 +1025,47 @@
     Gerar PDF
   </button>
 </div>
+      </div>
+
+      <div class="app-flow">
+        <div class="diagnosis-flow">
+          <div class="diagnosis-flow-header">
+            <div class="diagnosis-flow-title">Fluxo do diagnóstico Nexora</div>
+            <div class="diagnosis-flow-status">Etapa atual: Relatório</div>
+          </div>
+
+          <div class="diagnosis-flow-steps">
+            <div class="flow-step done">
+              <span class="flow-step-number">01</span>
+              <strong>Performance</strong>
+              <span>Métricas, PPC e operação</span>
+            </div>
+
+            <div class="flow-step done">
+              <span class="flow-step-number">02</span>
+              <strong>Página</strong>
+              <span>Listing, SEO e conversão</span>
+            </div>
+
+            <div class="flow-step done">
+              <span class="flow-step-number">03</span>
+              <strong>Mercado</strong>
+              <span>Concorrência e barreira</span>
+            </div>
+
+            <div class="flow-step done">
+              <span class="flow-step-number">04</span>
+              <strong>Síntese</strong>
+              <span>Causa raiz consolidada</span>
+            </div>
+
+            <div class="flow-step active">
+              <span class="flow-step-number">05</span>
+              <strong>Relatório</strong>
+              <span>Entrega final</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <section class="report-cover">
