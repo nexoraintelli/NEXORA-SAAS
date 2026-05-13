@@ -740,6 +740,193 @@
         grid-template-columns: 1fr;
       }
     }
+
+
+    /* =========================================================
+       NEXORA · HISTÓRICO / EVOLUÇÃO DO PRODUTO
+       ========================================================= */
+
+    .evolution-dashboard {
+      display: grid;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .evolution-hero {
+      display: grid;
+      grid-template-columns: minmax(320px, .75fr) minmax(0, 1.25fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .evolution-current-card,
+    .evolution-reading-card,
+    .evolution-stage-card,
+    .timeline-card {
+      border: 1px solid rgba(255,255,255,.10);
+      background:
+        radial-gradient(circle at top left, rgba(139,30,30,.14), transparent 36%),
+        rgba(255,255,255,.025);
+      border-radius: 18px;
+      padding: 18px;
+      min-width: 0;
+    }
+
+    .evolution-current-card {
+      border-color: rgba(179,38,38,.34);
+      background:
+        radial-gradient(circle at top left, rgba(139,30,30,.26), transparent 38%),
+        rgba(255,255,255,.03);
+    }
+
+    .evolution-big-number {
+      font-family: Syne, sans-serif;
+      font-size: 64px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -.06em;
+      margin-top: 8px;
+    }
+
+    .evolution-reading-card h3,
+    .evolution-current-card h3,
+    .evolution-stage-card h3,
+    .timeline-card h3 {
+      font-family: Syne, sans-serif;
+      line-height: 1.35;
+      margin-top: 8px;
+    }
+
+    .evolution-reading-card p,
+    .evolution-current-card p,
+    .evolution-stage-card p,
+    .timeline-card p {
+      color: var(--nx-muted);
+      line-height: 1.7;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .evolution-stage-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stage-delta {
+      display: inline-flex;
+      width: fit-content;
+      border-radius: 999px;
+      padding: 6px 9px;
+      font-size: 11px;
+      font-weight: 800;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.035);
+      margin-top: 10px;
+    }
+
+    .stage-delta.up {
+      color: #78f0bd;
+      border-color: rgba(61,220,151,.30);
+      background: rgba(61,220,151,.10);
+    }
+
+    .stage-delta.down {
+      color: #fecaca;
+      border-color: rgba(239,68,68,.34);
+      background: rgba(139,30,30,.16);
+    }
+
+    .stage-delta.stable {
+      color: #d1d5db;
+      border-color: rgba(255,255,255,.12);
+    }
+
+    .timeline-list {
+      position: relative;
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .timeline-item {
+      position: relative;
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr) 82px 160px;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      padding: 14px;
+      background: rgba(255,255,255,.025);
+    }
+
+    .timeline-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--nx-red), var(--nx-red-2));
+      box-shadow: 0 0 0 6px rgba(139,30,30,.14);
+    }
+
+    .timeline-item.active {
+      border-color: rgba(179,38,38,.44);
+      background:
+        radial-gradient(circle at top left, rgba(139,30,30,.18), transparent 34%),
+        rgba(255,255,255,.035);
+    }
+
+    .timeline-item h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .timeline-item p {
+      margin-top: 5px;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .timeline-score {
+      width: 56px;
+      height: 56px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      border: 2px solid rgba(61,220,151,.46);
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      justify-self: center;
+    }
+
+    .timeline-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .timeline-actions button {
+      padding: 9px 11px;
+      font-size: 12px;
+    }
+
+    @media (max-width: 1200px) {
+      .evolution-hero,
+      .evolution-stage-grid,
+      .timeline-item {
+        grid-template-columns: 1fr;
+      }
+
+      .timeline-score {
+        justify-self: start;
+      }
+
+      .timeline-actions {
+        justify-content: flex-start;
+      }
+    }
+
     @media (max-width: 980px) {
       .product-card,
       .two-col {
@@ -991,6 +1178,28 @@
 </section>
     
     
+
+
+<section class="panel" id="evolutionDashboardPanel">
+  <div class="topbar" style="margin-bottom:0;">
+    <div>
+      <p class="section-label">Acompanhamento contínuo</p>
+      <h2>Evolução estratégica do produto</h2>
+      <p style="color:var(--nx-muted);font-size:13px;margin-top:6px;">
+        Visão consolidada da evolução do Product Health Score e dos scores por cérebro ao longo dos diagnósticos.
+      </p>
+    </div>
+
+    <span class="pill" id="evolutionStatusPill">Sem evolução</span>
+  </div>
+
+  <div id="evolutionDashboardArea">
+    <div class="alert-empty">
+      Gere pelo menos um diagnóstico completo para iniciar a leitura de evolução do produto.
+    </div>
+  </div>
+</section>
+
     <section class="two-col">
       <div class="panel">
         <p class="section-label">Evolução</p>
@@ -1119,6 +1328,7 @@ import { compararDiagnosticosNexora } from "../js/nexoraComparisonEngine.js";
       renderBrainCards();
       renderHistory();
       renderDiagnosticComparison();
+      renderEvolutionDashboard();
 
         finishLoading();
       } catch (error) {
@@ -1809,6 +2019,266 @@ function renderProductAlertCard(alert) {
       </p>
     </div>
   `;
+}
+
+
+function renderEvolutionDashboard() {
+  const area = document.getElementById("evolutionDashboardArea");
+  const statusPill = document.getElementById("evolutionStatusPill");
+
+  if (!area || !statusPill) return;
+
+  const items = getEvolutionItems();
+
+  if (!items.length) {
+    statusPill.textContent = "Sem evolução";
+    area.innerHTML = `
+      <div class="alert-empty">
+        Nenhum diagnóstico completo foi encontrado para montar a evolução. Gere uma Síntese para transformar o produto em acompanhamento contínuo.
+      </div>
+    `;
+    return;
+  }
+
+  const latest = items[items.length - 1];
+  const previous = items.length > 1 ? items[items.length - 2] : null;
+  const first = items[0];
+
+  const diffFromPrevious = previous ? calculateDelta(latest.synthScore, previous.synthScore) : null;
+  const diffFromFirst = first && first.id !== latest.id ? calculateDelta(latest.synthScore, first.synthScore) : null;
+
+  const status = classifyEvolutionStatus(diffFromPrevious);
+  statusPill.textContent = status.label;
+
+  area.innerHTML = `
+    <div class="evolution-dashboard">
+      <div class="evolution-hero">
+        <div class="evolution-current-card">
+          <span class="pill pill-red">Diagnóstico atual</span>
+          <div class="evolution-big-number">${escapeHtml(latest.synthScore ?? "—")}</div>
+          <p>Product Health Score · ${escapeHtml(formatDate(latest.created_at))}</p>
+
+          <div class="control-mini-grid">
+            <div class="control-mini">
+              <span>Vs. anterior</span>
+              <strong>${escapeHtml(formatDelta(diffFromPrevious))}</strong>
+            </div>
+
+            <div class="control-mini">
+              <span>Vs. primeiro</span>
+              <strong>${escapeHtml(formatDelta(diffFromFirst))}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="evolution-reading-card">
+          <span class="pill ${status.className === "up" ? "" : status.className === "down" ? "pill-red" : ""}">${escapeHtml(status.label)}</span>
+          <h3>${escapeHtml(latest.rootCause || "Causa raiz ainda não consolidada")}</h3>
+          <p>${escapeHtml(latest.summary || "A Nexora ainda não encontrou resumo executivo para este diagnóstico.")}</p>
+          <p><strong style="color:var(--nx-text);">Leitura:</strong> ${escapeHtml(buildEvolutionReading(items, latest, previous, diffFromPrevious))}</p>
+        </div>
+      </div>
+
+      <div class="evolution-stage-grid">
+        ${renderStageEvolutionCard("Performance", latest.c1Score, previous?.c1Score)}
+        ${renderStageEvolutionCard("Página", latest.c2Score, previous?.c2Score)}
+        ${renderStageEvolutionCard("Mercado", latest.c3Score, previous?.c3Score)}
+        ${renderStageEvolutionCard("Product Health", latest.synthScore, previous?.synthScore)}
+      </div>
+
+      <div class="timeline-card">
+        <div class="topbar" style="margin-bottom:0;">
+          <div>
+            <p class="section-label">Linha do tempo</p>
+            <h2>Diagnósticos registrados</h2>
+            <p>Histórico cronológico do produto com score, causa raiz e acesso rápido a relatórios.</p>
+          </div>
+          <span class="pill">${items.length} ${items.length === 1 ? "diagnóstico" : "diagnósticos"}</span>
+        </div>
+
+        <div class="timeline-list">
+          ${items.slice().reverse().map(item => renderTimelineItem(item)).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function getEvolutionItems() {
+  const visibleDiagnostics = [...diagnostics]
+    .filter(d => !isDraftWithoutResult(d))
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+  return visibleDiagnostics.map(diagnostic => {
+    const synthRow = getBrainRowForDiagnostic(diagnostic.id, "synth");
+    const c1Row = getBrainRowForDiagnostic(diagnostic.id, "c1");
+    const c2Row = getBrainRowForDiagnostic(diagnostic.id, "c2");
+    const c3Row = getBrainRowForDiagnostic(diagnostic.id, "c3");
+    const priorityRow = getBrainPriorityRow(diagnostic.id);
+    const priorityResult = priorityRow?.result_data || {};
+    const synth = synthRow?.result_data || {};
+
+    return {
+      id: diagnostic.id,
+      created_at: diagnostic.created_at,
+      status: diagnostic.status,
+      synthScore: getScoreFromDiagnostic(diagnostic),
+      c1Score: getScoreFromBrainRowOrSource(c1Row, synth, "c1"),
+      c2Score: getScoreFromBrainRowOrSource(c2Row, synth, "c2"),
+      c3Score: getScoreFromBrainRowOrSource(c3Row, synth, "c3"),
+      rootCause:
+        synth.causa_raiz_consolidada ||
+        synth.structured_synthesis?.causa_raiz ||
+        priorityResult.causa_raiz_consolidada ||
+        priorityResult.root_cause ||
+        diagnostic.root_cause ||
+        "Diagnóstico do produto",
+      summary:
+        synth.resumo_cliente ||
+        synth.structured_synthesis?.diagnostico_principal ||
+        priorityResult.resumo_cliente ||
+        priorityResult.leitura_cruzada ||
+        priorityResult.diagnostico_executivo ||
+        priorityResult.gap_principal ||
+        "Diagnóstico salvo para acompanhamento histórico.",
+      hasSynth: Boolean(synthRow?.result_data)
+    };
+  }).filter(item =>
+    Number.isFinite(Number(item.synthScore)) ||
+    Number.isFinite(Number(item.c1Score)) ||
+    Number.isFinite(Number(item.c2Score)) ||
+    Number.isFinite(Number(item.c3Score))
+  );
+}
+
+function getBrainRowForDiagnostic(diagnosticId, stage) {
+  const codes = getCodesForStage(stage);
+
+  return [...brainResults]
+    .filter(item =>
+      String(item.diagnostic_id) === String(diagnosticId) &&
+      codes.includes(String(item.brain_code || "").toLowerCase()) &&
+      item.result_data
+    )
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0] || null;
+}
+
+function getScoreFromBrainRowOrSource(row, synth, stage) {
+  const direct = getBrainScoreFromRow(row);
+
+  if (Number.isFinite(direct)) return direct;
+
+  const source = synth?.source?.[stage] || synth?.sources?.[stage] || synth?.[stage] || null;
+
+  if (!source) return null;
+
+  const score =
+    source.score_final ??
+    source.score_mercado ??
+    source.score_pagina ??
+    source.score_geral ??
+    source.score ??
+    null;
+
+  const number = Number(score);
+  return Number.isFinite(number) && number > 0 ? Math.round(number) : null;
+}
+
+function renderStageEvolutionCard(label, current, previous) {
+  const delta = calculateDelta(current, previous);
+  const className = getDeltaClass(delta);
+
+  return `
+    <div class="evolution-stage-card">
+      <span class="pill">${escapeHtml(label)}</span>
+      <h3>${escapeHtml(formatScore(current))}</h3>
+      <p>Score atual dentro do último diagnóstico salvo.</p>
+      <span class="stage-delta ${className}">${escapeHtml(formatDelta(delta))}</span>
+    </div>
+  `;
+}
+
+function renderTimelineItem(item) {
+  const isSelected = String(item.id) === String(currentDiagnosticId || "");
+  const summary = String(item.summary || "");
+
+  return `
+    <div class="timeline-item ${isSelected ? "active" : ""}">
+      <div class="timeline-dot"></div>
+
+      <div>
+        <h3>${escapeHtml(item.rootCause || "Diagnóstico do produto")}</h3>
+        <p>${escapeHtml(summary.slice(0, 190))}${summary.length > 190 ? "..." : ""}</p>
+        <p>${escapeHtml(formatDate(item.created_at))} · ${escapeHtml(formatStatus(item.status))}</p>
+      </div>
+
+      <div class="timeline-score">${escapeHtml(item.synthScore ?? "—")}</div>
+
+      <div class="timeline-actions">
+        <button class="btn-secondary" onclick="abrirDiagnosticoHistorico('${escapeHtml(item.id)}')">Abrir</button>
+        ${item.hasSynth ? `
+          <button class="btn-secondary" onclick="abrirRelatorioHistorico('${escapeHtml(item.id)}')">Relatório</button>
+        ` : `
+          <button class="btn-secondary" onclick="abrirSinteseHistorica('${escapeHtml(item.id)}')">Síntese</button>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function calculateDelta(current, previous) {
+  const currentNumber = Number(current);
+  const previousNumber = Number(previous);
+
+  if (!Number.isFinite(currentNumber) || !Number.isFinite(previousNumber)) return null;
+
+  return Math.round(currentNumber - previousNumber);
+}
+
+function formatDelta(delta) {
+  if (delta === null || delta === undefined || !Number.isFinite(Number(delta))) return "—";
+  const value = Number(delta);
+  if (value > 0) return `+${value}`;
+  return String(value);
+}
+
+function getDeltaClass(delta) {
+  if (delta === null || delta === undefined || !Number.isFinite(Number(delta))) return "stable";
+  if (Number(delta) > 0) return "up";
+  if (Number(delta) < 0) return "down";
+  return "stable";
+}
+
+function classifyEvolutionStatus(delta) {
+  if (delta === null || delta === undefined || !Number.isFinite(Number(delta))) {
+    return { label: "Primeira leitura", className: "stable" };
+  }
+
+  if (Number(delta) >= 5) return { label: "Melhorou", className: "up" };
+  if (Number(delta) <= -5) return { label: "Piorou", className: "down" };
+  return { label: "Estável", className: "stable" };
+}
+
+function formatScore(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "—";
+  return `${Math.round(number)}/100`;
+}
+
+function buildEvolutionReading(items, latest, previous, delta) {
+  if (!previous) {
+    return "Este é o primeiro diagnóstico consolidado do produto. A partir das próximas análises, a Nexora passará a comparar evolução, queda ou estabilidade dos principais scores.";
+  }
+
+  if (Number(delta) >= 5) {
+    return "O produto apresenta melhora relevante em relação ao diagnóstico anterior. A recomendação é verificar quais ações foram executadas entre os diagnósticos e proteger os pilares que avançaram.";
+  }
+
+  if (Number(delta) <= -5) {
+    return "O produto apresenta queda relevante em relação ao diagnóstico anterior. A prioridade é revisar o que mudou em página, mídia, preço, reviews, concorrência ou operação antes de escalar novamente.";
+  }
+
+  return "O produto está relativamente estável em relação ao diagnóstico anterior. A prioridade é atacar os gargalos persistentes, especialmente a causa raiz e a próxima melhor ação indicada pela Nexora.";
 }
 
     
