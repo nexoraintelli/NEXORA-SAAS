@@ -976,7 +976,7 @@
         </div>
 
         <div class="actions">
-          <button class="btn-secondary" onclick="location.href='./dashboard.html'">
+          <button class="btn-secondary" onclick="voltarDashboardProduto()">
             Voltar ao Dashboard
           </button>
 
@@ -1281,6 +1281,7 @@ import { sb } from "../js/supabaseClient.js";
 import { createDiagnostic } from "../js/diagnostics.js";
 import { canCreateDiagnostic } from "../js/plans.js";
 import { compararDiagnosticosNexora } from "../js/nexoraComparisonEngine.js";
+import { trackEvent, trackPageView } from "../js/analytics.js";
 
     const notice = document.getElementById("notice");
     const loadingText = document.getElementById("loadingText");
@@ -1303,11 +1304,21 @@ import { compararDiagnosticosNexora } from "../js/nexoraComparisonEngine.js";
         currentProductId = getParam("product_id") || localStorage.getItem("nx_product_id");
         currentDiagnosticId = getParam("diagnostic_id") || localStorage.getItem("nx_diagnostic_id");
 
+        trackPageView("produto");
+        trackEvent("opened_product_detail", {
+          product_id: currentProductId || null,
+          diagnostic_id: currentDiagnosticId || null
+        });
+
         if (!currentProductId && currentDiagnosticId) {
           await resolveProductIdFromDiagnostic(currentDiagnosticId);
         }
 
         if (!currentProductId) {
+          trackEvent("product_detail_missing_product", {
+            diagnostic_id: currentDiagnosticId || null
+          });
+
           showNotice("Nenhum produto ativo foi encontrado. Volte ao dashboard e cadastre ou abra um produto.");
           finishLoading();
           return;
@@ -1316,6 +1327,15 @@ import { compararDiagnosticosNexora } from "../js/nexoraComparisonEngine.js";
         localStorage.setItem("nx_product_id", currentProductId);
 
         await loadProduct();
+
+        trackEvent("loaded_product_detail", {
+          product_id: currentProductId,
+          diagnostic_id: currentDiagnosticId || null,
+          client_id: product?.client_id || null,
+          product_name: getSafeProductName(product),
+          asin: product?.asin || null
+        });
+
         await loadProductDiagnostics();
         await loadBrainResultsForDiagnostics();
 
@@ -1330,9 +1350,22 @@ import { compararDiagnosticosNexora } from "../js/nexoraComparisonEngine.js";
       renderDiagnosticComparison();
       renderEvolutionDashboard();
 
+        trackEvent("loaded_product_evolution", {
+          product_id: currentProductId,
+          diagnostic_id: currentDiagnosticId || null,
+          client_id: product?.client_id || null,
+          diagnostics_count: diagnostics.filter(d => !isDraftWithoutResult(d)).length,
+          has_comparison: Boolean(getComparisonSynthPair().current && getComparisonSynthPair().previous)
+        });
+
         finishLoading();
       } catch (error) {
         console.error("Erro ao carregar dashboard do produto:", error);
+        trackEvent("product_detail_load_error", {
+          product_id: currentProductId || null,
+          diagnostic_id: currentDiagnosticId || null,
+          error: error?.message || String(error)
+        });
         showNotice("Não foi possível carregar o dashboard histórico deste produto. Verifique o Supabase e tente novamente.");
         finishLoading();
       }
@@ -2491,14 +2524,31 @@ const summary =
 
    window.novoDiagnosticoProduto = async function () {
   if (!currentProductId) {
+    trackEvent("started_diagnostic_from_product_failed", {
+      reason: "missing_product"
+    });
+
     alert("Nenhum produto ativo encontrado.");
     return;
   }
 
   try {
+    trackEvent("clicked_new_diagnostic_from_product", {
+      product_id: currentProductId,
+      diagnostic_id: currentDiagnosticId || null,
+      client_id: product?.client_id || null
+    });
+
     const permission = await canCreateDiagnostic();
 
     if (!permission.allowed) {
+      trackEvent("diagnostic_from_product_blocked_by_plan", {
+        product_id: currentProductId,
+        diagnostic_id: currentDiagnosticId || null,
+        client_id: product?.client_id || null,
+        reason: permission.reason || null
+      });
+
       const message = encodeURIComponent(
         permission.reason || "Você atingiu o limite de diagnósticos do seu plano."
       );
@@ -2509,6 +2559,12 @@ const summary =
 
     const diagnostic = await createDiagnostic({
       productId: currentProductId
+    });
+
+    trackEvent("started_diagnostic_from_product", {
+      product_id: currentProductId,
+      diagnostic_id: diagnostic.id,
+      client_id: product?.client_id || null
     });
 
     localStorage.setItem("nx_diagnostic_id", diagnostic.id);
@@ -2530,8 +2586,25 @@ const summary =
     alert("Não foi possível criar um novo diagnóstico para este produto.");
   }
 };
+
+window.voltarDashboardProduto = function () {
+  trackEvent("clicked_back_dashboard_from_product", {
+    product_id: currentProductId || null,
+    diagnostic_id: currentDiagnosticId || null,
+    client_id: product?.client_id || null
+  });
+
+  window.location.href = "./dashboard.html";
+};
+
 window.voltarAoCliente = function () {
   const clientId = product?.client_id;
+
+  trackEvent("clicked_back_client_from_product", {
+    product_id: currentProductId || null,
+    diagnostic_id: currentDiagnosticId || null,
+    client_id: clientId || null
+  });
 
   if (clientId) {
     window.location.href = `./cliente.html?client_id=${encodeURIComponent(clientId)}`;
@@ -2546,9 +2619,21 @@ window.abrirRelatorioAtual = function () {
   const diagnosticId = synthRow?.diagnostic_id || currentDiagnosticId;
 
   if (!diagnosticId) {
+    trackEvent("opened_latest_report_from_product_failed", {
+      product_id: currentProductId || null,
+      client_id: product?.client_id || null,
+      reason: "missing_synthesis"
+    });
+
     alert("Nenhuma Síntese encontrada para abrir relatório.");
     return;
   }
+
+  trackEvent("opened_latest_report_from_product", {
+    product_id: currentProductId || null,
+    diagnostic_id: diagnosticId,
+    client_id: product?.client_id || null
+  });
 
   localStorage.setItem("nx_diagnostic_id", diagnosticId);
   localStorage.setItem("nx_product_id", currentProductId);
@@ -2559,9 +2644,21 @@ window.abrirRelatorioAtual = function () {
 
 window.abrirSinteseHistorica = function (diagnosticId) {
   if (!diagnosticId) {
+    trackEvent("opened_historical_synthesis_failed", {
+      product_id: currentProductId || null,
+      client_id: product?.client_id || null,
+      reason: "missing_diagnostic"
+    });
+
     alert("Diagnóstico não encontrado para abrir a síntese.");
     return;
   }
+
+  trackEvent("opened_historical_synthesis", {
+    product_id: currentProductId || null,
+    diagnostic_id: diagnosticId,
+    client_id: product?.client_id || null
+  });
 
   localStorage.setItem("nx_diagnostic_id", diagnosticId);
   localStorage.setItem("nx_product_id", currentProductId);
@@ -2571,6 +2668,12 @@ window.abrirSinteseHistorica = function (diagnosticId) {
 };
     
 window.abrirRelatorioHistorico = function (diagnosticId) {
+  trackEvent("opened_historical_report", {
+    product_id: currentProductId || null,
+    diagnostic_id: diagnosticId || null,
+    client_id: product?.client_id || null
+  });
+
   localStorage.setItem("nx_diagnostic_id", diagnosticId);
   localStorage.setItem("nx_product_id", currentProductId);
 
@@ -2580,6 +2683,12 @@ window.abrirRelatorioHistorico = function (diagnosticId) {
 
     
     window.abrirDiagnosticoHistorico = function (diagnosticId) {
+      trackEvent("opened_historical_diagnostic_from_product", {
+        product_id: currentProductId || null,
+        diagnostic_id: diagnosticId || null,
+        client_id: product?.client_id || null
+      });
+
       localStorage.setItem("nx_diagnostic_id", diagnosticId);
       localStorage.setItem("nx_product_id", currentProductId);
 
@@ -2643,6 +2752,14 @@ function diagnosticHasStageResult(diagnosticId, stage) {
 }
 
 window.abrirEtapaPorBrain = function (page, stage) {
+  trackEvent("opened_brain_from_product", {
+    product_id: currentProductId || null,
+    diagnostic_id: currentDiagnosticId || null,
+    client_id: product?.client_id || null,
+    stage,
+    target_page: page
+  });
+
   const selectedDiagnosticId =
     new URLSearchParams(window.location.search).get("diagnostic_id") ||
     currentDiagnosticId ||
