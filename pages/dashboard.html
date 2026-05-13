@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1114,6 +1115,10 @@
 <button class="nav-item" onclick="location.href='./planos.html'">
   <span class="nav-icon">◈</span> Planos
 </button>
+
+<button class="nav-item" onclick="abrirConfiguracoesDashboard()">
+  <span class="nav-icon">⚙</span> Configurações
+</button>
           <button class="nav-item" onclick="location.href='./clientes.html'">
   <span class="nav-icon">◎</span> Clientes
 </button>
@@ -1420,6 +1425,11 @@
 <div class="quick-card" onclick="location.href='./clientes.html'">
   <strong>Gerenciar clientes</strong>
   <p>Cadastre marcas, sellers e contas atendidas para organizar produtos e diagnósticos por cliente.</p>
+</div>
+
+<div class="quick-card" onclick="abrirConfiguracoesDashboard()">
+  <strong>Abrir configurações</strong>
+  <p>Veja preferências da conta, marketplace padrão, tipo de usuário e atalhos internos da Nexora.</p>
 </div>
 
               <div class="quick-card" id="adminQuickCard" style="display:none;" onclick="location.href='./admin.html'">
@@ -2169,6 +2179,15 @@ async function loadProductAlertsSummary(products = []) {
     return map;
   }
 }
+
+window.abrirConfiguracoesDashboard = async function () {
+  await trackEvent("opened_settings_from_dashboard", {
+    source: "dashboard"
+  });
+
+  window.location.href = "./configuracoes.html";
+};
+
 window.logoutUser = logout;
     async function canCreateProductByPlan() {
   const plan = await getCurrentUserPlan();
