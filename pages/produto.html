@@ -726,6 +726,133 @@
       margin-top: 14px;
     }
 
+
+/* =========================================================
+   NEXORA · ONBOARDING / ESTADOS VAZIOS DO PRODUTO
+   ========================================================= */
+
+.product-onboarding-panel {
+  border-color: rgba(240,163,58,.26);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(240,163,58,.10), transparent 28%),
+    linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+}
+
+.product-onboarding-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.product-onboarding-head h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.product-onboarding-head p {
+  color: var(--nx-muted);
+  line-height: 1.7;
+  font-size: 13px;
+  margin-top: 8px;
+  max-width: 760px;
+}
+
+.onboarding-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.onboarding-step {
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.025);
+  border-radius: 16px;
+  padding: 14px;
+  min-height: 126px;
+}
+
+.onboarding-step span {
+  display: inline-flex;
+  color: #f0a33a;
+  font-family: Syne, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  margin-bottom: 10px;
+}
+
+.onboarding-step strong {
+  display: block;
+  font-family: Syne, sans-serif;
+  font-size: 15px;
+  margin-bottom: 6px;
+  line-height: 1.35;
+}
+
+.onboarding-step p {
+  color: var(--nx-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.empty-action-box {
+  border: 1px dashed rgba(240,163,58,.28);
+  background:
+    radial-gradient(circle at top left, rgba(240,163,58,.10), transparent 32%),
+    rgba(255,255,255,.025);
+  color: var(--nx-muted);
+  border-radius: 18px;
+  padding: 22px;
+  line-height: 1.7;
+}
+
+.empty-action-box h3 {
+  color: var(--nx-text);
+  font-family: Syne, sans-serif;
+  margin: 8px 0 0;
+}
+
+.empty-action-box p {
+  color: var(--nx-muted);
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.empty-action-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.empty-action-item {
+  border: 1px solid rgba(255,255,255,.09);
+  background: rgba(255,255,255,.025);
+  border-radius: 14px;
+  padding: 12px;
+  color: var(--nx-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.empty-action-item strong {
+  display: block;
+  color: var(--nx-text);
+  font-family: Syne, sans-serif;
+  margin-bottom: 5px;
+}
+
+@media (max-width: 1100px) {
+  .onboarding-steps,
+  .empty-action-list {
+    grid-template-columns: 1fr;
+  }
+}
+
     @media (max-width: 1200px) {
       .product-shell {
         width: min(100% - 40px, 100%);
@@ -1052,6 +1179,31 @@
       </div>
     </section>
 
+
+    <section class="panel product-onboarding-panel" id="productOnboardingPanel" style="display:none;">
+      <div class="product-onboarding-head">
+        <div>
+          <p class="section-label">Próximo passo</p>
+          <h2 id="productOnboardingTitle">Comece o acompanhamento deste produto</h2>
+          <p id="productOnboardingText">
+            A Nexora organiza este produto como um ativo monitorado. O acompanhamento fica mais forte quando existem diagnóstico completo, Síntese, relatório e histórico de evolução.
+          </p>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary" onclick="novoDiagnosticoProduto()">
+            Iniciar diagnóstico
+          </button>
+
+          <button class="btn-secondary" id="productOnboardingReportBtn" style="display:none;" onclick="abrirRelatorioAtual()">
+            Abrir relatório
+          </button>
+        </div>
+      </div>
+
+      <div class="onboarding-steps" id="productOnboardingSteps"></div>
+    </section>
+
     <section class="control-grid" id="strategicSnapshotPanel">
       <div class="control-card">
         <div>
@@ -1152,8 +1304,10 @@
   </div>
 
   <div id="productAlertsArea">
-    <div class="alert-empty">
-      Nenhum alerta ativo encontrado ainda. Gere uma Síntese para que a Nexora consolide os alertas do produto.
+    <div class="empty-action-box">
+      <span class="pill">Sem alertas ativos</span>
+      <h3>Os alertas aparecem depois da Síntese</h3>
+      <p>Gere a Síntese para que a Nexora consolide sinais críticos, pontos de atenção e ações recomendadas.</p>
     </div>
   </div>
 </section>
@@ -1171,8 +1325,10 @@
   </div>
 
   <div id="comparisonArea">
-    <div class="alert-empty">
-      Ainda não há diagnóstico anterior suficiente para comparar este produto.
+    <div class="empty-action-box">
+      <span class="pill">Comparação indisponível</span>
+      <h3>A comparação aparece a partir da segunda Síntese</h3>
+      <p>Depois de dois diagnósticos completos, a Nexora mostra se o produto melhorou, piorou ou permaneceu estável.</p>
     </div>
   </div>
 </section>
@@ -1194,8 +1350,10 @@
   </div>
 
   <div id="evolutionDashboardArea">
-    <div class="alert-empty">
-      Gere pelo menos um diagnóstico completo para iniciar a leitura de evolução do produto.
+    <div class="empty-action-box">
+      <span class="pill">Sem evolução ainda</span>
+      <h3>Rode o primeiro diagnóstico completo</h3>
+      <p>A evolução estratégica começa quando a primeira Síntese do produto é salva.</p>
     </div>
   </div>
 </section>
@@ -1341,6 +1499,7 @@ import { trackEvent, trackPageView } from "../js/analytics.js";
 
        renderProduct();
        renderMetrics();
+      renderProductOnboardingState();
       renderProductStrategicSnapshot();
       renderProductAlerts();
       renderChart();
@@ -1714,6 +1873,84 @@ function getSelectedDiagnostic() {
 
   document.getElementById("currentInsight").textContent = text;
 }
+
+function renderProductOnboardingState() {
+  const panel = document.getElementById("productOnboardingPanel");
+  const title = document.getElementById("productOnboardingTitle");
+  const textEl = document.getElementById("productOnboardingText");
+  const stepsEl = document.getElementById("productOnboardingSteps");
+  const reportBtn = document.getElementById("productOnboardingReportBtn");
+
+  if (!panel || !title || !textEl || !stepsEl) return;
+
+  const completedDiagnostics = diagnostics.filter(d => !isDraftWithoutResult(d));
+  const synthRows = brainResults.filter(row =>
+    ["synth", "sintese", "síntese", "synthesis", "final"].includes(String(row.brain_code || "").toLowerCase()) &&
+    row.result_data
+  );
+
+  const hasAnyDiagnostic = completedDiagnostics.length > 0;
+  const hasSynthesis = synthRows.length > 0;
+  const hasEvolution = completedDiagnostics.length >= 2 && synthRows.length >= 2;
+
+  if (reportBtn) {
+    reportBtn.style.display = hasSynthesis ? "inline-flex" : "none";
+  }
+
+  panel.style.display = "block";
+
+  if (!hasAnyDiagnostic) {
+    title.textContent = "Rode o primeiro diagnóstico deste produto";
+    textEl.textContent = "Este produto já está cadastrado. O próximo passo é iniciar o fluxo Cérebro 1, Cérebro 2, Cérebro 3 e Síntese para liberar Product Health Score, Brand Health, alertas e relatório final.";
+
+    stepsEl.innerHTML = `
+      ${onboardingStep("01", "Iniciar Cérebro 1", "Preencha métricas de performance, PPC, conversão e operação.")}
+      ${onboardingStep("02", "Analisar página", "Passe pelo Cérebro 2 para avaliar listing, imagens, SEO, confiança e oferta.")}
+      ${onboardingStep("03", "Ler mercado", "Use o Cérebro 3 para comparar concorrência, preço, barreira e posicionamento.")}
+      ${onboardingStep("04", "Gerar Síntese", "Finalize com Product Health Score, Brand Health, alertas e relatório.")}
+    `;
+    return;
+  }
+
+  if (!hasSynthesis) {
+    title.textContent = "Conclua a Síntese para liberar o centro estratégico";
+    textEl.textContent = "Já existe diagnóstico iniciado para este produto, mas ainda falta a Síntese final. Sem ela, a Nexora não consegue mostrar causa raiz consolidada, próxima melhor ação, relatório completo e alertas estratégicos.";
+
+    stepsEl.innerHTML = `
+      ${onboardingStep("01", "Reabrir etapa pendente", "Use os cards dos Cérebros abaixo para continuar o diagnóstico ativo.")}
+      ${onboardingStep("02", "Gerar Síntese", "Cruze C1, C2 e C3 para consolidar a leitura estratégica.")}
+      ${onboardingStep("03", "Abrir relatório", "Depois da Síntese, o relatório final fica disponível para entrega.")}
+      ${onboardingStep("04", "Rodar nova leitura", "Depois da primeira entrega, gere novos diagnósticos para acompanhar evolução.")}
+    `;
+    return;
+  }
+
+  if (!hasEvolution) {
+    title.textContent = "Primeira leitura concluída. A evolução começa no próximo diagnóstico";
+    textEl.textContent = "Este produto já possui Síntese e relatório. Para enxergar melhora, queda ou estabilidade, rode um segundo diagnóstico depois de aplicar as ações recomendadas.";
+
+    stepsEl.innerHTML = `
+      ${onboardingStep("01", "Usar relatório atual", "Revise causa raiz, alertas e próxima melhor ação antes de executar mudanças.")}
+      ${onboardingStep("02", "Aplicar ações", "Corrija os principais gargalos apontados pela Nexora.")}
+      ${onboardingStep("03", "Reavaliar produto", "Rode um novo diagnóstico após alguns dias ou semanas de execução.")}
+      ${onboardingStep("04", "Comparar evolução", "A partir do segundo diagnóstico, a página mostra evolução histórica real.")}
+    `;
+    return;
+  }
+
+  panel.style.display = "none";
+}
+
+function onboardingStep(number, title, description) {
+  return `
+    <div class="onboarding-step">
+      <span>${escapeHtml(number)}</span>
+      <strong>${escapeHtml(title)}</strong>
+      <p>${escapeHtml(description)}</p>
+    </div>
+  `;
+}
+
 function renderProductStrategicSnapshot() {
   const synthRow = getActiveSynthRowForAlerts();
   const synth = synthRow?.result_data || {};
@@ -1864,8 +2101,27 @@ function renderProductAlerts() {
   if (!alerts.length) {
     alertsCount.textContent = "0 alertas";
     alertsArea.innerHTML = `
-      <div class="alert-empty">
-        Nenhum alerta ativo encontrado para este produto. Gere ou reabra uma Síntese com alertas para que a Nexora mostre os sinais estratégicos aqui.
+      <div class="empty-action-box">
+        <span class="pill">Sem alertas ativos</span>
+        <h3>Os alertas aparecem depois da Síntese</h3>
+        <p>
+          Quando a Nexora cruza performance, página e mercado, esta área mostra sinais críticos e pontos de atenção do produto.
+        </p>
+
+        <div class="empty-action-list">
+          <div class="empty-action-item">
+            <strong>1. Complete os Cérebros</strong>
+            Rode C1, C2 e C3 no mesmo diagnóstico.
+          </div>
+          <div class="empty-action-item">
+            <strong>2. Gere a Síntese</strong>
+            A engine consolida alertas, causa raiz e próxima ação.
+          </div>
+          <div class="empty-action-item">
+            <strong>3. Acompanhe aqui</strong>
+            Os alertas mais importantes passam a aparecer nesta página.
+          </div>
+        </div>
       </div>
     `;
     return;
@@ -1914,8 +2170,27 @@ function renderProductAlerts() {
   if (!pair.current || !pair.previous) {
     statusEl.textContent = "Sem comparação";
     area.innerHTML = `
-      <div class="alert-empty">
-        Ainda não há diagnóstico anterior suficiente para comparar este produto. Gere pelo menos duas Sínteses para acompanhar evolução.
+      <div class="empty-action-box">
+        <span class="pill">Comparação indisponível</span>
+        <h3>A evolução aparece a partir da segunda Síntese</h3>
+        <p>
+          Este produto ainda não possui histórico suficiente para comparar melhora, queda ou estabilidade. Rode um novo diagnóstico depois de aplicar as recomendações atuais.
+        </p>
+
+        <div class="empty-action-list">
+          <div class="empty-action-item">
+            <strong>Primeira leitura</strong>
+            Gera o ponto de partida do produto.
+          </div>
+          <div class="empty-action-item">
+            <strong>Segunda leitura</strong>
+            Mostra o que melhorou, piorou ou ficou estável.
+          </div>
+          <div class="empty-action-item">
+            <strong>Histórico contínuo</strong>
+            Ajuda a provar evolução para clientes e sellers.
+          </div>
+        </div>
       </div>
     `;
     return;
@@ -2066,8 +2341,27 @@ function renderEvolutionDashboard() {
   if (!items.length) {
     statusPill.textContent = "Sem evolução";
     area.innerHTML = `
-      <div class="alert-empty">
-        Nenhum diagnóstico completo foi encontrado para montar a evolução. Gere uma Síntese para transformar o produto em acompanhamento contínuo.
+      <div class="empty-action-box">
+        <span class="pill">Sem evolução ainda</span>
+        <h3>Este produto ainda precisa de uma Síntese completa</h3>
+        <p>
+          A evolução estratégica usa os resultados salvos do diagnóstico para mostrar Product Health Score, scores por Cérebro e linha do tempo.
+        </p>
+
+        <div class="empty-action-list">
+          <div class="empty-action-item">
+            <strong>Comece pelo C1</strong>
+            Performance, tráfego, conversão, PPC e operação.
+          </div>
+          <div class="empty-action-item">
+            <strong>Complete C2 e C3</strong>
+            Página, oferta, mercado e concorrência.
+          </div>
+          <div class="empty-action-item">
+            <strong>Finalize na Síntese</strong>
+            Libere evolução, alertas e relatório do produto.
+          </div>
+        </div>
       </div>
     `;
     return;
@@ -2389,8 +2683,18 @@ historyCount.textContent = `${visibleDiagnostics.length} ${visibleDiagnostics.le
 
 if (!visibleDiagnostics.length) {
         historyList.innerHTML = `
-          <div class="empty-box">
-            Nenhum diagnóstico encontrado para este produto. Clique em “Novo diagnóstico deste produto” para iniciar a primeira análise e criar o histórico.
+          <div class="empty-action-box">
+            <span class="pill">Histórico vazio</span>
+            <h3>Nenhum diagnóstico salvo para este produto</h3>
+            <p>
+              Inicie o primeiro diagnóstico para criar o histórico deste produto. Depois disso, cada nova rodada ficará registrada aqui com score, etapa, data e acesso ao relatório.
+            </p>
+
+            <div class="actions" style="justify-content:center;margin-top:14px;">
+              <button class="btn-primary" onclick="novoDiagnosticoProduto()">
+                Iniciar primeiro diagnóstico
+              </button>
+            </div>
           </div>
         `;
         return;
@@ -2483,7 +2787,8 @@ const summary =
       if (!scores.length) {
         chart.innerHTML = `
           <div class="chart-empty">
-            Nenhum score encontrado ainda. Gere o primeiro diagnóstico para iniciar a evolução.
+            Ainda não há score consolidado para este produto.<br>
+            Gere a primeira Síntese para iniciar a curva de evolução.
           </div>
         `;
         return;
@@ -2492,7 +2797,8 @@ const summary =
       if (scores.length === 1) {
         chart.innerHTML = `
           <div class="chart-empty">
-            Score atual: ${scores[0].score}/100. Gere novos diagnósticos para visualizar evolução.
+            Score atual: ${scores[0].score}/100.<br>
+            A curva de evolução aparece quando houver pelo menos dois diagnósticos com score.
           </div>
         `;
         return;
