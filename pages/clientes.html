@@ -692,6 +692,7 @@
   <script type="module">
     import { requireAuth } from "../js/auth.js";
     import { sb } from "../js/supabaseClient.js";
+    import { trackEvent, trackPageView } from "../js/analytics.js";
 
     const authUser = await requireAuth();
 
@@ -715,6 +716,9 @@
     }
 
     let clients = [];
+
+    await trackPageView("Clientes");
+    await trackEvent("opened_clients");
 
     await configurarAcessoAdmin();
     await carregarClientes();
@@ -746,11 +750,19 @@
       }
     }
 
-    window.voltarDashboard = function () {
+    window.voltarDashboard = async function () {
+      await trackEvent("clicked_back_dashboard", {
+        source: "clientes"
+      });
+
       window.location.href = "./dashboard.html";
     };
 
     window.abrirModalCliente = function () {
+      trackEvent("clicked_create_client", {
+        source: "clientes"
+      });
+
       document.getElementById("clientModal")?.classList.add("active");
     };
 
@@ -794,9 +806,11 @@
           notes: v("clientNotes")
         };
 
-        const { error } = await sb
+        const { data: insertedClient, error } = await sb
           .from("clients")
-          .insert(payload);
+          .insert(payload)
+          .select("id, name")
+          .single();
 
         if (error) {
           console.error("Erro ao salvar cliente:", JSON.stringify(error, null, 2));
@@ -810,6 +824,14 @@
 
           return;
         }
+
+        await trackEvent("created_client", {
+          client_id: insertedClient?.id || null,
+          client_name: name,
+          has_email: Boolean(v("clientEmail")),
+          has_phone: Boolean(v("clientPhone")),
+          has_company: Boolean(v("clientCompany"))
+        });
 
         msg.textContent = "Cliente salvo com sucesso.";
         fecharModalCliente();
@@ -938,7 +960,12 @@
       `;
     }
 
-    window.abrirCliente = function (clientId) {
+    window.abrirCliente = async function (clientId) {
+  await trackEvent("opened_client_detail", {
+    client_id: clientId,
+    source: "clientes"
+  });
+
   window.location.href = `./cliente.html?client_id=${encodeURIComponent(clientId)}`;
 };
 
