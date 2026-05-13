@@ -550,7 +550,7 @@
             <span class="nav-icon">◇</span> Produtos
           </button>
 
-          <button class="nav-item active" onclick="location.href='./clientes.html'">
+          <button class="nav-item active" onclick="voltarClientes()">
             <span class="nav-icon">◎</span> Clientes
           </button>
 
@@ -586,7 +586,7 @@
         </div>
 
         <div class="top-actions">
-          <button class="btn-secondary" onclick="location.href='./clientes.html'">
+          <button class="btn-secondary" onclick="voltarClientes()">
             Voltar para Clientes
           </button>
 
@@ -792,6 +792,7 @@
     import { createProduct } from "../js/product.js";
     import { createDiagnostic } from "../js/diagnostics.js";
     import { canCreateDiagnostic } from "../js/plans.js";
+    import { trackEvent, trackPageView } from "../js/analytics.js";
 
     const params = new URLSearchParams(window.location.search);
     const clientId = params.get("client_id");
@@ -812,6 +813,11 @@
     let brainResults = [];
 
     document.getElementById("userEmail").textContent = currentUser.email || currentUser.id || "-";
+
+    await trackPageView("cliente_detail");
+    await trackEvent("opened_client_detail", {
+      client_id: clientId
+    });
 
     if (!clientId) {
       alert("Cliente não informado.");
@@ -853,6 +859,12 @@
       renderCliente();
       renderProdutos();
       renderKpis();
+
+      await trackEvent("loaded_client_products", {
+        client_id: clientId,
+        products_count: products.length,
+        diagnostics_count: diagnostics.length
+      });
 
       msg.textContent = products.length
         ? "Produtos carregados."
@@ -1121,6 +1133,10 @@
     }
 
     window.abrirModalProduto = function () {
+      trackEvent("clicked_create_product_from_client", {
+        client_id: clientId
+      });
+
       document.getElementById("productModal")?.classList.add("active");
       const modalMsg = document.getElementById("productModalMsg");
       if (modalMsg) modalMsg.textContent = "";
@@ -1150,7 +1166,7 @@
       try {
         modalMsg.textContent = "Salvando produto...";
 
-        await createProduct({
+        const createdProduct = await createProduct({
           client_id: clientId,
           product_name: productName,
           name: productName,
@@ -1170,6 +1186,14 @@
           image_url: getValue("modalImageUrl")
         });
 
+        await trackEvent("created_product_from_client", {
+          client_id: clientId,
+          product_id: createdProduct?.id || null,
+          product_name: productName,
+          category,
+          subcategory
+        });
+
         modalMsg.textContent = "Produto salvo com sucesso.";
         fecharModalProduto();
         limparModalProduto();
@@ -1186,8 +1210,13 @@
       }
     };
 
-    window.abrirProduto = function (productId) {
+    window.abrirProduto = async function (productId) {
       localStorage.setItem("nx_product_id", productId);
+
+      await trackEvent("opened_product_from_client", {
+        client_id: clientId,
+        product_id: productId
+      });
 
       window.location.href =
         `./produto.html?product_id=${encodeURIComponent(productId)}`;
@@ -1226,6 +1255,12 @@
 
         localStorage.setItem("nx_diagnostic_id", diagnostic.id);
 
+        await trackEvent("started_diagnostic_from_client", {
+          client_id: clientId,
+          product_id: productId,
+          diagnostic_id: diagnostic.id
+        });
+
         window.location.href =
           `./diagnostico.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnostic.id)}`;
       } catch (error) {
@@ -1234,7 +1269,7 @@
       }
     };
 
-    window.abrirRelatorio = function (productId, diagnosticId) {
+    window.abrirRelatorio = async function (productId, diagnosticId) {
       if (!productId || !diagnosticId) {
         alert("Produto ou diagnóstico não encontrado.");
         return;
@@ -1243,8 +1278,22 @@
       localStorage.setItem("nx_product_id", productId);
       localStorage.setItem("nx_diagnostic_id", diagnosticId);
 
+      await trackEvent("opened_report_from_client", {
+        client_id: clientId,
+        product_id: productId,
+        diagnostic_id: diagnosticId
+      });
+
       window.location.href =
         `./relatorio.html?product_id=${encodeURIComponent(productId)}&diagnostic_id=${encodeURIComponent(diagnosticId)}`;
+    };
+
+    window.voltarClientes = async function () {
+      await trackEvent("clicked_back_clients_from_client_detail", {
+        client_id: clientId
+      });
+
+      window.location.href = "./clientes.html";
     };
 
     function limparModalProduto() {
