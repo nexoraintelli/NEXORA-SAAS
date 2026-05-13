@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -948,6 +947,137 @@
     grid-template-columns: 1fr;
   }
 }
+/* =========================================================
+   NEXORA · ONBOARDING E ESTADOS VAZIOS
+   ========================================================= */
+.empty-state {
+  border: 1px solid rgba(179,38,38,.28);
+  background:
+    radial-gradient(circle at top left, rgba(139,30,30,.18), transparent 34%),
+    linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+  border-radius: 18px;
+  padding: 22px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+}
+
+.empty-state-kicker {
+  font-family: Syne, sans-serif;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.58);
+  font-size: 11px;
+  margin-bottom: 8px;
+}
+
+.empty-state h3 {
+  font-family: Syne, sans-serif;
+  font-size: 21px;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.empty-state p {
+  color: var(--nx-muted);
+  line-height: 1.65;
+  font-size: 13px;
+  margin-top: 8px;
+  max-width: 720px;
+}
+
+.empty-state-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.empty-state-checklist {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.empty-check {
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 14px;
+  background: rgba(255,255,255,.025);
+  padding: 12px;
+}
+
+.empty-check strong {
+  display: block;
+  font-family: Syne, sans-serif;
+  font-size: 13px;
+}
+
+.empty-check span {
+  display: block;
+  color: var(--nx-muted);
+  font-size: 11.5px;
+  line-height: 1.45;
+  margin-top: 5px;
+}
+
+.onboarding-panel {
+  padding: 22px;
+  margin-bottom: 22px;
+}
+
+.onboarding-progress {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.onboarding-mini {
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 16px;
+  background: rgba(255,255,255,.025);
+  padding: 14px;
+  min-height: 112px;
+}
+
+.onboarding-mini span {
+  color: #f0a33a;
+  font-family: Syne, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .10em;
+}
+
+.onboarding-mini strong {
+  display: block;
+  font-family: Syne, sans-serif;
+  font-size: 15px;
+  margin-top: 8px;
+}
+
+.onboarding-mini p {
+  color: var(--nx-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+@media (max-width: 900px) {
+  .empty-state {
+    grid-template-columns: 1fr;
+  }
+
+  .empty-state-actions {
+    justify-content: flex-start;
+  }
+
+  .empty-state-checklist,
+  .onboarding-progress {
+    grid-template-columns: 1fr;
+  }
+}
+
   </style>
 </head>
 
@@ -1037,6 +1167,48 @@
           <p>
             A Nexora cruza performance, página, mercado e os 5 Sistemas para indicar onde o produto está travado e qual deve ser a próxima ação.
           </p>
+        </div>
+      </section>
+
+
+      <section class="panel onboarding-panel" id="onboardingPanel">
+        <div class="section-head">
+          <div>
+            <h2>Comece pela sequência certa</h2>
+            <p style="color:var(--nx-muted);font-size:13px;margin-top:6px;line-height:1.65;">
+              Para gerar um relatório completo, a Nexora precisa de um produto vinculado e de um diagnóstico passando pelos três cérebros.
+            </p>
+          </div>
+
+          <button class="btn-primary" onclick="abrirModalProduto()">
+            Cadastrar primeiro produto
+          </button>
+        </div>
+
+        <div class="onboarding-progress">
+          <div class="onboarding-mini">
+            <span>PASSO 01</span>
+            <strong>Cadastre um produto</strong>
+            <p>Informe nome, categoria, marketplace e dados básicos para vincular o histórico.</p>
+          </div>
+
+          <div class="onboarding-mini">
+            <span>PASSO 02</span>
+            <strong>Rode os 3 Cérebros</strong>
+            <p>Performance, página e mercado formam a base do diagnóstico estratégico.</p>
+          </div>
+
+          <div class="onboarding-mini">
+            <span>PASSO 03</span>
+            <strong>Gere a Síntese</strong>
+            <p>A Nexora consolida causa raiz, Product Health Score, alertas e próxima ação.</p>
+          </div>
+
+          <div class="onboarding-mini">
+            <span>PASSO 04</span>
+            <strong>Abra o relatório</strong>
+            <p>Use a entrega final para tomada de decisão, call, cliente ou acompanhamento.</p>
+          </div>
         </div>
       </section>
 
@@ -1793,33 +1965,53 @@ if (clientsProductsCount) {
     : "Nenhum produto cadastrado ainda";
 
   const emptyMessage = activeClientId
-    ? "Adicione um produto e escolha este cliente no campo Cliente vinculado."
-    : "Clique em Adicionar produto para iniciar o acompanhamento.";
+    ? "Este cliente ainda não tem produtos monitorados. Cadastre um produto e mantenha o cliente selecionado no campo Cliente vinculado."
+    : "Cadastre seu primeiro produto para iniciar um diagnóstico completo e começar a construir histórico, Product Health Score e relatórios.";
 
   el.innerHTML = `
-    <div class="diag-row">
+    <div class="empty-state">
       <div>
-        <div class="diag-title">${escapeHtml(emptyTitle)}</div>
-        <div class="diag-meta">${escapeHtml(emptyMessage)}</div>
-      </div>
+        <div class="empty-state-kicker">Próximo passo recomendado</div>
+        <h3>${escapeHtml(emptyTitle)}</h3>
+        <p>${escapeHtml(emptyMessage)}</p>
 
-          <span class="status-pill">Vazio</span>
-
-          <div class="score-badge">-</div>
-
-          <div class="diag-meta">
-            Agora
+        <div class="empty-state-checklist">
+          <div class="empty-check">
+            <strong>Produto</strong>
+            <span>Nome, ASIN, categoria, subcategoria e marketplace.</span>
           </div>
 
-          <div class="diag-action">
-            <button class="btn-mini" onclick="abrirModalProduto()">
-              Adicionar
-            </button>
+          <div class="empty-check">
+            <strong>Diagnóstico</strong>
+            <span>Cérebro 1, Cérebro 2, Cérebro 3 e Síntese.</span>
+          </div>
+
+          <div class="empty-check">
+            <strong>Relatório</strong>
+            <span>Entrega final com causa raiz, alertas e plano de ação.</span>
           </div>
         </div>
-      `;
-      return;
-    }
+      </div>
+
+      <div class="empty-state-actions">
+        <button class="btn-primary" onclick="abrirModalProduto()">
+          Adicionar produto
+        </button>
+
+        ${activeClientId ? `
+          <button class="btn-secondary" onclick="location.href='./clientes.html'">
+            Voltar para clientes
+          </button>
+        ` : `
+          <button class="btn-secondary" onclick="location.href='./clientes.html'">
+            Gerenciar clientes
+          </button>
+        `}
+      </div>
+    </div>
+  `;
+  return;
+}
 
     el.innerHTML = products.map(product => {
       const name =
@@ -2450,14 +2642,41 @@ function getModalValue(id) {
 
       if (!rows.length) {
         el.innerHTML = `
-          <div class="diag-row">
+          <div class="empty-state">
             <div>
-              <div class="diag-title">Nenhum diagnóstico salvo ainda</div>
-              <div class="diag-meta">Inicie um novo diagnóstico para alimentar seu histórico.</div>
+              <div class="empty-state-kicker">Histórico vazio</div>
+              <h3>Nenhum diagnóstico salvo ainda</h3>
+              <p>
+                Assim que você rodar o primeiro diagnóstico, esta área vai mostrar o andamento, score, data, status e acesso ao produto analisado.
+              </p>
+
+              <div class="empty-state-checklist">
+                <div class="empty-check">
+                  <strong>1. Produto</strong>
+                  <span>Cadastre ou selecione o produto que será analisado.</span>
+                </div>
+
+                <div class="empty-check">
+                  <strong>2. Cérebros</strong>
+                  <span>Preencha performance, página e mercado.</span>
+                </div>
+
+                <div class="empty-check">
+                  <strong>3. Síntese</strong>
+                  <span>Gere Product Health Score e relatório final.</span>
+                </div>
+              </div>
             </div>
-            <span class="status-pill">Vazio</span>
-            <div class="score-badge">-</div>
-            <div class="diag-meta">Agora</div>
+
+            <div class="empty-state-actions">
+              <button class="btn-primary" onclick="novoDiagnostico()">
+                Iniciar diagnóstico
+              </button>
+
+              <button class="btn-secondary" onclick="abrirModalProduto()">
+                Adicionar produto
+              </button>
+            </div>
           </div>
         `;
         return;
