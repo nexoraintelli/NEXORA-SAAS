@@ -42,7 +42,7 @@
 }
 
     .plans-shell {
-      width: min(1180px, calc(100% - 36px));
+      width: min(1480px, calc(100% - 48px));
       margin: 0 auto;
       padding: 30px 0 46px;
     }
@@ -332,6 +332,143 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* =========================================================
+   NEXORA · PLANOS COM FOCO EM VALOR
+   ========================================================= */
+.hero-value-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+  max-width: 980px;
+}
+
+.hero-value-card,
+.value-card,
+.plan-fit-card {
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.025);
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.hero-value-card span,
+.value-card span,
+.plan-fit-card span {
+  display: block;
+  color: var(--nx-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: 7px;
+}
+
+.hero-value-card strong,
+.value-card strong,
+.plan-fit-card strong {
+  display: block;
+  font-family: Syne, sans-serif;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.value-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.value-card {
+  min-height: 128px;
+}
+
+.value-card p {
+  color: var(--nx-muted);
+  font-size: 12px;
+  line-height: 1.55;
+  margin-top: 8px;
+}
+
+.plan-use {
+  border: 1px solid rgba(179,38,38,.28);
+  background: rgba(139,30,30,.10);
+  border-radius: 14px;
+  padding: 12px;
+  margin-top: 14px;
+  color: rgba(255,255,255,.82);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.plan-use strong {
+  display: block;
+  font-family: Syne, sans-serif;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.value-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.value-comparison-card {
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.025);
+  border-radius: 18px;
+  padding: 16px;
+  min-height: 170px;
+}
+
+.value-comparison-card.featured {
+  border-color: rgba(179,38,38,.42);
+  background:
+    radial-gradient(circle at top left, rgba(139,30,30,.22), transparent 42%),
+    rgba(255,255,255,.025);
+}
+
+.value-comparison-card h3 {
+  font-family: Syne, sans-serif;
+  margin: 0;
+}
+
+.value-comparison-card p {
+  color: var(--nx-muted);
+  font-size: 13px;
+  line-height: 1.65;
+  margin-top: 8px;
+}
+
+.plan-recommendation-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+@media (max-width: 1100px) {
+  .hero-value-grid,
+  .value-grid,
+  .value-comparison-grid,
+  .plan-recommendation-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .hero-value-grid,
+  .value-grid,
+  .value-comparison-grid,
+  .plan-recommendation-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
     .status-pill {
       display: inline-flex;
       border-radius: 999px;
@@ -375,10 +512,25 @@
       <div class="topbar">
         <div>
           <p class="section-label">Nexora Intelligence · Planos</p>
-          <h1>Planos e créditos</h1>
+          <h1>Escolha como acompanhar seus produtos na Amazon</h1>
           <p>
-            Escolha o volume ideal de diagnósticos para sua operação. Na Nexora, 1 crédito libera 1 diagnóstico completo de produto, incluindo Cérebro 1, Cérebro 2, Cérebro 3, Síntese e Relatório.
+            A Nexora transforma métricas, página, mercado e concorrência em diagnósticos estratégicos, Product Health Score, Brand Health, alertas e relatórios prontos para decisão. Escolha o plano ideal para testar, atender clientes ou acompanhar uma carteira de produtos.
           </p>
+
+          <div class="hero-value-grid">
+            <div class="hero-value-card">
+              <span>Diagnóstico completo</span>
+              <strong>C1 + C2 + C3 + Síntese + Relatório</strong>
+            </div>
+            <div class="hero-value-card">
+              <span>Acompanhamento</span>
+              <strong>Histórico, evolução e alertas por produto</strong>
+            </div>
+            <div class="hero-value-card">
+              <span>Decisão</span>
+              <strong>Próxima melhor ação e plano de ação</strong>
+            </div>
+          </div>
         </div>
 
         <div class="actions">
@@ -474,9 +626,121 @@
     </div>
   </div>
 </section>
+
+<section class="panel">
+  <p class="section-label">O que está incluso</p>
+  <h2>Todos os planos pagos entregam inteligência, não só relatórios</h2>
+  <p class="note">
+    A Nexora foi criada para transformar dados soltos em leitura estratégica de produto. Cada diagnóstico completo gera uma visão de performance, página, mercado, causa raiz, alertas e ações recomendadas.
+  </p>
+
+  <div class="value-grid">
+    <div class="value-card">
+      <span>Score</span>
+      <strong>Product Health Score</strong>
+      <p>Leitura consolidada do produto a partir dos três cérebros.</p>
+    </div>
+
+    <div class="value-card">
+      <span>Marca</span>
+      <strong>Brand Health</strong>
+      <p>Saúde do produto/marca considerando performance, listing, mercado, autoridade e PPC.</p>
+    </div>
+
+    <div class="value-card">
+      <span>Private Label</span>
+      <strong>Intelligence para marca própria</strong>
+      <p>Maturidade, dependência de PPC, força de marca, diferenciação e risco competitivo.</p>
+    </div>
+
+    <div class="value-card">
+      <span>Ação</span>
+      <strong>Próxima melhor ação</strong>
+      <p>Ordem prática do que corrigir primeiro antes de escalar mídia ou investimento.</p>
+    </div>
+
+    <div class="value-card">
+      <span>Alertas</span>
+      <strong>Sinais estratégicos</strong>
+      <p>Alertas críticos e pontos de atenção gerados pela engine Nexora.</p>
+    </div>
+
+    <div class="value-card">
+      <span>Histórico</span>
+      <strong>Evolução por produto</strong>
+      <p>Acompanhamento de score, comparação e diagnósticos anteriores.</p>
+    </div>
+
+    <div class="value-card">
+      <span>Cliente</span>
+      <strong>Visão multi-produto</strong>
+      <p>Produtos organizados por cliente para consultores, sellers e agências.</p>
+    </div>
+
+    <div class="value-card">
+      <span>Entrega</span>
+      <strong>Relatório final</strong>
+      <p>Documento final para decisão interna, apresentação ou acompanhamento do cliente.</p>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <p class="section-label">Escolha pelo uso</p>
+  <h2>Qual plano faz sentido para você?</h2>
+
+  <div class="plan-recommendation-grid">
+    <div class="plan-fit-card">
+      <span>Seller individual</span>
+      <strong>Solo</strong>
+      <p class="note">Para diagnosticar poucos produtos e acompanhar onde o produto está travando.</p>
+    </div>
+
+    <div class="plan-fit-card">
+      <span>Consultor</span>
+      <strong>Consultor</strong>
+      <p class="note">Para atender clientes, gerar relatórios e organizar produtos com histórico.</p>
+    </div>
+
+    <div class="plan-fit-card">
+      <span>Operação recorrente</span>
+      <strong>Pro</strong>
+      <p class="note">Para quem acompanha múltiplos produtos e precisa repetir diagnósticos ao longo do mês.</p>
+    </div>
+
+    <div class="plan-fit-card">
+      <span>Agência</span>
+      <strong>Agência / Agência Plus</strong>
+      <p class="note">Para carteiras multi-clientes, alto volume de análises e acompanhamento contínuo.</p>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <p class="section-label">Valor da Nexora</p>
+  <h2>De dado operacional para decisão estratégica</h2>
+
+  <div class="value-comparison-grid">
+    <div class="value-comparison-card">
+      <h3>Antes</h3>
+      <p>O seller olha CTR, CVR, ACOS, reviews e concorrentes separadamente, sem saber qual problema corrigir primeiro.</p>
+    </div>
+
+    <div class="value-comparison-card featured">
+      <h3>Com a Nexora</h3>
+      <p>A plataforma cruza performance, página e mercado para indicar causa raiz, risco, prioridade e próxima melhor ação.</p>
+    </div>
+
+    <div class="value-comparison-card">
+      <h3>Depois</h3>
+      <p>O produto passa a ter histórico, evolução, Brand Health e relatórios comparáveis ao longo do tempo.</p>
+    </div>
+  </div>
+</section>
     <section class="panel">
       <p class="section-label">Assinaturas</p>
-      <h2>Escolha seu plano Nexora</h2>
+      <h2>Escolha o plano de acordo com seu volume de produtos</h2>
+      <p class="note">Todos os planos pagos incluem diagnóstico completo, Product Health Score, Brand Health, Private Label Intelligence, alertas, próxima melhor ação, histórico por produto e relatório final.</p>
 
       <div class="plans-grid">
         <article class="plan-card">
@@ -484,6 +748,7 @@
             <span class="plan-tag">Entrada</span>
             <h3>Teste</h3>
             <div class="price">R$ 0 <span>/ primeiro acesso</span></div>
+            <div class="plan-use"><strong>Para conhecer o fluxo</strong>Ideal para testar um produto e entender como a Nexora estrutura o diagnóstico.</div>
 
             <div class="plan-list">
               <div>1 diagnóstico completo para conhecer o fluxo Nexora</div>
@@ -503,17 +768,18 @@
             <span class="plan-tag">Individual</span>
             <h3>Solo</h3>
             <div class="price">R$ 49 <span>/ mês</span></div>
+            <div class="plan-use"><strong>Para sellers individuais</strong>Ideal para acompanhar poucos produtos com leitura estratégica e relatórios recorrentes.</div>
 
             <div class="plan-list">
              <div>5 diagnósticos completos por mês</div>
             <div>3 produtos monitorados</div>
-            <div>Síntese estratégica com IA</div>
+            <div>Product Health Score, Brand Health e alertas</div>
             <div>Relatórios finais inclusos</div>
             </div>
           </div>
 
           <button class="btn-secondary" onclick="solicitarUpgrade('solo')">
-            Assinar plano
+            Ativar plano
           </button>
         </article>
 
@@ -522,17 +788,18 @@
            <span class="plan-tag">Mais indicado para consultores</span>
             <h3>Consultor</h3>
             <div class="price">R$ 97 <span>/ mês</span></div>
+            <div class="plan-use"><strong>Para consultores</strong>Ideal para transformar análise operacional em entregas claras para clientes.</div>
 
             <div class="plan-list">
               <div>15 diagnósticos completos por mês</div>
               <div>10 produtos monitorados</div>
-              <div>Histórico por produto</div>
+              <div>Histórico, Brand Health e evolução por produto</div>
               <div>Relatórios para apresentar a clientes</div>
             </div>
           </div>
 
           <button class="btn-primary" onclick="solicitarUpgrade('consultor')">
-            Assinar plano
+            Ativar plano
           </button>
         </article>
 
@@ -541,17 +808,18 @@
             <span class="plan-tag">Profissional</span>
             <h3>Pro</h3>
             <div class="price">R$ 197 <span>/ mês</span></div>
+            <div class="plan-use"><strong>Para operação recorrente</strong>Ideal para acompanhar múltiplos produtos e revisar evolução ao longo do mês.</div>
 
             <div class="plan-list">
               <div>40 diagnósticos completos por mês</div>
               <div>25 produtos monitorados</div>
-              <div>Síntese estratégica com IA</div>
+              <div>Brand Health, Private Label Intelligence e alertas</div>
               <div>Ideal para operação recorrente</div>
             </div>
           </div>
 
           <button class="btn-secondary" onclick="solicitarUpgrade('pro')">
-  Assinar plano
+  Ativar plano
 </button>
         </article>
 
@@ -560,17 +828,18 @@
             <span class="plan-tag">Mais indicado para agências</span>
             <h3>Agência</h3>
             <div class="price">R$ 397 <span>/ mês</span></div>
+            <div class="plan-use"><strong>Para carteiras multi-clientes</strong>Ideal para agências pequenas e médias que precisam organizar clientes, produtos e relatórios.</div>
 
             <div class="plan-list">
-              <div>100 diagnósticos completo por mês</div>
+              <div>100 diagnósticos completos por mês</div>
               <div>60 produtos monitorados</div>
-              <div>Relatórios para carteira de clientes</div>
+              <div>Clientes, produtos, histórico e relatórios por carteira</div>
               <div>Ideal para agências pequenas e médias</div>
             </div>
           </div>
 
           <button class="btn-secondary" onclick="solicitarUpgrade('agencia')">
-            Assinar plano
+            Ativar plano
           </button>
         </article>
 
@@ -579,17 +848,18 @@
             <span class="plan-tag">Volume</span>
             <h3>Agência Plus</h3>
             <div class="price">R$ 697 <span>/ mês</span></div>
+            <div class="plan-use"><strong>Para alto volume</strong>Ideal para operações com muitos produtos, muitos clientes e rotina intensa de diagnósticos.</div>
 
             <div class="plan-list">
               <div>250 diagnósticos completos por mês</div>
               <div>150 produtos monitorados</div>
-              <div>Uso em alto volume de análises</div>
+              <div>Uso em alto volume de análises e acompanhamento contínuo</div>
               <div>Suporte prioritário</div>
             </div>
           </div>
 
           <button class="btn-secondary" onclick="solicitarUpgrade('agencia_plus')">
-            Assinar plano
+            Ativar plano
           </button>
         </article>
       </div>
